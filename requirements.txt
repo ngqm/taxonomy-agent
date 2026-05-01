@@ -1,0 +1,8 @@
+langchain-core>=0.3
+langchain-openai>=0.2
+langgraph>=1.0
+requests>=2.31
+python-dotenv>=1.0
+pyyaml>=6.0
+streamlit>=1.30
+pandas>=2.0

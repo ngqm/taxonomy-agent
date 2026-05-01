@@ -1,0 +1,182 @@
+"""Orchestrator setup and the main `run()` entry point."""
+from __future__ import annotations
+
+import json
+import os
+import uuid
+from pathlib import Path
+from typing import Iterable, Union
+
+from dotenv import load_dotenv
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
+
+from .judge import make_judge_caller
+from .prompts import SYSTEM_PROMPT_TEMPLATE
+from .tools import make_tools
+
+
+def _load_items(items_or_path: Union[str, Path, Iterable[dict]]) -> list[dict]:
+    """Accept either an in-memory iterable of dicts or a JSONL path.
+
+    Item ids must be unique — duplicates would silently collapse in the
+    id-keyed pool used by classify_with_judge, so we reject them up front."""
+    if isinstance(items_or_path, (str, Path)):
+        items: list[dict] = []
+        seen: set[str] = set()
+        with open(items_or_path) as f:
+            for ln, line in enumerate(f, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                obj = json.loads(line)
+                if "id" not in obj:
+                    raise ValueError(f"item on line {ln} missing 'id': {obj}")
+                if "text" not in obj:
+                    raise ValueError(f"item on line {ln} missing 'text': {obj}")
+                obj["id"] = str(obj["id"])
+                if obj["id"] in seen:
+                    raise ValueError(f"duplicate id {obj['id']!r} on line {ln}")
+                seen.add(obj["id"])
+                items.append(obj)
+        return items
+    out = list(items_or_path)
+    seen = set()
+    for obj in out:
+        if "id" not in obj or "text" not in obj:
+            raise ValueError("every item must have 'id' and 'text'")
+        obj["id"] = str(obj["id"])
+        if obj["id"] in seen:
+            raise ValueError(f"duplicate id: {obj['id']!r}")
+        seen.add(obj["id"])
+    return out
+
+
+def run(
+    items: Union[str, Path, Iterable[dict]],
+    instruction: str,
+    output_dir: Union[str, Path],
+    *,
+    orchestrator_model: str = "anthropic/claude-sonnet-4.6",
+    judge_model: str = "meta-llama/llama-3.3-70b-instruct",
+    max_iterations: int = 10,
+    converge_below: float = 0.10,
+    probe_size: int = 20,
+    pool_limit: int | None = None,
+    recursion_limit: int = 80,
+    concurrency: int = 8,
+    size_hint: str | None = "4–10",
+    category_focus: str | None = None,
+    api_key: str | None = None,
+    base_url: str = "https://openrouter.ai/api/v1",
+    temperature: float = 0.2,
+) -> dict:
+    """Discover a taxonomy of patterns in `items` and classify every item.
+
+    Args:
+        items: list/iterable of dicts (each must have `id` and `text`) OR a JSONL path.
+            Any extra keys per item are passed to the judge as context and copied into
+            the output classification rows.
+        instruction: short natural-language description of what to classify
+            (e.g. "Identify the rhetorical strategy used to redirect from the question.").
+        output_dir: directory for taxonomy.json and trace.jsonl.
+        orchestrator_model, judge_model: OpenRouter model IDs.
+        max_iterations: hard cap on the discovery loop.
+        converge_below: don't-fit rate threshold for early stop (0.10 = 10%).
+        probe_size: K — number of items per discovery probe batch.
+        pool_limit: optional cap on items used (smoke testing).
+        recursion_limit: LangGraph's cap on agent super-steps.
+        concurrency: parallel judge calls.
+        size_hint: free-form target size for the taxonomy injected into the
+            orchestrator prompt (e.g. "4–10", "around 6", "3"). Pass None or ""
+            to omit the guidance entirely and let the data-fit threshold drive
+            convergence on its own. Default "4–10".
+        category_focus: free-form description of what the taxonomy's categories
+            should describe (e.g. "what each text is about" for topic modeling,
+            "the reasoning strategy each chain of thought uses" for CoT
+            analysis). Injected as an extra constraint bullet in the system
+            prompt. Default None — no extra bullet, the `instruction` carries
+            the meaning on its own.
+        api_key: defaults to OPENROUTER_API_KEY env var.
+        base_url: OpenRouter base URL.
+        temperature: orchestrator sampling temperature.
+
+    Returns:
+        dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
+        artifact contents.
+    """
+    load_dotenv(override=True)
+    api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY missing. Pass api_key= or set the env var.")
+
+    items_list = _load_items(items)
+    if pool_limit:
+        items_list = items_list[:pool_limit]
+    if not items_list:
+        raise ValueError("no items to classify.")
+
+    output_dir = str(output_dir)
+    os.makedirs(output_dir, exist_ok=True)
+
+    run_id = f"run-{uuid.uuid4().hex[:8]}"
+    print(f"[taxonomy_agent] items={len(items_list)} run_id={run_id}")
+    print(f"[taxonomy_agent] orchestrator={orchestrator_model}, judge={judge_model}")
+    print(f"[taxonomy_agent] output_dir={output_dir}")
+
+    judge_call, judge_parallel = make_judge_caller(api_key, judge_model, base_url=base_url)
+    tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
+                       concurrency=concurrency, max_iters=max_iterations)
+
+    llm = ChatOpenAI(
+        model=orchestrator_model,
+        api_key=api_key,
+        base_url=base_url,
+        temperature=temperature,
+    )
+    size_aside = f" (aim for {size_hint.strip()} categories)" if size_hint and size_hint.strip() else ""
+    focus_bullet = (
+        f"- Categories should describe {category_focus.strip()}.\n"
+        if category_focus and category_focus.strip()
+        else ""
+    )
+    sys_prompt = SYSTEM_PROMPT_TEMPLATE.format(
+        instruction=instruction.strip(),
+        n_items=len(items_list),
+        threshold=converge_below,
+        probe_size=probe_size,
+        max_iters=max_iterations,
+        size_aside=size_aside,
+        focus_bullet=focus_bullet,
+    )
+
+    agent = create_react_agent(llm, tools, prompt=sys_prompt)
+    cfg = {"recursion_limit": recursion_limit}
+    kickoff = "Begin the analysis."
+    for event in agent.stream(
+        {"messages": [{"role": "user", "content": kickoff}]},
+        cfg,
+        stream_mode="values",
+    ):
+        msgs = event.get("messages", [])
+        if not msgs:
+            continue
+        last = msgs[-1]
+        if hasattr(last, "pretty_print"):
+            last.pretty_print()
+        else:
+            print(last)
+
+    artifact_path = os.path.join(output_dir, "taxonomy.json")
+    out: dict = {"run_id": run_id, "output_dir": output_dir, "artifact_path": artifact_path}
+    if os.path.exists(artifact_path):
+        with open(artifact_path) as f:
+            out["artifact"] = json.load(f)
+        out["status"] = "ok"
+        print(f"[taxonomy_agent] done → {artifact_path}")
+    else:
+        out["status"] = "incomplete"
+        print(f"[taxonomy_agent] WARNING: stream ended without finalize_classify "
+              f"— no artifact at {artifact_path}. The orchestrator may have hit "
+              f"the recursion limit, the classify budget, or an LLM error mid-run.")
+    return out
