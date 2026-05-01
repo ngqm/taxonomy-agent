@@ -89,8 +89,8 @@ def run(
         concurrency: parallel judge calls.
         size_hint: free-form target size for the taxonomy injected into the
             orchestrator prompt (e.g. "4–10", "around 6", "3"). Pass None or ""
-            to omit the guidance entirely and let the data-fit threshold drive
-            convergence on its own. Default "4–10".
+            to tell the orchestrator there is no target size — it should use
+            whatever number of categories fits the corpus. Default "4–10".
         category_focus: free-form description of what the taxonomy's categories
             should describe (e.g. "what each text is about" for topic modeling,
             "the reasoning strategy each chain of thought uses" for CoT
@@ -134,7 +134,10 @@ def run(
         base_url=base_url,
         temperature=temperature,
     )
-    size_aside = f" (aim for {size_hint.strip()} categories)" if size_hint and size_hint.strip() else ""
+    if size_hint and size_hint.strip():
+        size_aside = f" (aim for {size_hint.strip()} categories)"
+    else:
+        size_aside = " (use whatever number of categories fits the corpus)"
     focus_bullet = (
         f"- Categories should describe {category_focus.strip()}.\n"
         if category_focus and category_focus.strip()

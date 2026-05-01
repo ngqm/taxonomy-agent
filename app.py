@@ -65,8 +65,8 @@ with st.sidebar:
         size_hint = st.text_input(
             "Target size hint", "4–10",
             help=("Free-form target taxonomy size injected into the orchestrator "
-                  "prompt (e.g. '4–10', 'around 6', '3'). Leave blank to drop the "
-                  "guidance entirely."),
+                  "prompt (e.g. '4–10', 'around 6', '3'). Leave blank for no "
+                  "target — the orchestrator uses whatever number fits the corpus."),
         )
         category_focus = st.text_input(
             "Category focus (optional)", "",

@@ -112,7 +112,8 @@ def main() -> None:
                    default=cfg.get("size_hint", "4–10"),
                    help="Target taxonomy size for the orchestrator prompt "
                         "(e.g. '4–10', 'around 6', '3'). Pass an empty string "
-                        "to drop the guidance entirely.")
+                        "for no target — the orchestrator uses whatever number "
+                        "of categories fits the corpus.")
     p.add_argument("--category-focus",
                    default=cfg.get("category_focus"),
                    help="What the taxonomy's categories should describe "
