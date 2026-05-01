@@ -37,8 +37,17 @@ def test_size_aside_appears_when_set():
     assert "aim for 10–25 categories" in rendered
 
 
-def test_size_aside_omitted_by_default():
+def test_size_aside_omitted_when_template_slot_empty():
+    """Template-level: an empty `size_aside` slot does not introduce 'aim for'."""
     rendered = _render()
+    assert "aim for" not in rendered
+
+
+def test_no_target_size_aside_renders():
+    """When the run() helper produces the 'no target' aside (size_hint empty/None),
+    the orchestrator is told there is no fixed count to aim for."""
+    rendered = _render(size_aside=" (use whatever number of categories fits the corpus)")
+    assert "use whatever number of categories fits the corpus" in rendered
     assert "aim for" not in rendered
 
 
