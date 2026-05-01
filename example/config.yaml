@@ -1,0 +1,33 @@
+# taxonomy_agent config — fill in the three required fields, tweak the rest.
+# Any CLI flag overrides its value here.
+
+# ── REQUIRED ────────────────────────────────────────────────────────────────
+input: example/items.jsonl     # JSONL of {id, text, ...}
+instruction_file: example/instruction.txt   # OR set `instruction:` inline
+output_dir: example/out
+
+# Inline instruction (use INSTEAD of instruction_file):
+# instruction: |
+#   Classify each text into the type of evasion strategy a politician uses
+#   to avoid answering a direct question. Focus on the rhetorical move
+#   (e.g. topic switching, whataboutism, dismissal as old news), not topic.
+
+# ── MODELS ──────────────────────────────────────────────────────────────────
+orchestrator: anthropic/claude-sonnet-4.6
+judge: meta-llama/llama-3.3-70b-instruct
+
+# ── DISCOVERY LOOP ──────────────────────────────────────────────────────────
+max_iters: 10                # hard cap on discovery iterations
+threshold: 0.10              # stop when don't-fit rate < this on a fresh probe
+probe_size: 20               # K — items per probe batch
+size_hint: "4–10"            # free-form target size in the orchestrator prompt;
+                             #   "" (empty) drops the guidance entirely
+# category_focus: ""         # what categories should describe — e.g.
+#                            #   "what each text is about" (topic modeling),
+#                            #   "the reasoning strategy each chain of thought uses"
+#                            # default: none — instruction carries the meaning
+
+# ── EXECUTION ───────────────────────────────────────────────────────────────
+concurrency: 8               # parallel judge calls
+recursion_limit: 80          # LangGraph super-step cap
+# pool_limit: 50             # uncomment for smoke testing

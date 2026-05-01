@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "taxonomy-agent"
+version = "0.1.0"
+description = "Discover and apply an interpretable taxonomy along a single axis of variation in a text corpus."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Quang Minh Nguyen"}]
+requires-python = ">=3.10"
+dependencies = [
+    "langchain-core>=0.3",
+    "langchain-openai>=0.2",
+    "langgraph>=1.0",
+    "requests>=2.31",
+    "python-dotenv>=1.0",
+    "pyyaml>=6.0",
+    "streamlit>=1.30",
+    "pandas>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+# After `pip install -e .` from this directory, `taxonomy ui` and
+# `taxonomy --config ...` become available on PATH.
+taxonomy = "taxonomy_agent.__main__:main"
+
+# The package source IS this directory — there's no parent project wrapping it.
+# `package-dir = {"taxonomy_agent" = "."}` tells setuptools to treat the
+# contents of this folder as the contents of the `taxonomy_agent` package,
+# so `pip install -e .` can be run from inside `taxonomy_agent/` itself.
+[tool.setuptools]
+packages = ["taxonomy_agent"]
+
+[tool.setuptools.package-dir]
+taxonomy_agent = "."
+
+[tool.setuptools.package-data]
+taxonomy_agent = ["example/*", "example/**/*"]
