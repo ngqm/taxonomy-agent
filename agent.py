@@ -1,6 +1,7 @@
 """Orchestrator setup and the main `run()` entry point."""
 from __future__ import annotations
 
+import datetime
 import json
 import os
 import uuid
@@ -124,6 +125,23 @@ def run(
     print(f"[taxonomy_agent] orchestrator={orchestrator_model}, judge={judge_model}")
     print(f"[taxonomy_agent] output_dir={output_dir}")
 
+    # Write meta.json so the UI's Runs tab can list the run before
+    # finalize_classify writes taxonomy.json. Status is updated at the end.
+    meta_path = os.path.join(output_dir, "meta.json")
+    meta = {
+        "run_id": run_id,
+        "started_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "instruction": instruction.strip(),
+        "n_items_input": len(items_list),
+        "orchestrator_model": orchestrator_model,
+        "judge_model": judge_model,
+        "size_hint": size_hint,
+        "category_focus": category_focus,
+        "status": "running",
+    }
+    with open(meta_path, "w") as f:
+        json.dump(meta, f, indent=2)
+
     judge_call, judge_parallel = make_judge_caller(api_key, judge_model, base_url=base_url)
     tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
                        concurrency=concurrency, max_iters=max_iterations)
@@ -182,4 +200,10 @@ def run(
         print(f"[taxonomy_agent] WARNING: stream ended without finalize_classify "
               f"— no artifact at {artifact_path}. The orchestrator may have hit "
               f"the recursion limit, the classify budget, or an LLM error mid-run.")
+
+    meta["status"] = out["status"]
+    meta["finished_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    with open(meta_path, "w") as f:
+        json.dump(meta, f, indent=2)
+
     return out
