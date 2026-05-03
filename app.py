@@ -38,18 +38,61 @@ ss = st.session_state
 ss.setdefault("log_lines", [])
 ss.setdefault("result_dir", None)
 ss.setdefault("running", False)
+# Task-config defaults — these back the Run-tab text widgets via `key=…` so
+# preset selection can update them in place.
+ss.setdefault("instruction_text", "")
+ss.setdefault("cat_focus_text", "")
+ss.setdefault("size_hint_text", "4–10")
+ss.setdefault("preset_applied", "— Custom —")
+
+
+def _example_instruction() -> str:
+    p = EXAMPLE_DIR / "instruction.txt"
+    return p.read_text().strip() if p.exists() else ""
+
+
+PRESETS: dict[str, dict | None] = {
+    "— Custom —": None,
+    "Topic modeling": dict(
+        instruction="Identify the dominant topic of each text.",
+        category_focus="what each text is about",
+        size_hint="10–25",
+    ),
+    "Reasoning strategies (CoT)": dict(
+        instruction="Identify the dominant reasoning strategy used in each chain of thought.",
+        category_focus="the reasoning strategy each chain of thought uses",
+        size_hint="4–10",
+    ),
+    "Failure modes": dict(
+        instruction="Classify each item by the failure mode it shows (e.g. hallucination, refusal, format break).",
+        category_focus="",
+        size_hint="4–10",
+    ),
+    "Bundled example (rhetorical strategies)": dict(
+        instruction=_example_instruction(),
+        category_focus="",
+        size_hint="4–10",
+    ),
+}
 
 # ── Sidebar ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Configuration")
 
     with st.expander("API & models", expanded=True):
+        env_key = os.getenv("OPENROUTER_API_KEY", "")
         api_key = st.text_input(
             "OpenRouter API key",
             type="password",
-            value=os.getenv("OPENROUTER_API_KEY", ""),
+            value=env_key,
             help="Defaults to the OPENROUTER_API_KEY env var.",
         )
+        if api_key and api_key == env_key:
+            st.caption("✓ Loaded from `OPENROUTER_API_KEY` env var.")
+        elif api_key:
+            st.caption("✓ Set (overrides env var).")
+        else:
+            st.caption("⚠ Not set — runs will fail until you provide a key.")
         orchestrator = st.text_input(
             "Orchestrator model", "anthropic/claude-sonnet-4.6",
             help="Strong model: tool-calling + reasoning.",
@@ -66,19 +109,6 @@ with st.sidebar:
             help="Stop when fewer than this fraction of a fresh probe falls outside the taxonomy.",
         )
         probe_size = st.number_input("Probe batch size (K)", 5, 100, 20)
-        size_hint = st.text_input(
-            "Target size hint", "4–10",
-            help=("Free-form target taxonomy size injected into the orchestrator "
-                  "prompt (e.g. '4–10', 'around 6', '3'). Leave blank for no "
-                  "target — the orchestrator uses whatever number fits the corpus."),
-        )
-        category_focus = st.text_input(
-            "Category focus (optional)", "",
-            help=("What the taxonomy's categories should describe. Examples: "
-                  "'what each text is about' (topic modeling), 'the reasoning "
-                  "strategy each chain of thought uses' (CoT analysis). Leave "
-                  "blank to let the instruction carry the meaning."),
-        )
 
     with st.expander("Execution"):
         concurrency = st.number_input("Parallel judge calls", 1, 64, 8)
@@ -93,6 +123,28 @@ run_tab, runs_tab, results_tab = st.tabs(["Run", "Runs", "Results"])
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
+    st.caption(
+        "First time? Pick the **Bundled example** preset, leave the items source "
+        "on **Use example**, and click ▶ Start run."
+    )
+
+    # Task preset — fills instruction / category focus / size hint with sensible
+    # defaults. Re-selecting the same preset is a no-op; switching presets
+    # overwrites the three fields, but the user can edit them after.
+    preset = st.selectbox(
+        "Task preset",
+        list(PRESETS.keys()),
+        help="Auto-fills instruction, category focus, and size hint. Pick "
+             "'— Custom —' to leave the fields untouched.",
+    )
+    if preset != ss.preset_applied:
+        ss.preset_applied = preset
+        cfg = PRESETS[preset]
+        if cfg is not None:
+            ss.instruction_text = cfg["instruction"]
+            ss.cat_focus_text = cfg["category_focus"]
+            ss.size_hint_text = cfg["size_hint"]
+
     st.subheader("Items")
     src = st.radio(
         "Source", ["Upload JSONL", "Paste JSONL", "File path", "Use example"],
@@ -128,27 +180,40 @@ with run_tab:
         st.info(f"Using example items at `{items_path}`")
 
     st.subheader("Instruction")
-    default_instr = ""
-    if src == "Use example":
-        instr_file = EXAMPLE_DIR / "instruction.txt"
-        if instr_file.exists():
-            default_instr = instr_file.read_text().strip()
     instruction = st.text_area(
         "What should the agent classify? (natural language)",
-        value=default_instr,
         height=110,
-        placeholder=("Classify each text into the type of rhetorical strategy used "
-                     "to redirect from the question."),
+        key="instruction_text",
+        placeholder="Identify the dominant topic of each text.",
     )
+
+    fc1, fc2 = st.columns(2)
+    with fc1:
+        category_focus = st.text_input(
+            "Category focus (optional)",
+            key="cat_focus_text",
+            help="What categories should describe (e.g. 'what each text is "
+                 "about'). Blank = let the instruction carry the meaning.",
+        )
+    with fc2:
+        size_hint = st.text_input(
+            "Size hint",
+            key="size_hint_text",
+            help="Target taxonomy size (e.g. '4–10', 'around 6'). Blank = no "
+                 "target — the orchestrator chooses.",
+        )
 
     st.subheader("Output")
-    default_outdir = str(
-        PROJECT_ROOT / "taxonomy_runs" / time.strftime("run_%Y%m%d_%H%M%S")
+    output_dir_in = st.text_input(
+        "Output directory (leave blank for auto)",
+        value="",
+        placeholder=str(PROJECT_ROOT / "taxonomy_runs" / "run_<timestamp>"),
+        help="Defaults to `taxonomy_runs/run_<current timestamp>/` at the "
+             "moment you click Start run.",
     )
-    output_dir = st.text_input("Output directory", value=default_outdir)
 
     c1, c2 = st.columns([1, 5])
-    start = c1.button("Run agent", type="primary", disabled=ss.running)
+    start = c1.button("▶ Start run", type="primary", disabled=ss.running)
 
     log_box = st.empty()
 
@@ -163,6 +228,11 @@ with run_tab:
             ss.log_lines = []
             ss.running = True
 
+            # Compute the output dir at click time so the timestamp isn't stale.
+            output_dir = output_dir_in.strip() or str(
+                PROJECT_ROOT / "taxonomy_runs"
+                             / time.strftime("run_%Y%m%d_%H%M%S")
+            )
             out_abs = str(Path(output_dir).expanduser().resolve())
             cmd = [
                 sys.executable, "-u", "-m", "taxonomy_agent",
