@@ -83,6 +83,26 @@ def _estimate_cost(n_items: int, max_iters: int, probe_size: int) -> dict:
     }
 
 
+# Curated OpenRouter model IDs for the sidebar dropdowns. The first entry of
+# each list is the default. "Custom…" reveals a text input so the user can
+# plug in any other model OpenRouter exposes.
+ORCHESTRATOR_OPTIONS = [
+    "anthropic/claude-sonnet-4.6",
+    "anthropic/claude-opus-4-7",
+    "openai/gpt-5",
+    "google/gemini-2.5-pro",
+    "Custom…",
+]
+JUDGE_OPTIONS = [
+    "meta-llama/llama-3.3-70b-instruct",
+    "anthropic/claude-haiku-4-5",
+    "openai/gpt-5-mini",
+    "google/gemini-2.5-flash",
+    "mistralai/mistral-small",
+    "Custom…",
+]
+
+
 PRESETS: dict[str, dict | None] = {
     "— Custom —": None,
     "Topic modeling": dict(
@@ -125,14 +145,37 @@ with st.sidebar:
             st.caption("✓ Set (overrides env var).")
         else:
             st.caption("⚠ Not set — runs will fail until you provide a key.")
-        orchestrator = st.text_input(
-            "Orchestrator model", "anthropic/claude-sonnet-4.6",
+        orch_choice = st.selectbox(
+            "Orchestrator model",
+            ORCHESTRATOR_OPTIONS,
+            index=0,
             help="Strong model: tool-calling + reasoning.",
         )
-        judge = st.text_input(
-            "Judge model", "meta-llama/llama-3.3-70b-instruct",
+        if orch_choice == "Custom…":
+            orchestrator = st.text_input(
+                "Custom OpenRouter model ID",
+                value="",
+                placeholder="provider/model-id",
+                key="custom_orchestrator",
+            )
+        else:
+            orchestrator = orch_choice
+
+        judge_choice = st.selectbox(
+            "Judge model",
+            JUDGE_OPTIONS,
+            index=0,
             help="Cheap, fast model for the bulk classification work.",
         )
+        if judge_choice == "Custom…":
+            judge = st.text_input(
+                "Custom OpenRouter model ID",
+                value="",
+                placeholder="provider/model-id",
+                key="custom_judge",
+            )
+        else:
+            judge = judge_choice
 
     with st.expander("Discovery loop", expanded=True):
         max_iters = st.number_input("Max iterations", 1, 50, 10)
