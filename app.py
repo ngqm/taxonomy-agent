@@ -51,6 +51,38 @@ def _example_instruction() -> str:
     return p.read_text().strip() if p.exists() else ""
 
 
+def _count_items(path: str | None) -> int | None:
+    """Count non-blank lines in a JSONL file (cheap proxy for item count)."""
+    if not path:
+        return None
+    p = Path(path)
+    if not p.exists():
+        return None
+    try:
+        return sum(1 for ln in open(p) if ln.strip())
+    except Exception:
+        return None
+
+
+def _estimate_cost(n_items: int, max_iters: int, probe_size: int) -> dict:
+    """Upper-bound cost + wall-time estimate, calibrated against the README's
+    baseline of ~$1.05 / ~12 min for 200 items at max_iters=10, K=20, with the
+    default Sonnet 4.6 orchestrator + Llama 3.3 70B judge. Real costs run
+    lower if the orchestrator converges before max_iters."""
+    judge_per_call = 0.0003       # USD per judge call (input + output averaged)
+    orch_per_iter  = 0.10         # USD per orchestrator iteration
+    n_judge_calls  = max_iters * probe_size + n_items   # probes + finalize
+    judge_cost     = n_judge_calls * judge_per_call
+    orch_cost      = max_iters * orch_per_iter
+    minutes        = max(2, max_iters * 1.0 + n_items * 0.005)
+    return {
+        "judge": judge_cost,
+        "orchestrator": orch_cost,
+        "total": judge_cost + orch_cost,
+        "minutes": int(round(minutes)),
+    }
+
+
 PRESETS: dict[str, dict | None] = {
     "— Custom —": None,
     "Topic modeling": dict(
@@ -211,6 +243,26 @@ with run_tab:
         help="Defaults to `taxonomy_runs/run_<current timestamp>/` at the "
              "moment you click Start run.",
     )
+
+    # ── Cost / time estimate ────────────────────────────────────────────────
+    n_items_known = _count_items(items_path)
+    if n_items_known is not None:
+        effective_n = min(n_items_known, int(pool_limit)) if pool_limit and pool_limit > 0 else n_items_known
+        est = _estimate_cost(effective_n, int(max_iters), int(probe_size))
+        st.info(
+            f"**Estimated upper bound:** ~**\\${est['total']:.2f}** "
+            f"(orchestrator ~\\${est['orchestrator']:.2f} + judge ~\\${est['judge']:.2f}), "
+            f"up to ~**{est['minutes']} min** wall time on **{effective_n} items**. "
+            f"Both can be much lower if the orchestrator converges before "
+            f"`max_iters={int(max_iters)}` iterations. "
+            f"_Calibrated for the default Sonnet 4.6 + Llama 3.3 70B pair._"
+        )
+    else:
+        st.caption(
+            "Cost estimate appears once items are loaded. Rule of thumb: "
+            "~\\$0.10 per orchestrator iteration plus ~\\$0.0003 per judge call "
+            "(probes + finalize)."
+        )
 
     c1, c2 = st.columns([1, 5])
     start = c1.button("▶ Start run", type="primary", disabled=ss.running)
