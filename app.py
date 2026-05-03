@@ -5,7 +5,9 @@ Run from the project root:
     streamlit run taxonomy_agent/app.py
 
 The app shells out to `python -m taxonomy_agent` so the agent itself stays
-decoupled from the UI process.
+decoupled from the UI process. The subprocess is started detached
+(`start_new_session=True`) and its stdout is redirected to a log file in the
+output directory, so closing the browser tab does not kill the run.
 """
 from __future__ import annotations
 
@@ -15,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -22,6 +25,7 @@ import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EXAMPLE_DIR = Path(__file__).resolve().parent / "example"
+DEFAULT_RUNS_ROOT = PROJECT_ROOT / "taxonomy_runs"
 
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
 st.title("Taxonomy Agent")
@@ -85,7 +89,7 @@ with st.sidebar:
         )
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
-run_tab, results_tab = st.tabs(["Run", "Results"])
+run_tab, runs_tab, results_tab = st.tabs(["Run", "Runs", "Results"])
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
@@ -183,24 +187,48 @@ with run_tab:
             env["OPENROUTER_API_KEY"] = api_key
             env["PYTHONUNBUFFERED"] = "1"
 
-            st.info(f"Running: `{' '.join(cmd[:5])} …`  →  output: `{out_abs}`")
+            # Set up the log file — the subprocess writes here directly so we
+            # don't have to drain a PIPE (which would fill if Streamlit dies).
+            out_path = Path(out_abs)
+            out_path.mkdir(parents=True, exist_ok=True)
+            log_path = out_path / "run.log"
+            log_w = open(log_path, "w")
+
+            st.info(
+                f"Running: `{' '.join(cmd[:5])} …`  →  output: `{out_abs}`\n\n"
+                f"This run is **detached** — closing this tab is safe; the run "
+                f"continues in the background. Find it later in the **Runs** tab."
+            )
             with st.spinner("Agent running — streaming logs below…"):
                 try:
                     proc = subprocess.Popen(
                         cmd,
-                        stdout=subprocess.PIPE,
+                        stdout=log_w,
                         stderr=subprocess.STDOUT,
-                        bufsize=1,
                         text=True,
                         env=env,
                         cwd=str(PROJECT_ROOT),
+                        start_new_session=True,  # detach: outlive Streamlit
                     )
-                    for line in proc.stdout:  # type: ignore[union-attr]
-                        ss.log_lines.append(line.rstrip())
-                        log_box.code(
-                            "\n".join(ss.log_lines[-400:]), language="text",
-                        )
-                    proc.wait()
+                    # Tail the log file. The subprocess survives if Streamlit
+                    # tears down this script — the parent's log_w handle goes
+                    # away but the subprocess still has its own fd.
+                    log_r = open(log_path, "r")
+                    while proc.poll() is None:
+                        line = log_r.readline()
+                        if line:
+                            ss.log_lines.append(line.rstrip())
+                            log_box.code(
+                                "\n".join(ss.log_lines[-400:]), language="text",
+                            )
+                        else:
+                            time.sleep(0.3)
+                    # Drain anything written between the last readline and exit
+                    for line in log_r.read().splitlines():
+                        ss.log_lines.append(line)
+                    log_box.code("\n".join(ss.log_lines[-400:]), language="text")
+                    log_r.close()
+                    log_w.close()
                 except Exception as e:
                     ss.running = False
                     st.exception(e)
@@ -214,6 +242,101 @@ with run_tab:
                 st.error(f"Agent exited with code {proc.returncode}. Inspect the log above.")
     elif ss.log_lines:
         log_box.code("\n".join(ss.log_lines[-400:]), language="text")
+
+# ── Runs tab ────────────────────────────────────────────────────────────────
+with runs_tab:
+    st.subheader("All runs")
+    runs_root_str = st.text_input(
+        "Runs directory",
+        value=str(DEFAULT_RUNS_ROOT),
+        help=("Directory to scan for past runs. Each run is a subdirectory "
+              "containing meta.json (and taxonomy.json once the run finalizes)."),
+    )
+    if st.button("🔄 Refresh"):
+        st.rerun()
+
+    runs_root = Path(runs_root_str).expanduser()
+    if not runs_root.exists():
+        st.info(
+            f"`{runs_root}` does not exist yet. UI-launched runs default to "
+            f"this directory and will appear here. To list runs from elsewhere, "
+            f"point this field at the parent directory containing them."
+        )
+    else:
+        rows = []
+        for d in sorted(runs_root.iterdir(),
+                        key=lambda x: x.stat().st_mtime, reverse=True):
+            if not d.is_dir():
+                continue
+            meta_path = d / "meta.json"
+            tax_path = d / "taxonomy.json"
+            if not meta_path.exists() and not tax_path.exists():
+                continue
+            row = {"dir": str(d), "name": d.name, "mtime": d.stat().st_mtime}
+            if meta_path.exists():
+                try:
+                    row.update(json.load(open(meta_path)))
+                except Exception:
+                    pass
+            if tax_path.exists():
+                try:
+                    art = json.load(open(tax_path))
+                    row["n_categories"] = len(art.get("taxonomy", []))
+                    row["n_items"] = art.get("n_items")
+                    row["n_judge_errors"] = art.get("n_judge_errors")
+                    # taxonomy.json wins over a stale meta.status="running"
+                    row["status"] = "ok"
+                except Exception:
+                    pass
+            row.setdefault("status", "unknown")
+            rows.append(row)
+
+        if not rows:
+            st.info("No runs found in this directory yet.")
+        else:
+            st.write(f"Found **{len(rows)}** run(s).")
+            badges = {
+                "ok":         "✅ Completed",
+                "running":    "⏳ In progress",
+                "incomplete": "⚠️ Incomplete",
+                "unknown":    "❓ Unknown",
+            }
+            for r in rows:
+                badge = badges.get(r["status"], r["status"])
+                started = r.get("started_at") or datetime.fromtimestamp(
+                    r["mtime"]).isoformat(timespec="seconds")
+                instr_short = (r.get("instruction") or "")[:80]
+                if len(r.get("instruction") or "") > 80:
+                    instr_short += "…"
+                header = f"**{r['name']}** — {badge} — {started}"
+                if instr_short:
+                    header += f"  ·  {instr_short}"
+                with st.expander(header):
+                    if r.get("instruction"):
+                        st.markdown(f"**Instruction:** {r['instruction']}")
+                    cols = st.columns(4)
+                    cols[0].metric("Items", r.get("n_items", "—"))
+                    cols[1].metric("Categories", r.get("n_categories", "—"))
+                    cols[2].metric("Judge errors", r.get("n_judge_errors", "—"))
+                    if r.get("orchestrator_model"):
+                        cols[3].metric(
+                            "Orchestrator",
+                            str(r["orchestrator_model"]).split("/")[-1],
+                        )
+                    st.caption(f"Path: `{r['dir']}`")
+                    if st.button("Load in Results tab", key=f"load_{r['dir']}"):
+                        ss.result_dir = r["dir"]
+                        st.success(
+                            f"Loaded — switch to the **Results** tab to view."
+                        )
+                    log_path = Path(r["dir"]) / "run.log"
+                    if log_path.exists():
+                        with st.expander("Show last 50 log lines", expanded=False):
+                            try:
+                                lines = log_path.read_text().splitlines()[-50:]
+                                st.code("\n".join(lines), language="text")
+                            except Exception as e:
+                                st.warning(f"Could not read log: {e}")
 
 # ── Results tab ─────────────────────────────────────────────────────────────
 with results_tab:
