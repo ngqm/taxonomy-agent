@@ -179,6 +179,12 @@ with st.sidebar:
 
     with st.expander("Discovery loop", expanded=True):
         max_iters = st.number_input("Max iterations", 1, 50, 10)
+        min_iters = st.number_input(
+            "Min iterations", 0, 50, 3,
+            help="Floor on classify_with_judge rounds before convergence is "
+                 "allowed. Prevents premature finalize on a lucky early probe. "
+                 "Must be ≤ max iterations.",
+        )
         threshold = st.slider(
             "Don't-fit threshold", 0.0, 0.5, 0.10, 0.01,
             help="Stop when fewer than this fraction of a fresh probe falls outside the taxonomy.",
@@ -319,6 +325,12 @@ with run_tab:
             st.error("Instruction is required.")
         elif not api_key:
             st.error("OpenRouter API key is required.")
+        elif int(min_iters) > int(max_iters):
+            st.error(
+                f"Min iterations ({int(min_iters)}) cannot exceed "
+                f"max iterations ({int(max_iters)}) — the floor would be "
+                f"unreachable."
+            )
         else:
             ss.log_lines = []
             ss.running = True
@@ -337,6 +349,7 @@ with run_tab:
                 "--orchestrator", orchestrator,
                 "--judge", judge,
                 "--max-iters", str(int(max_iters)),
+                "--min-iters", str(int(min_iters)),
                 "--threshold", str(float(threshold)),
                 "--probe-size", str(int(probe_size)),
                 "--concurrency", str(int(concurrency)),

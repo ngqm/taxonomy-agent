@@ -95,6 +95,11 @@ def main() -> None:
                    default=cfg.get("judge", "meta-llama/llama-3.3-70b-instruct"))
     p.add_argument("--max-iters", type=int,
                    default=cfg.get("max_iters", 10))
+    p.add_argument("--min-iters", type=int,
+                   default=cfg.get("min_iters", 3),
+                   help="Minimum classify_with_judge rounds before "
+                        "finalize_classify is allowed (default 3). Prevents "
+                        "premature convergence on a lucky early probe.")
     p.add_argument("--threshold", type=float,
                    default=cfg.get("threshold", 0.10),
                    help="Don't-fit rate for early stop (default 0.10 = 10%%)")
@@ -148,6 +153,7 @@ def main() -> None:
         orchestrator_model=args.orchestrator,
         judge_model=args.judge,
         max_iterations=args.max_iters,
+        min_iterations=args.min_iters,
         converge_below=args.threshold,
         probe_size=args.probe_size,
         pool_limit=args.pool_limit,

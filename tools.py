@@ -241,11 +241,17 @@ def _apply_ops(state: _TaxonomyState,
 
 def make_tools(items: list[dict], run_id: str, output_dir: str,
                judge_call, judge_parallel,
-               concurrency: int = 8, seed: int = 42, max_iters: int = 10):
+               concurrency: int = 8, seed: int = 42, max_iters: int = 10,
+               min_iterations: int = 0):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
-    it through `revise_taxonomy` and reads it via `get_taxonomy`."""
+    it through `revise_taxonomy` and reads it via `get_taxonomy`.
+
+    `min_iterations` is a floor on the number of `classify_with_judge` calls
+    required before `finalize_classify` is allowed — guards against premature
+    convergence on a lucky early probe. 0 means no floor (used at the tool
+    layer in tests). `run()` defaults this to 3."""
     pool_by_id = {it["id"]: it for it in items}
     rng = random.Random(seed)
     # Cap classify_with_judge calls so a runaway orchestrator can't loop past
@@ -450,6 +456,12 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         taxonomy = state.taxonomy
         if not taxonomy:
             return "ERROR: taxonomy is empty. Call revise_taxonomy(add ...) before finalizing."
+        if state.classify_calls < min_iterations:
+            return (f"ERROR: finalize_classify requires at least {min_iterations} "
+                    f"classification rounds before convergence is allowed (you have "
+                    f"completed {state.classify_calls}). A single lucky probe is not "
+                    f"enough. Sample more items and call classify_with_judge to keep "
+                    f"iterating.")
         if state.finalized_at == taxonomy:
             return (f"ERROR: finalize_classify already ran with this taxonomy. "
                     f"The artifact at {artifact_path} is up to date — stop here. "

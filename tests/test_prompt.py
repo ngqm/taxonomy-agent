@@ -7,7 +7,7 @@ from taxonomy_agent.prompts import SYSTEM_PROMPT_TEMPLATE
 def _render(**overrides) -> str:
     base = dict(
         instruction="X", n_items=10, threshold=0.10, probe_size=20,
-        max_iters=10, size_aside="", focus_bullet="",
+        max_iters=10, min_iters=3, size_aside="", focus_bullet="",
     )
     base.update(overrides)
     return SYSTEM_PROMPT_TEMPLATE.format(**base)
@@ -56,6 +56,16 @@ def test_constraints_section_intact_after_focus_bullet_removal():
     rendered = _render()
     assert "Names: short snake_case" in rendered
     assert "JSON-only replies" in rendered
+
+
+def test_min_iters_appears_in_stop_rule_and_loop():
+    """The floor on classification rounds is mentioned in both the high-level
+    stop rule and the per-iteration loop guidance, so the orchestrator can't
+    miss it."""
+    rendered = _render(min_iters=5)
+    # Mentioned at least twice — once in the "Your job" stop rule, once in the
+    # iteration loop's convergence step.
+    assert rendered.count("5 classification rounds") + rendered.count("5 classify rounds") >= 2
 
 
 def test_strategies_focus_renders_naturally():

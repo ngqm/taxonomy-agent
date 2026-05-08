@@ -61,6 +61,7 @@ def run(
     orchestrator_model: str = "anthropic/claude-sonnet-4.6",
     judge_model: str = "meta-llama/llama-3.3-70b-instruct",
     max_iterations: int = 10,
+    min_iterations: int = 3,
     converge_below: float = 0.10,
     probe_size: int = 20,
     pool_limit: int | None = None,
@@ -83,6 +84,10 @@ def run(
         output_dir: directory for taxonomy.json and trace.jsonl.
         orchestrator_model, judge_model: OpenRouter model IDs.
         max_iterations: hard cap on the discovery loop.
+        min_iterations: floor on the number of `classify_with_judge` rounds
+            before `finalize_classify` is allowed. Guards against premature
+            convergence on a lucky early probe. Default 3. Must be ≤
+            max_iterations.
         converge_below: don't-fit rate threshold for early stop (0.10 = 10%).
         probe_size: K — number of items per discovery probe batch.
         pool_limit: optional cap on items used (smoke testing).
@@ -111,6 +116,13 @@ def run(
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY missing. Pass api_key= or set the env var.")
 
+    if min_iterations < 0:
+        raise ValueError(f"min_iterations must be ≥ 0, got {min_iterations}")
+    if min_iterations > max_iterations:
+        raise ValueError(f"min_iterations ({min_iterations}) cannot exceed "
+                         f"max_iterations ({max_iterations}) — the floor would "
+                         f"be unreachable.")
+
     items_list = _load_items(items)
     if pool_limit:
         items_list = items_list[:pool_limit]
@@ -137,6 +149,7 @@ def run(
         "judge_model": judge_model,
         "size_hint": size_hint,
         "category_focus": category_focus,
+        "min_iterations": min_iterations,
         "status": "running",
     }
     with open(meta_path, "w") as f:
@@ -144,7 +157,8 @@ def run(
 
     judge_call, judge_parallel = make_judge_caller(api_key, judge_model, base_url=base_url)
     tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
-                       concurrency=concurrency, max_iters=max_iterations)
+                       concurrency=concurrency, max_iters=max_iterations,
+                       min_iterations=min_iterations)
 
     llm = ChatOpenAI(
         model=orchestrator_model,
@@ -167,6 +181,7 @@ def run(
         threshold=converge_below,
         probe_size=probe_size,
         max_iters=max_iterations,
+        min_iters=min_iterations,
         size_aside=size_aside,
         focus_bullet=focus_bullet,
     )
