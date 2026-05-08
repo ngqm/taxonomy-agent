@@ -332,6 +332,63 @@ def test_finalize_empty_taxonomy_errors(items5, null_judge, make_tool_set):
     assert "taxonomy is empty" in out
 
 
+def test_finalize_blocked_below_min_iterations(items5, make_tool_set):
+    """With min_iterations=3 and 0 classify calls, finalize must refuse."""
+    def parallel(prompts, **k):
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    def call(*a, **k):
+        return None
+
+    t = make_tool_set(items5, call, parallel, min_iterations=3)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "ERROR" in out
+    assert "at least 3" in out
+    assert "completed 0" in out
+
+
+def test_finalize_allowed_at_min_iterations(items50, make_tool_set):
+    """Once classify_calls reaches min_iterations, finalize succeeds."""
+    def parallel(prompts, **k):
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    def call(*a, **k):
+        return None
+
+    t = make_tool_set(items50, call, parallel, min_iterations=2)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    t["classify"].invoke({"item_ids": ["1"], "classify_prompt": "p"})
+    # 1 classify call — still below floor.
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "ERROR" in out and "at least 2" in out
+    t["classify"].invoke({"item_ids": ["2"], "classify_prompt": "p"})
+    # 2 classify calls — at the floor, allowed.
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "Wrote" in out
+
+
+def test_min_iterations_zero_means_no_floor(items5, make_tool_set):
+    """The default make_tools min_iterations=0 keeps existing tool-layer
+    tests working — finalize allowed with 0 classify calls."""
+    def parallel(prompts, **k):
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    def call(*a, **k):
+        return None
+
+    t = make_tool_set(items5, call, parallel)  # default min_iterations=0
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "Wrote" in out
+
+
 # === trace.jsonl ===
 
 def test_trace_records_revise_and_classify(items50, make_tool_set, tmp_path):

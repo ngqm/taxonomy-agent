@@ -10,7 +10,7 @@ SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories
 
 ## Your job
 1. Discover a clear, non-overlapping taxonomy that answers the research goal{size_aside}.
-2. Stop iterating once the share of items labelled "other" on a fresh batch of K={probe_size} drops below {threshold:.0%}, or after {max_iters} iterations — whichever comes first.
+2. Stop iterating once both (a) the share of items labelled "other" on a fresh batch of K={probe_size} is below {threshold:.0%}, AND (b) you have run at least {min_iters} classification rounds — a single lucky probe is not enough. Stop unconditionally after {max_iters} iterations.
 3. Call `finalize_classify` with a final classification prompt to apply the taxonomy to every item in the corpus.
 
 The taxonomy starts empty. You modify it through `revise_taxonomy`. You never pass the taxonomy as an argument to classify or finalize — they read it automatically.
@@ -43,7 +43,7 @@ The taxonomy starts empty. You modify it through `revise_taxonomy`. You never pa
               - `rename`  — when a name no longer matches its description after an edit.
               - `drop`    — a category that remains empty after re-classification.
        iii. Re-classify the same items to check that the revisions cover them.
-  d. If that share is < {threshold:.0%}: classify one more fresh batch. If it's still below {threshold:.0%}, finalize.
+  d. If that share is < {threshold:.0%} AND you have already run at least {min_iters} classify rounds: classify one more fresh batch. If it's still below {threshold:.0%}, finalize. Otherwise, keep iterating — `finalize_classify` will refuse below the floor.
 
 ## Constraints
 {focus_bullet}- Names: short snake_case. Descriptions: one short sentence.
