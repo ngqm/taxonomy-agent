@@ -250,6 +250,15 @@ Scales linearly with pool size; orchestrator cost grows with iteration count
   counted as `n_judge_errors`, **not** folded into the don't-fit rate.
 - **Audit trail** — every `revise` / `classify` / `novelty` call appends a
   structured entry to `trace.jsonl`.
+- **Live cost tracking** — `cost.json` is rewritten after every orchestrator
+  step with per-model token counts and USD estimates from a built-in price
+  table (`cost.MODEL_PRICES`). The UI shows it live in the Run tab and at
+  rest in Runs and Results.
+- **Partial progress saving** — after every `revise_taxonomy`, the current
+  working taxonomy is written to `taxonomy_state.json`. During
+  `finalize_classify`, each per-item label is streamed to
+  `classifications.jsonl` as it returns. A crashed run keeps both files; the
+  Results tab loads them automatically when `taxonomy.json` is missing.
 
 ---
 
@@ -260,9 +269,10 @@ pip install pytest
 python -m pytest taxonomy_agent/tests/ -v
 ```
 
-68 unit tests covering input parsing, taxonomy ops, JSON extraction, the six
-tools' behaviours, and the judge's retry path. They use stub judges so the
-suite runs offline in under a second — no API key required.
+106 unit tests covering input parsing, taxonomy ops, JSON extraction, the six
+tools' behaviours, the judge's retry path, cost accounting, and partial-save
+streaming. They use stub judges so the suite runs offline in under a second —
+no API key required.
 
 ---
 

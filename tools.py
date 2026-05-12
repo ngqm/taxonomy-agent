@@ -6,6 +6,7 @@ import json
 import os
 import random
 import re
+import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -263,7 +264,16 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
 
     trace_path = os.path.join(output_dir, "trace.jsonl")
     artifact_path = os.path.join(output_dir, "taxonomy.json")
+    state_path = os.path.join(output_dir, "taxonomy_state.json")
+    classifications_jsonl = os.path.join(output_dir, "classifications.jsonl")
     os.makedirs(output_dir, exist_ok=True)
+
+    def _write_taxonomy_state() -> None:
+        """Persist the current working taxonomy so a crashed run still has the
+        latest categories on disk, not just buried in trace.jsonl."""
+        with open(state_path, "w") as f:
+            json.dump({"taxonomy": state.taxonomy,
+                       "n_classify_calls": state.classify_calls}, f, indent=2)
 
     @tool
     def sample_items(k: int) -> str:
@@ -316,6 +326,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             "applied": applied,
             "taxonomy_after": new_tax,
         })
+        _write_taxonomy_state()
         return json.dumps({"applied": applied, "taxonomy": new_tax}, indent=2)
 
     @tool
@@ -472,7 +483,29 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             f"{hardened}\n\n## Categories\n{tax_str}\n\n## Item to classify\n{_format_item(it, 1)}"
             for it in items
         ]
-        replies = judge_parallel(prompts, concurrency=concurrency * 2, max_tokens=300)
+
+        # Stream per-item rows to classifications.jsonl as the judge returns
+        # them. If the process is killed mid-finalize, the user keeps whatever
+        # labels arrived; the consolidated taxonomy.json is written only after
+        # the parallel batch completes successfully. Truncate any stale file
+        # from a previous attempt before we start writing.
+        open(classifications_jsonl, "w").close()
+        write_lock = threading.Lock()
+
+        def _on_reply(idx: int, rep: str | None) -> None:
+            it = items[idx]
+            if rep is None:
+                cat, rat = "other", JUDGE_ERROR_RATIONALE
+            else:
+                parsed = _parse_json_block(rep)
+                cat, rat = _coerce_category(parsed, taxonomy)
+            row = {**it, "category": cat, "rationale": rat}
+            with write_lock:
+                with open(classifications_jsonl, "a") as f:
+                    f.write(json.dumps(row) + "\n")
+
+        replies = judge_parallel(prompts, concurrency=concurrency * 2,
+                                 max_tokens=300, on_reply=_on_reply)
         classifications: list[dict] = []
         category_counts: dict[str, int] = {}
         n_coerced = 0

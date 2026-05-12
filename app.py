@@ -83,6 +83,43 @@ def _estimate_cost(n_items: int, max_iters: int, probe_size: int) -> dict:
     }
 
 
+def _render_cost_panel(box, cost_path: "Path") -> None:
+    """Read cost.json (if present) and render a small live-cost panel.
+    Resilient to a half-written file mid-flush."""
+    if not cost_path.exists():
+        return
+    try:
+        body = json.loads(cost_path.read_text())
+    except Exception:
+        return
+    orch = body.get("orchestrator", {}) or {}
+    judge = body.get("judge", {}) or {}
+    total_usd = body.get("total_usd")
+    with box.container():
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric(
+            "Total cost",
+            f"${total_usd:.4f}" if total_usd is not None else "—",
+            help="Sum of orchestrator + judge USD if both models are priced. "
+                 "Tokens are tracked regardless.",
+        )
+        c2.metric(
+            "Orchestrator",
+            f"${orch.get('usd'):.4f}" if orch.get("usd") is not None else "—",
+            help=f"{orch.get('n_calls', 0)} calls · "
+                 f"{orch.get('input_tokens', 0):,} in / "
+                 f"{orch.get('output_tokens', 0):,} out tokens",
+        )
+        c3.metric(
+            "Judge",
+            f"${judge.get('usd'):.4f}" if judge.get("usd") is not None else "—",
+            help=f"{judge.get('n_calls', 0)} calls · "
+                 f"{judge.get('input_tokens', 0):,} in / "
+                 f"{judge.get('output_tokens', 0):,} out tokens",
+        )
+        c4.metric("Judge calls", judge.get("n_calls", 0))
+
+
 # Curated OpenRouter model IDs for the sidebar dropdowns. The first entry of
 # each list is the default. "Custom…" reveals a text input so the user can
 # plug in any other model OpenRouter exposes.
@@ -316,6 +353,7 @@ with run_tab:
     c1, c2 = st.columns([1, 5])
     start = c1.button("▶ Start run", type="primary", disabled=ss.running)
 
+    cost_box = st.empty()
     log_box = st.empty()
 
     if start:
@@ -392,6 +430,7 @@ with run_tab:
                     # tears down this script — the parent's log_w handle goes
                     # away but the subprocess still has its own fd.
                     log_r = open(log_path, "r")
+                    cost_path = out_path / "cost.json"
                     while proc.poll() is None:
                         line = log_r.readline()
                         if line:
@@ -399,12 +438,15 @@ with run_tab:
                             log_box.code(
                                 "\n".join(ss.log_lines[-400:]), language="text",
                             )
+                            _render_cost_panel(cost_box, cost_path)
                         else:
+                            _render_cost_panel(cost_box, cost_path)
                             time.sleep(0.3)
                     # Drain anything written between the last readline and exit
                     for line in log_r.read().splitlines():
                         ss.log_lines.append(line)
                     log_box.code("\n".join(ss.log_lines[-400:]), language="text")
+                    _render_cost_panel(cost_box, cost_path)
                     log_r.close()
                     log_w.close()
                 except Exception as e:
@@ -456,6 +498,12 @@ with runs_tab:
                     row.update(json.load(open(meta_path)))
                 except Exception:
                     pass
+            cost_path = d / "cost.json"
+            if cost_path.exists():
+                try:
+                    row["cost"] = json.load(open(cost_path))
+                except Exception:
+                    pass
             if tax_path.exists():
                 try:
                     art = json.load(open(tax_path))
@@ -496,11 +544,14 @@ with runs_tab:
                     cols[0].metric("Items", r.get("n_items", "—"))
                     cols[1].metric("Categories", r.get("n_categories", "—"))
                     cols[2].metric("Judge errors", r.get("n_judge_errors", "—"))
+                    total_usd = (r.get("cost") or {}).get("total_usd")
+                    cols[3].metric(
+                        "Cost",
+                        f"${total_usd:.4f}" if total_usd is not None else "—",
+                    )
                     if r.get("orchestrator_model"):
-                        cols[3].metric(
-                            "Orchestrator",
-                            str(r["orchestrator_model"]).split("/")[-1],
-                        )
+                        st.caption(f"Orchestrator: `{r['orchestrator_model']}` · "
+                                   f"Judge: `{r.get('judge_model', '?')}`")
                     st.caption(f"Path: `{r['dir']}`")
                     if st.button("Load in Results tab", key=f"load_{r['dir']}"):
                         ss.result_dir = r["dir"]
@@ -529,7 +580,46 @@ with results_tab:
         cand_path = Path(candidate).expanduser()
         artifact_path = cand_path / "taxonomy.json"
         if not artifact_path.exists():
-            st.warning(f"No `taxonomy.json` in `{cand_path}`.")
+            # Surface partial state if the run didn't finalize cleanly.
+            state_path = cand_path / "taxonomy_state.json"
+            partial_jsonl = cand_path / "classifications.jsonl"
+            if state_path.exists() or partial_jsonl.exists():
+                st.warning(
+                    f"`taxonomy.json` is missing in `{cand_path}` — the run "
+                    f"did not finalize cleanly. Showing recoverable partial state."
+                )
+                if state_path.exists():
+                    try:
+                        state_body = json.loads(state_path.read_text())
+                        st.subheader("Working taxonomy at last revise")
+                        for cat in state_body.get("taxonomy", []):
+                            st.markdown(
+                                f"- **{cat.get('name')}** — {cat.get('description', '')}"
+                            )
+                        st.caption(
+                            f"`n_classify_calls={state_body.get('n_classify_calls', '?')}`"
+                        )
+                    except Exception as e:
+                        st.warning(f"Could not read taxonomy_state.json: {e}")
+                if partial_jsonl.exists():
+                    try:
+                        lines = [
+                            json.loads(l) for l in partial_jsonl.read_text().splitlines() if l.strip()
+                        ]
+                        st.subheader(f"Streamed classifications ({len(lines):,} rows)")
+                        if lines:
+                            partial_df = pd.DataFrame(lines)
+                            st.dataframe(partial_df, height=300, use_container_width=True)
+                            st.download_button(
+                                "classifications.jsonl",
+                                partial_jsonl.read_bytes(),
+                                file_name="classifications.jsonl",
+                                mime="application/x-ndjson",
+                            )
+                    except Exception as e:
+                        st.warning(f"Could not read classifications.jsonl: {e}")
+            else:
+                st.warning(f"No `taxonomy.json` in `{cand_path}`.")
         else:
             with open(artifact_path) as f:
                 art = json.load(f)
@@ -539,6 +629,36 @@ with results_tab:
             m2.metric("Categories", len(art.get("taxonomy", [])))
             m3.metric("Coerced → other", art.get("n_coerced", 0))
             m4.metric("Run ID", art.get("run_id", "?"))
+
+            cost_path = cand_path / "cost.json"
+            if cost_path.exists():
+                try:
+                    cost_body = json.loads(cost_path.read_text())
+                    orch = cost_body.get("orchestrator", {}) or {}
+                    judge = cost_body.get("judge", {}) or {}
+                    total_usd = cost_body.get("total_usd")
+                    st.subheader("Cost")
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric(
+                        "Total",
+                        f"${total_usd:.4f}" if total_usd is not None else "—",
+                    )
+                    c2.metric(
+                        "Orchestrator",
+                        f"${orch.get('usd'):.4f}" if orch.get("usd") is not None else "—",
+                        help=f"{orch.get('n_calls', 0)} calls · "
+                             f"{orch.get('input_tokens', 0):,}/"
+                             f"{orch.get('output_tokens', 0):,} tokens",
+                    )
+                    c3.metric(
+                        "Judge",
+                        f"${judge.get('usd'):.4f}" if judge.get("usd") is not None else "—",
+                        help=f"{judge.get('n_calls', 0)} calls · "
+                             f"{judge.get('input_tokens', 0):,}/"
+                             f"{judge.get('output_tokens', 0):,} tokens",
+                    )
+                except Exception:
+                    pass
 
             counts: dict = art.get("category_counts", {}) or {}
 
