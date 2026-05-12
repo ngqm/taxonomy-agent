@@ -81,3 +81,94 @@ def test_parallel_isolates_per_prompt_failures():
          patch("taxonomy_agent.judge.time.sleep"):
         out = parallel(["good1", "fail", "good2"], concurrency=2)
     assert out == ["ok", None, "ok"]
+
+
+def _ok_resp_with_usage(content: str = "ok",
+                         prompt_tokens: int = 10,
+                         completion_tokens: int = 5) -> MagicMock:
+    r = MagicMock()
+    r.raise_for_status = lambda: None
+    r.json.return_value = {
+        "choices": [{"message": {"content": content}}],
+        "usage": {"prompt_tokens": prompt_tokens,
+                   "completion_tokens": completion_tokens,
+                   "total_tokens": prompt_tokens + completion_tokens},
+    }
+    return r
+
+
+def test_usage_sink_called_per_successful_call():
+    captured: list[dict] = []
+    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_ok_resp_with_usage(prompt_tokens=42, completion_tokens=7)):
+        call("prompt")
+    assert captured == [{"prompt_tokens": 42, "completion_tokens": 7,
+                          "total_tokens": 49}]
+
+
+def test_usage_sink_not_called_on_failure():
+    captured: list[dict] = []
+    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+
+    def fake_post(*a, **k):
+        raise RuntimeError("network")
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.time.sleep"):
+        out = call("prompt")
+    assert out is None
+    assert captured == []
+
+
+def test_usage_sink_error_does_not_break_call():
+    """A buggy sink must not poison the judge result — accounting is best-effort."""
+    def boom(usage):
+        raise RuntimeError("sink exploded")
+
+    call, _ = make_judge_caller("k", "model", usage_sink=boom)
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_ok_resp_with_usage()):
+        assert call("prompt") == "ok"
+
+
+def test_parallel_on_reply_fires_per_completion():
+    """on_reply must be called once per future result, with (index, reply)."""
+    _, parallel = make_judge_caller("k", "model")
+
+    def fake_post(*a, data=None, **kw):
+        body = _json.loads(data)
+        return _ok_resp(content=f"reply_to_{body['messages'][0]['content']}")
+
+    received: list[tuple[int, str | None]] = []
+
+    def on_reply(i, rep):
+        received.append((i, rep))
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post):
+        out = parallel(["a", "b", "c"], concurrency=2, on_reply=on_reply)
+
+    assert out == ["reply_to_a", "reply_to_b", "reply_to_c"]
+    # All three indices appear (order across threads isn't guaranteed).
+    assert sorted(received) == [(0, "reply_to_a"), (1, "reply_to_b"), (2, "reply_to_c")]
+
+
+def test_parallel_on_reply_fires_for_failures_too():
+    """A None result must still trigger on_reply so the streaming sink can
+    persist a placeholder."""
+    _, parallel = make_judge_caller("k", "model")
+
+    def fake_post(*a, data=None, **kw):
+        body = _json.loads(data)
+        if "fail" in body["messages"][0]["content"]:
+            raise RuntimeError("network")
+        return _ok_resp(content="ok")
+
+    received: list[tuple[int, str | None]] = []
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.time.sleep"):
+        parallel(["good", "fail"], concurrency=2,
+                 on_reply=lambda i, r: received.append((i, r)))
+
+    assert sorted(received) == [(0, "ok"), (1, None)]

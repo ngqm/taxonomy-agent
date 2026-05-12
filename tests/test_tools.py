@@ -389,6 +389,83 @@ def test_min_iterations_zero_means_no_floor(items5, make_tool_set):
     assert "Wrote" in out
 
 
+# === partial save: taxonomy_state.json + classifications.jsonl ===
+
+def test_revise_writes_taxonomy_state(items5, null_judge, make_tool_set, tmp_path):
+    """After every revise call, taxonomy_state.json reflects the current taxonomy
+    so a crashed run still has the latest categories on disk."""
+    t = make_tool_set(items5, *null_judge)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    state = json.load(open(os.path.join(str(tmp_path), "taxonomy_state.json")))
+    assert state["taxonomy"] == [{"name": "a", "description": "d"}]
+    assert state["n_classify_calls"] == 0
+
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "b", "description": "d2"}
+    ]})
+    state = json.load(open(os.path.join(str(tmp_path), "taxonomy_state.json")))
+    assert {c["name"] for c in state["taxonomy"]} == {"a", "b"}
+
+
+def test_finalize_streams_classifications_jsonl(items5, make_tool_set, tmp_path):
+    """Each per-item judge reply lands in classifications.jsonl as it arrives,
+    so a crash mid-finalize keeps the rows that already finished."""
+    def parallel(prompts, on_reply=None, **k):
+        replies = ['{"category": "a", "rationale": "r"}'] * len(prompts)
+        # Match production behaviour: invoke on_reply for each completion.
+        for i, rep in enumerate(replies):
+            if on_reply is not None:
+                on_reply(i, rep)
+        return replies
+
+    def call(*a, **k):
+        return None
+
+    t = make_tool_set(items5, call, parallel)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    t["finalize"].invoke({"final_prompt": "p"})
+
+    jsonl_path = os.path.join(str(tmp_path), "classifications.jsonl")
+    lines = open(jsonl_path).read().strip().splitlines()
+    assert len(lines) == 5  # one row per item
+    parsed = [json.loads(l) for l in lines]
+    assert all(r["category"] == "a" for r in parsed)
+    # Every input item id must appear exactly once.
+    assert {r["id"] for r in parsed} == {"0", "1", "2", "3", "4"}
+
+
+def test_finalize_truncates_stale_classifications_jsonl(items5, make_tool_set, tmp_path):
+    """A prior partial file from a previous finalize attempt should be cleared
+    at the start of the next finalize, not appended to."""
+    jsonl_path = os.path.join(str(tmp_path), "classifications.jsonl")
+    with open(jsonl_path, "w") as f:
+        f.write('{"id": "stale", "category": "x", "rationale": "old"}\n')
+
+    def parallel(prompts, on_reply=None, **k):
+        replies = ['{"category": "a", "rationale": "r"}'] * len(prompts)
+        for i, rep in enumerate(replies):
+            if on_reply is not None:
+                on_reply(i, rep)
+        return replies
+
+    def call(*a, **k):
+        return None
+
+    t = make_tool_set(items5, call, parallel)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}
+    ]})
+    t["finalize"].invoke({"final_prompt": "p"})
+
+    lines = open(jsonl_path).read().strip().splitlines()
+    assert len(lines) == 5
+    assert not any('"id": "stale"' in l for l in lines)
+
+
 # === trace.jsonl ===
 
 def test_trace_records_revise_and_classify(items50, make_tool_set, tmp_path):

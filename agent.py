@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
+from .cost import CostTracker
 from .judge import make_judge_caller
 from .prompts import SYSTEM_PROMPT_TEMPLATE
 from .tools import make_tools
@@ -155,7 +156,16 @@ def run(
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
 
-    judge_call, judge_parallel = make_judge_caller(api_key, judge_model, base_url=base_url)
+    cost = CostTracker(
+        orchestrator_model=orchestrator_model,
+        judge_model=judge_model,
+        output_dir=output_dir,
+    )
+    cost.write()  # zero-state cost.json so the UI can read it immediately
+
+    judge_call, judge_parallel = make_judge_caller(
+        api_key, judge_model, base_url=base_url, usage_sink=cost.add_judge_usage,
+    )
     tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
                        concurrency=concurrency, max_iters=max_iterations,
                        min_iterations=min_iterations)
@@ -189,36 +199,70 @@ def run(
     agent = create_react_agent(llm, tools, prompt=sys_prompt)
     cfg = {"recursion_limit": recursion_limit}
     kickoff = "Begin the analysis."
-    for event in agent.stream(
-        {"messages": [{"role": "user", "content": kickoff}]},
-        cfg,
-        stream_mode="values",
-    ):
-        msgs = event.get("messages", [])
-        if not msgs:
-            continue
-        last = msgs[-1]
-        if hasattr(last, "pretty_print"):
-            last.pretty_print()
-        else:
-            print(last)
+    seen_message_ids: set[str] = set()
+    stream_error: Exception | None = None
+    try:
+        for event in agent.stream(
+            {"messages": [{"role": "user", "content": kickoff}]},
+            cfg,
+            stream_mode="values",
+        ):
+            msgs = event.get("messages", [])
+            if not msgs:
+                continue
+            # stream_mode="values" emits the full message list each step, so we
+            # dedupe on message id to avoid double-counting usage.
+            for m in msgs:
+                mid = getattr(m, "id", None)
+                if mid and mid not in seen_message_ids:
+                    seen_message_ids.add(mid)
+                    usage = getattr(m, "usage_metadata", None)
+                    if usage:
+                        cost.add_orchestrator_usage(usage)
+            last = msgs[-1]
+            if hasattr(last, "pretty_print"):
+                last.pretty_print()
+            else:
+                print(last)
+            cost.write()  # refresh cost.json each agent step
+    except Exception as e:
+        stream_error = e
+        print(f"[taxonomy_agent] orchestrator stream raised: {e!r} — flushing "
+              f"partial state and exiting.")
 
     artifact_path = os.path.join(output_dir, "taxonomy.json")
     out: dict = {"run_id": run_id, "output_dir": output_dir, "artifact_path": artifact_path}
-    if os.path.exists(artifact_path):
+    if os.path.exists(artifact_path) and stream_error is None:
         with open(artifact_path) as f:
             out["artifact"] = json.load(f)
         out["status"] = "ok"
         print(f"[taxonomy_agent] done → {artifact_path}")
     else:
-        out["status"] = "incomplete"
-        print(f"[taxonomy_agent] WARNING: stream ended without finalize_classify "
-              f"— no artifact at {artifact_path}. The orchestrator may have hit "
-              f"the recursion limit, the classify budget, or an LLM error mid-run.")
+        out["status"] = "incomplete" if stream_error is None else "error"
+        if stream_error is not None:
+            out["error"] = repr(stream_error)
+        print(f"[taxonomy_agent] WARNING: no artifact at {artifact_path}. "
+              f"Status={out['status']}. The orchestrator may have hit the "
+              f"recursion limit, the classify budget, or an LLM error mid-run. "
+              f"Partial state (latest taxonomy + streamed classifications) is "
+              f"in {output_dir}/taxonomy_state.json and "
+              f"{output_dir}/classifications.jsonl.")
 
+    cost.write()
+    cost_snapshot = cost.snapshot()
+    out["cost"] = cost_snapshot
     meta["status"] = out["status"]
     meta["finished_at"] = datetime.datetime.now().isoformat(timespec="seconds")
+    meta["cost"] = cost_snapshot
     with open(meta_path, "w") as f:
         json.dump(meta, f, indent=2)
+
+    if cost_snapshot["total_usd"] is not None:
+        print(f"[taxonomy_agent] cost: ${cost_snapshot['total_usd']:.4f} "
+              f"(orch={cost_snapshot['orchestrator']['n_calls']} calls, "
+              f"judge={cost_snapshot['judge']['n_calls']} calls)")
+    else:
+        print(f"[taxonomy_agent] tokens recorded; USD unknown for one or both "
+              f"models (not in cost.MODEL_PRICES). See {output_dir}/cost.json.")
 
     return out
