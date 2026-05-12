@@ -45,11 +45,17 @@ class _PerModelTotals:
     input_tokens: int = 0
     output_tokens: int = 0
     n_calls: int = 0
+    native_usd: float = 0.0       # Sum of OpenRouter-reported cost across calls.
+    n_native_priced: int = 0      # How many calls reported a native cost.
 
-    def add(self, in_tok: int, out_tok: int) -> None:
+    def add(self, in_tok: int, out_tok: int,
+            native_cost: float | None = None) -> None:
         self.input_tokens += in_tok
         self.output_tokens += out_tok
         self.n_calls += 1
+        if native_cost is not None:
+            self.native_usd += float(native_cost)
+            self.n_native_priced += 1
 
     def as_dict(self, model: str) -> dict:
         d = {
@@ -58,8 +64,21 @@ class _PerModelTotals:
             "output_tokens": self.output_tokens,
             "n_calls": self.n_calls,
         }
-        cost = usd_cost(model, self.input_tokens, self.output_tokens)
-        d["usd"] = round(cost, 6) if cost is not None else None
+        # Prefer the cost OpenRouter actually charged. Fall back to the static
+        # MODEL_PRICES table only when no calls reported a native cost — this
+        # handles custom models, non-OpenRouter base URLs, and providers that
+        # don't honour `usage.include`.
+        if self.n_native_priced > 0:
+            d["usd"] = round(self.native_usd, 6)
+            d["price_source"] = (
+                "openrouter"
+                if self.n_native_priced == self.n_calls
+                else f"openrouter ({self.n_native_priced}/{self.n_calls} calls)"
+            )
+        else:
+            cost = usd_cost(model, self.input_tokens, self.output_tokens)
+            d["usd"] = round(cost, 6) if cost is not None else None
+            d["price_source"] = "table" if cost is not None else None
         return d
 
 
@@ -75,21 +94,38 @@ class CostTracker:
     _judge: _PerModelTotals = field(default_factory=_PerModelTotals)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
+    @staticmethod
+    def _extract_cost(usage: dict) -> float | None:
+        """OpenRouter returns the charge under `usage.cost` when
+        `usage.include=true` was set on the request. Treat zero as missing —
+        no real call costs literally zero, so a zero value usually means the
+        provider didn't honour the flag."""
+        c = usage.get("cost")
+        if c is None:
+            return None
+        try:
+            c = float(c)
+        except (TypeError, ValueError):
+            return None
+        return c if c > 0 else None
+
     def add_orchestrator_usage(self, usage: dict | None) -> None:
         if not usage:
             return
         in_tok = int(usage.get("input_tokens") or usage.get("prompt_tokens") or 0)
         out_tok = int(usage.get("output_tokens") or usage.get("completion_tokens") or 0)
+        native = self._extract_cost(usage)
         with self._lock:
-            self._orch.add(in_tok, out_tok)
+            self._orch.add(in_tok, out_tok, native_cost=native)
 
     def add_judge_usage(self, usage: dict | None) -> None:
         if not usage:
             return
         in_tok = int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0)
         out_tok = int(usage.get("completion_tokens") or usage.get("output_tokens") or 0)
+        native = self._extract_cost(usage)
         with self._lock:
-            self._judge.add(in_tok, out_tok)
+            self._judge.add(in_tok, out_tok, native_cost=native)
 
     def snapshot(self) -> dict:
         """Return a JSON-serialisable view of current totals."""
@@ -103,10 +139,20 @@ class CostTracker:
             total_usd = orch["usd"]
         elif judge["usd"] is not None:
             total_usd = judge["usd"]
+        sources = {orch.get("price_source"), judge.get("price_source")} - {None}
+        if not sources:
+            total_source = None
+        elif sources == {"openrouter"}:
+            total_source = "openrouter"
+        elif sources == {"table"}:
+            total_source = "table"
+        else:
+            total_source = "mixed"
         return {
             "orchestrator": orch,
             "judge": judge,
             "total_usd": total_usd,
+            "price_source": total_source,
             "price_table_complete": (orch["usd"] is not None
                                      and judge["usd"] is not None),
         }

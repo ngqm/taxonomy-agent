@@ -251,9 +251,12 @@ Scales linearly with pool size; orchestrator cost grows with iteration count
 - **Audit trail** — every `revise` / `classify` / `novelty` call appends a
   structured entry to `trace.jsonl`.
 - **Live cost tracking** — `cost.json` is rewritten after every orchestrator
-  step with per-model token counts and USD estimates from a built-in price
-  table (`cost.MODEL_PRICES`). The UI shows it live in the Run tab and at
-  rest in Runs and Results.
+  step with per-model token counts and USD. Cost comes from OpenRouter's
+  native `usage.cost` field (we set `usage: {include: true}` on every
+  request); the static `cost.MODEL_PRICES` table is only a fallback for
+  endpoints that don't return native cost. The UI shows the current source
+  ("OpenRouter native (exact)" vs. "Static price table (estimate)") next to
+  the figures.
 - **Partial progress saving** — after every `revise_taxonomy`, the current
   working taxonomy is written to `taxonomy_state.json`. During
   `finalize_classify`, each per-item label is streamed to
@@ -269,10 +272,10 @@ pip install pytest
 python -m pytest taxonomy_agent/tests/ -v
 ```
 
-106 unit tests covering input parsing, taxonomy ops, JSON extraction, the six
-tools' behaviours, the judge's retry path, cost accounting, and partial-save
-streaming. They use stub judges so the suite runs offline in under a second —
-no API key required.
+114 unit tests covering input parsing, taxonomy ops, JSON extraction, the six
+tools' behaviours, the judge's retry path, cost accounting (native OpenRouter
++ static-table fallback), and partial-save streaming. They use stub judges so
+the suite runs offline in under a second — no API key required.
 
 ---
 

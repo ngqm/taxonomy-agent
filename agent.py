@@ -175,6 +175,10 @@ def run(
         api_key=api_key,
         base_url=base_url,
         temperature=temperature,
+        # Forward `usage: {include: true}` so OpenRouter returns the actual
+        # charge under usage.cost — CostTracker prefers this over the static
+        # MODEL_PRICES fallback. Harmless for endpoints that ignore it.
+        extra_body={"usage": {"include": True}},
     )
     if size_hint and size_hint.strip():
         size_aside = f" (aim for {size_hint.strip()} categories)"
@@ -218,7 +222,16 @@ def run(
                     seen_message_ids.add(mid)
                     usage = getattr(m, "usage_metadata", None)
                     if usage:
-                        cost.add_orchestrator_usage(usage)
+                        # langchain-openai's standardised usage_metadata drops
+                        # provider-specific fields like OpenRouter's `cost`,
+                        # which lands in response_metadata.token_usage instead.
+                        # Merge it back in so CostTracker can prefer native.
+                        merged = dict(usage)
+                        rmeta = getattr(m, "response_metadata", None) or {}
+                        tu = (rmeta.get("token_usage") or {}) if isinstance(rmeta, dict) else {}
+                        if isinstance(tu, dict) and tu.get("cost") is not None:
+                            merged["cost"] = tu["cost"]
+                        cost.add_orchestrator_usage(merged)
             last = msgs[-1]
             if hasattr(last, "pretty_print"):
                 last.pretty_print()

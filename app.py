@@ -83,6 +83,13 @@ def _estimate_cost(n_items: int, max_iters: int, probe_size: int) -> dict:
     }
 
 
+_PRICE_SOURCE_LABEL = {
+    "openrouter": "OpenRouter native (exact)",
+    "table":      "Static price table (estimate)",
+    "mixed":      "Mixed (orchestrator + judge differ)",
+}
+
+
 def _render_cost_panel(box, cost_path: "Path") -> None:
     """Read cost.json (if present) and render a small live-cost panel.
     Resilient to a half-written file mid-flush."""
@@ -95,13 +102,15 @@ def _render_cost_panel(box, cost_path: "Path") -> None:
     orch = body.get("orchestrator", {}) or {}
     judge = body.get("judge", {}) or {}
     total_usd = body.get("total_usd")
+    source = body.get("price_source")
+    source_help = _PRICE_SOURCE_LABEL.get(source, "Unknown")
     with box.container():
         c1, c2, c3, c4 = st.columns(4)
         c1.metric(
             "Total cost",
             f"${total_usd:.4f}" if total_usd is not None else "—",
-            help="Sum of orchestrator + judge USD if both models are priced. "
-                 "Tokens are tracked regardless.",
+            help=f"Source: {source_help}. Tokens are tracked regardless of "
+                 f"whether USD pricing is available.",
         )
         c2.metric(
             "Orchestrator",
@@ -118,6 +127,8 @@ def _render_cost_panel(box, cost_path: "Path") -> None:
                  f"{judge.get('output_tokens', 0):,} out tokens",
         )
         c4.metric("Judge calls", judge.get("n_calls", 0))
+        if source:
+            st.caption(f"Price source: **{source_help}**")
 
 
 # Curated OpenRouter model IDs for the sidebar dropdowns. The first entry of
@@ -637,7 +648,13 @@ with results_tab:
                     orch = cost_body.get("orchestrator", {}) or {}
                     judge = cost_body.get("judge", {}) or {}
                     total_usd = cost_body.get("total_usd")
+                    source = cost_body.get("price_source")
                     st.subheader("Cost")
+                    if source:
+                        st.caption(
+                            f"Price source: **"
+                            f"{_PRICE_SOURCE_LABEL.get(source, source)}**"
+                        )
                     c1, c2, c3 = st.columns(3)
                     c1.metric(
                         "Total",

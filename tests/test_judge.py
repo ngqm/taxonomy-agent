@@ -85,14 +85,18 @@ def test_parallel_isolates_per_prompt_failures():
 
 def _ok_resp_with_usage(content: str = "ok",
                          prompt_tokens: int = 10,
-                         completion_tokens: int = 5) -> MagicMock:
+                         completion_tokens: int = 5,
+                         cost: float | None = None) -> MagicMock:
     r = MagicMock()
     r.raise_for_status = lambda: None
+    usage = {"prompt_tokens": prompt_tokens,
+             "completion_tokens": completion_tokens,
+             "total_tokens": prompt_tokens + completion_tokens}
+    if cost is not None:
+        usage["cost"] = cost
     r.json.return_value = {
         "choices": [{"message": {"content": content}}],
-        "usage": {"prompt_tokens": prompt_tokens,
-                   "completion_tokens": completion_tokens,
-                   "total_tokens": prompt_tokens + completion_tokens},
+        "usage": usage,
     }
     return r
 
@@ -119,6 +123,34 @@ def test_usage_sink_not_called_on_failure():
         out = call("prompt")
     assert out is None
     assert captured == []
+
+
+def test_request_body_asks_openrouter_for_native_cost():
+    """Every call must include `usage: {include: true}` in the request body —
+    that's how OpenRouter knows to return usage.cost."""
+    call, _ = make_judge_caller("k", "model")
+    captured: dict = {}
+
+    def fake_post(*a, data=None, **k):
+        captured["body"] = _json.loads(data)
+        return _ok_resp("ok")
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post):
+        call("prompt")
+
+    assert captured["body"]["usage"] == {"include": True}
+
+
+def test_usage_sink_forwards_native_cost():
+    captured: list[dict] = []
+    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_ok_resp_with_usage(prompt_tokens=100,
+                                                  completion_tokens=20,
+                                                  cost=0.0042)):
+        call("prompt")
+    assert captured == [{"prompt_tokens": 100, "completion_tokens": 20,
+                          "total_tokens": 120, "cost": 0.0042}]
 
 
 def test_usage_sink_error_does_not_break_call():
