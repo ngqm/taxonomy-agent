@@ -38,6 +38,10 @@ def make_judge_caller(api_key: str, model: str,
                         "messages": [{"role": "user", "content": prompt}],
                         "max_tokens": max_tokens,
                         "temperature": temperature,
+                        # Tell OpenRouter to include the actual charge in the
+                        # response under usage.cost — cost.CostTracker prefers
+                        # this over the static MODEL_PRICES fallback.
+                        "usage": {"include": True},
                     }),
                     timeout=90,
                 )
