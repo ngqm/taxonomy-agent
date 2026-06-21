@@ -23,6 +23,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--orchestrator", default="anthropic/claude-sonnet-4.6",
                    help="orchestrator model for taxonomy_agent method")
     p.add_argument("--n-per-class", type=int, default=50)
+    p.add_argument("--reasoning-path", default=None,
+                   help="path to reasoning-strategies JSONL "
+                        "(only used when --corpus reasoning)")
     p.add_argument("--dry-run", action="store_true",
                    help="skip LLM/heavy calls, use canned predictions")
     args = p.parse_args(argv)
@@ -31,6 +34,10 @@ def main(argv: list[str] | None = None) -> int:
     api_key = os.environ.get("OPENROUTER_API_KEY")
     methods = [m.strip() for m in args.methods.split(",") if m.strip()]
     seeds = [int(s) for s in args.seeds.split(",") if s.strip()]
+
+    extra: dict = {}
+    if args.reasoning_path:
+        extra["synth_path"] = args.reasoning_path
 
     res = benchmark(
         corpus_name=args.corpus,
@@ -43,6 +50,7 @@ def main(argv: list[str] | None = None) -> int:
         api_key=api_key,
         n_per_class=args.n_per_class,
         dry_run=args.dry_run,
+        **extra,
     )
     print(f"wrote {len(res['rows'])} runs to {args.output_dir}")
     return 0
