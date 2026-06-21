@@ -26,8 +26,87 @@ import pandas as pd
 import streamlit as st
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXAMPLE_DIR = Path(__file__).resolve().parent / "example"
+PACKAGE_DIR = Path(__file__).resolve().parent
+EXAMPLE_DIR = PACKAGE_DIR / "example"
 DEFAULT_RUNS_ROOT = PROJECT_ROOT / "taxonomy_runs"
+
+
+def _discover_runs_roots() -> list[Path]:
+    """Return every `*_runs/` directory under the project root *or* the
+    package directory that actually exists. UI-launched runs land in
+    `<project>/taxonomy_runs`, while evaluation runs from the CLI typically
+    sit inside the package as `<package>/eval_runs/`. The Runs tab needs to
+    see both. Falls back to `[DEFAULT_RUNS_ROOT]` so the picker is never
+    empty even on a fresh checkout."""
+    roots: list[Path] = []
+    for parent in (PROJECT_ROOT, PACKAGE_DIR):
+        for p in sorted(parent.glob("*_runs")):
+            if p.is_dir() and p not in roots:
+                roots.append(p)
+    if not roots:
+        return [DEFAULT_RUNS_ROOT]
+    if DEFAULT_RUNS_ROOT not in roots:
+        roots.append(DEFAULT_RUNS_ROOT)
+    return roots
+
+
+def _scan_runs(roots: list[Path], max_depth: int = 3) -> list[dict]:
+    """Walk every root up to `max_depth` levels deep and return one row per
+    directory that contains `meta.json` or `taxonomy.json`. Newest first."""
+    rows: list[dict] = []
+    seen: set[Path] = set()
+    for root in roots:
+        if not root.exists() or not root.is_dir():
+            continue
+        # rglob is depth-unbounded, so filter by relative depth.
+        for path in root.rglob("*"):
+            if not path.is_dir():
+                continue
+            try:
+                rel_depth = len(path.relative_to(root).parts)
+            except ValueError:
+                continue
+            if rel_depth > max_depth:
+                continue
+            if path in seen:
+                continue
+            meta_path = path / "meta.json"
+            tax_path = path / "taxonomy.json"
+            if not meta_path.exists() and not tax_path.exists():
+                continue
+            seen.add(path)
+            row = {
+                "dir": str(path),
+                "name": str(path.relative_to(PROJECT_ROOT)),
+                "mtime": path.stat().st_mtime,
+            }
+            if meta_path.exists():
+                try:
+                    with open(meta_path) as f:
+                        row.update(json.load(f))
+                except Exception:
+                    pass
+            cost_path = path / "cost.json"
+            if cost_path.exists():
+                try:
+                    with open(cost_path) as f:
+                        row["cost"] = json.load(f)
+                except Exception:
+                    pass
+            if tax_path.exists():
+                try:
+                    with open(tax_path) as f:
+                        art = json.load(f)
+                    row["n_categories"] = len(art.get("taxonomy", []))
+                    row["n_items"] = art.get("n_items")
+                    row["n_judge_errors"] = art.get("n_judge_errors")
+                    row["status"] = "ok"
+                except Exception:
+                    pass
+            row.setdefault("status", "unknown")
+            rows.append(row)
+    rows.sort(key=lambda r: r["mtime"], reverse=True)
+    return rows
 
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
 st.title("Taxonomy Agent")
@@ -259,7 +338,11 @@ with st.sidebar:
             judge = judge_choice
 
     with st.expander("Discovery loop", expanded=True):
-        max_iters = st.number_input("Max iterations", 1, 50, 10)
+        max_iters = st.number_input(
+            "Max iterations", 1, 50, 10,
+            help="Hard ceiling on revise/probe rounds. The orchestrator may "
+                 "converge sooner if the don't-fit threshold is met.",
+        )
         min_iters = st.number_input(
             "Min iterations", 0, 50, 3,
             help="Floor on classify_with_judge rounds before convergence is "
@@ -270,11 +353,23 @@ with st.sidebar:
             "Don't-fit threshold", 0.0, 0.5, 0.10, 0.01,
             help="Stop when fewer than this fraction of a fresh probe falls outside the taxonomy.",
         )
-        probe_size = st.number_input("Probe batch size (K)", 5, 100, 20)
+        probe_size = st.number_input(
+            "Probe batch size (K)", 5, 100, 20,
+            help="How many items the judge classifies per probe round. Larger "
+                 "K = more stable signal but more judge calls per iteration.",
+        )
 
     with st.expander("Execution"):
-        concurrency = st.number_input("Parallel judge calls", 1, 64, 8)
-        recursion_limit = st.number_input("LangGraph recursion limit", 20, 500, 80)
+        concurrency = st.number_input(
+            "Parallel judge calls", 1, 64, 8,
+            help="How many judge requests run in parallel. Higher = faster "
+                 "wall time but more pressure on rate limits.",
+        )
+        recursion_limit = st.number_input(
+            "LangGraph recursion limit", 20, 500, 80,
+            help="Safety cap on total LangGraph node transitions. Rarely "
+                 "needs changing unless you bump max iterations.",
+        )
         pool_limit = st.number_input(
             "Pool limit (0 = no cap)", 0, 100000, 0,
             help="Cap items used. Useful for smoke tests.",
@@ -285,11 +380,29 @@ run_tab, runs_tab, results_tab = st.tabs(["Run", "Runs", "Results"])
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
-    st.caption(
-        "First time? Pick the **Bundled example** preset, leave the items source "
-        "on **Use example**, and click ▶ Start run."
+    # First-time onboarding callout — only shown when nothing is loaded yet
+    # and no run is in progress. Disappears once the user gets going.
+    if not ss.running and not ss.log_lines and not ss.result_dir:
+        st.info(
+            "**New here?** The fastest path is the green **Quick demo** "
+            "button below — it spins up a ~60-second run on the bundled "
+            "example so you can see the agent in action. Otherwise, walk "
+            "through the three numbered sections below."
+        )
+
+    # ── Quick demo: one-click 60-second run on the bundled example. ─────────
+    # Sets a small pool + low iter budget, picks the bundled example preset,
+    # then falls through into the regular Start-run code path via `start=True`.
+    quick_demo_clicked = st.button(
+        "🚀 Quick demo (about 60 seconds)",
+        type="primary",
+        disabled=ss.running,
+        help="Runs the agent on a 20-item slice of the bundled rhetorical-"
+             "strategies example with max_iters=3 and min_iters=2 so you can "
+             "watch the loop converge in under a minute.",
     )
 
+    st.markdown("##### 1. Task")
     # Task preset — fills instruction / category focus / size hint with sensible
     # defaults. Re-selecting the same preset is a no-op; switching presets
     # overwrites the three fields, but the user can edit them after.
@@ -307,10 +420,12 @@ with run_tab:
             ss.cat_focus_text = cfg["category_focus"]
             ss.size_hint_text = cfg["size_hint"]
 
-    st.subheader("Items")
+    st.markdown("##### 2. Items")
     src = st.radio(
         "Source", ["Upload JSONL", "Paste JSONL", "File path", "Use example"],
         horizontal=True,
+        help="Where to read the items the agent should classify. JSONL = one "
+             "`{\"id\": ..., \"text\": ...}` per line.",
     )
 
     items_path: str | None = None
@@ -342,7 +457,7 @@ with run_tab:
         items_path = str(EXAMPLE_DIR / "items.jsonl")
         st.info(f"Using example items at `{items_path}`")
 
-    st.subheader("Instruction")
+    st.markdown("##### 3. Instruction")
     instruction = st.text_area(
         "What should the agent classify? (natural language)",
         height=110,
@@ -366,7 +481,7 @@ with run_tab:
                  "target — the orchestrator chooses.",
         )
 
-    st.subheader("Output")
+    st.markdown("##### 4. Output")
     output_dir_in = st.text_input(
         "Output directory (leave blank for auto)",
         value="",
@@ -420,7 +535,7 @@ with run_tab:
     # right after Popen, so the run-in-another-tab case still works.
     if ss.running:
         pid_path_str = ss.get("pid_path")
-        stop = st.button("■ Stop run", type="primary", use_container_width=True)
+        stop = st.button("■ Stop run", type="primary", width="stretch")
         if stop and pid_path_str:
             try:
                 pid = int(Path(pid_path_str).read_text().strip())
@@ -447,6 +562,29 @@ with run_tab:
     cost_box = st.empty()
     log_box = st.empty()
 
+    # Quick demo overrides: when the user clicks the demo button, we ignore
+    # whatever's in the form and run a small, fast bundled-example slice. The
+    # form inputs themselves stay untouched so the user can edit + restart.
+    if quick_demo_clicked and not ss.running:
+        if not api_key:
+            st.error(
+                "OpenRouter API key is required for the quick demo. Set it "
+                "in the sidebar (or via the `OPENROUTER_API_KEY` env var)."
+            )
+        else:
+            start = True
+            items_path = str(EXAMPLE_DIR / "items.jsonl")
+            instruction = _example_instruction() or instruction
+            size_hint = "4–10"
+            category_focus = ""
+            max_iters, min_iters = 3, 2
+            probe_size = 20
+            pool_limit = 20
+            output_dir_in = str(
+                PROJECT_ROOT / "eval_runs"
+                             / time.strftime("quick_demo_%Y%m%d_%H%M%S")
+            )
+
     if start:
         if not items_path or not Path(items_path).exists():
             st.error("Items file is required and must exist.")
@@ -467,7 +605,7 @@ with run_tab:
             ss.running = True
 
             # Compute the output dir at click time so the timestamp isn't stale.
-            output_dir = output_dir_in.strip() or str(
+            output_dir = (output_dir_in or "").strip() or str(
                 PROJECT_ROOT / "taxonomy_runs"
                              / time.strftime("run_%Y%m%d_%H%M%S")
             )
@@ -566,62 +704,52 @@ with run_tab:
 # ── Runs tab ────────────────────────────────────────────────────────────────
 with runs_tab:
     st.subheader("All runs")
-    runs_root_str = st.text_input(
-        "Runs directory",
-        value=str(DEFAULT_RUNS_ROOT),
-        help=("Directory to scan for past runs. Each run is a subdirectory "
-              "containing meta.json (and taxonomy.json once the run finalizes)."),
-    )
-    if st.button("🔄 Refresh"):
-        st.rerun()
 
-    runs_root = Path(runs_root_str).expanduser()
-    if not runs_root.exists():
+    # Discover every `*_runs/` directory under the project root and pre-select
+    # them all. Conference-attendee defaults: zero config required.
+    available_roots = _discover_runs_roots()
+    available_root_strs = [str(p) for p in available_roots]
+    default_selection = [
+        s for s in available_root_strs if Path(s).exists()
+    ] or available_root_strs
+
+    c_pick, c_refresh = st.columns([5, 1])
+    with c_pick:
+        picked = st.multiselect(
+            "Runs directories to scan",
+            options=available_root_strs,
+            default=default_selection,
+            help="Auto-detected `*_runs/` directories under the project root. "
+                 "Scans up to 3 levels deep for any folder containing "
+                 "`meta.json` or `taxonomy.json`.",
+        )
+    with c_refresh:
+        st.write("")  # vertical alignment
+        if st.button("🔄 Refresh", width="stretch"):
+            st.rerun()
+
+    extra_root = st.text_input(
+        "Or add another directory (optional)",
+        value="",
+        placeholder="/path/to/some/runs",
+        help="Scan an additional directory not auto-detected above.",
+    )
+
+    scan_roots = [Path(s) for s in picked]
+    if extra_root.strip():
+        scan_roots.append(Path(extra_root.strip()).expanduser())
+
+    if not scan_roots:
         st.info(
-            f"`{runs_root}` does not exist yet. UI-launched runs default to "
-            f"this directory and will appear here. To list runs from elsewhere, "
-            f"point this field at the parent directory containing them."
+            "Pick at least one directory above to scan. UI-launched runs "
+            "default to `taxonomy_runs/`; evaluation runs typically live in "
+            "`eval_runs/`."
         )
     else:
-        rows = []
-        for d in sorted(runs_root.iterdir(),
-                        key=lambda x: x.stat().st_mtime, reverse=True):
-            if not d.is_dir():
-                continue
-            meta_path = d / "meta.json"
-            tax_path = d / "taxonomy.json"
-            if not meta_path.exists() and not tax_path.exists():
-                continue
-            row = {"dir": str(d), "name": d.name, "mtime": d.stat().st_mtime}
-            if meta_path.exists():
-                try:
-                    with open(meta_path) as f:
-                        row.update(json.load(f))
-                except Exception:
-                    pass
-            cost_path = d / "cost.json"
-            if cost_path.exists():
-                try:
-                    with open(cost_path) as f:
-                        row["cost"] = json.load(f)
-                except Exception:
-                    pass
-            if tax_path.exists():
-                try:
-                    with open(tax_path) as f:
-                        art = json.load(f)
-                    row["n_categories"] = len(art.get("taxonomy", []))
-                    row["n_items"] = art.get("n_items")
-                    row["n_judge_errors"] = art.get("n_judge_errors")
-                    # taxonomy.json wins over a stale meta.status="running"
-                    row["status"] = "ok"
-                except Exception:
-                    pass
-            row.setdefault("status", "unknown")
-            rows.append(row)
-
+        rows = _scan_runs(scan_roots)
         if not rows:
-            st.info("No runs found in this directory yet.")
+            roots_str = ", ".join(f"`{p}`" for p in scan_roots)
+            st.info(f"No runs found under {roots_str}.")
         else:
             st.write(f"Found **{len(rows)}** run(s).")
             badges = {
@@ -659,7 +787,7 @@ with runs_tab:
                     if st.button("Load in Results tab", key=f"load_{r['dir']}"):
                         ss.result_dir = r["dir"]
                         st.success(
-                            f"Loaded — switch to the **Results** tab to view."
+                            "Loaded — switch to the **Results** tab to view."
                         )
                     log_path = Path(r["dir"]) / "run.log"
                     if log_path.exists():
@@ -678,6 +806,41 @@ with results_tab:
         value=ss.result_dir or "",
         help="Directory containing taxonomy.json (and optionally trace.jsonl).",
     )
+
+    # Recent-runs picker — shown when no path is entered yet, so first-time
+    # demo visitors can click instead of typing a path they don't know.
+    if not (candidate or "").strip():
+        recent = _scan_runs(_discover_runs_roots())
+        # Only completed runs are interesting in Results.
+        recent = [r for r in recent if r.get("status") == "ok"][:10]
+        if recent:
+            st.caption("Or pick a recent completed run:")
+            labels = []
+            for r in recent:
+                started = r.get("started_at") or datetime.fromtimestamp(
+                    r["mtime"]).isoformat(timespec="seconds")
+                cost = (r.get("cost") or {}).get("total_usd")
+                cost_s = f" · ${cost:.2f}" if cost is not None else ""
+                cats = r.get("n_categories")
+                cats_s = f" · {cats} cats" if cats is not None else ""
+                labels.append(
+                    f"{r['name']}  ({started}{cats_s}{cost_s})"
+                )
+            pick = st.selectbox(
+                "Recent runs",
+                options=["— choose one —", *labels],
+                index=0,
+                label_visibility="collapsed",
+            )
+            if pick != "— choose one —":
+                idx = labels.index(pick)
+                ss.result_dir = recent[idx]["dir"]
+                st.rerun()
+        else:
+            st.caption(
+                "No completed runs found yet. Click **Quick demo** on the "
+                "**Run** tab to generate one in about a minute."
+            )
 
     if candidate:
         cand_path = Path(candidate).expanduser()
@@ -712,7 +875,7 @@ with results_tab:
                         st.subheader(f"Streamed classifications ({len(lines):,} rows)")
                         if lines:
                             partial_df = pd.DataFrame(lines)
-                            st.dataframe(partial_df, height=300, use_container_width=True)
+                            st.dataframe(partial_df, height=300, width="stretch")
                             st.download_button(
                                 "classifications.jsonl",
                                 partial_jsonl.read_bytes(),
@@ -806,7 +969,7 @@ with results_tab:
                         view["text"].astype(str).str.contains(q, case=False, na=False)
                     ]
                 st.caption(f"{len(view):,} of {len(df):,} rows")
-                st.dataframe(view, height=420, use_container_width=True)
+                st.dataframe(view, height=420, width="stretch")
 
             st.subheader("Downloads")
             d1, d2 = st.columns(2)

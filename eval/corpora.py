@@ -36,3 +36,11 @@ def load_20newsgroups(n_per_class: int = 50, seed: int = 42,
 
 def load_20newsgroups_tiny(n_per_class: int = 5) -> list[dict]:
     return load_20newsgroups(n_per_class=n_per_class)
+
+
+# Re-export the synthetic reasoning corpus loader + generator so callers can
+# do `from taxonomy_agent.eval.corpora import load_synth_reasoning`.
+from .synth_reasoning import (  # noqa: E402,F401
+    load_synth_reasoning,
+    generate_corpus as generate_reasoning_corpus,
+)

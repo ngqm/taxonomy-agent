@@ -10,11 +10,41 @@ import time
 from . import metrics as M
 
 
-def _load_corpus(name: str, n_per_class: int, seed: int) -> list[dict]:
+def _load_corpus(name: str, n_per_class: int, seed: int,
+                 **kwargs) -> list[dict]:
     if name in ("20ng", "20newsgroups"):
         from .corpora import load_20newsgroups
         return load_20newsgroups(n_per_class=n_per_class, seed=seed)
+    if name in ("reasoning", "synth_reasoning"):
+        from .synth_reasoning import load_synth_reasoning
+        path = kwargs.get("synth_path")
+        return load_synth_reasoning(path=path, n_per_strategy=n_per_class,
+                                    seed=seed)
     raise ValueError(f"unknown corpus {name!r}")
+
+
+def _dry_run_stub_corpus(corpus_name: str, n_per_class: int) -> list[dict]:
+    """Synthesize a tiny corpus for dry-run when the real file is absent.
+
+    Used only when `dry_run=True` AND `_load_corpus` raised FileNotFoundError —
+    e.g. the synthetic reasoning corpus hasn't been generated yet but a user
+    wants to smoke-test the eval plumbing.
+    """
+    if corpus_name in ("reasoning", "synth_reasoning"):
+        from .synth_reasoning import PATTERN_KEYS
+        names = list(PATTERN_KEYS)
+    else:
+        names = [f"class_{i}" for i in range(6)]
+    items: list[dict] = []
+    for cls, name in enumerate(names):
+        for j in range(max(1, n_per_class)):
+            items.append({
+                "id": f"stub-{cls}-{j}",
+                "text": f"dry-run stub item for class {name} #{j}",
+                "gold_label": cls,
+                "gold_label_name": name,
+            })
+    return items
 
 
 def _dry_run_predictions(items: list[dict], seed: int) -> dict:
@@ -149,9 +179,18 @@ def benchmark(corpus_name: str, methods: list[str], seeds: list[int],
     os.makedirs(output_dir, exist_ok=True)
     kwargs.setdefault("orchestrator_model", orchestrator_model)
     kwargs.setdefault("_eval_output_dir", output_dir)
+    synth_path = kwargs.get("synth_path")
     # Corpus depends only on n_per_class + a fixed canonical seed so all
     # methods see the same items (per-method randomness lives inside the run).
-    items = _load_corpus(corpus_name, n_per_class=n_per_class, seed=42)
+    try:
+        items = _load_corpus(corpus_name, n_per_class=n_per_class, seed=42,
+                             synth_path=synth_path)
+    except FileNotFoundError:
+        if not dry_run:
+            raise
+        print(f"[benchmark] dry-run: corpus {corpus_name!r} file missing, "
+              f"using stub")
+        items = _dry_run_stub_corpus(corpus_name, n_per_class)
     reference_corpus = [it["text"] for it in items]
     instr = instruction or "Identify the topic of each text."
 

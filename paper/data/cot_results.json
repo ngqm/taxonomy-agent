@@ -1,0 +1,70 @@
+{
+  "corpus": "reasoning",
+  "n_items": 149,
+  "instruction": "Group these chain-of-thought reasoning traces into categories based on the dominant style, approach, or behavior visible in the reasoning. The categories should reflect distinct ways the model is reasoning.",
+  "model": "deepseek/deepseek-v4-flash",
+  "dry_run": false,
+  "digest": "fae9570f",
+  "rows": [
+    {
+      "method": "taxonomy_agent",
+      "seed": 42,
+      "wall_time_total_s": 197.4630823135376,
+      "error": null,
+      "purity": 0.8657718120805369,
+      "nmi": 0.762488115374175,
+      "ari": 0.6595447936140538,
+      "npmi": 0.033165465764735974,
+      "c_v": 0.3691340395618772,
+      "redundancy": 0.1503267973856209,
+      "cost_usd": 2.2337,
+      "wall_time_s": 195.605881690979,
+      "n_categories": 5
+    },
+    {
+      "method": "bertopic",
+      "seed": 42,
+      "wall_time_total_s": 48.33043813705444,
+      "error": null,
+      "purity": 0.20134228187919462,
+      "nmi": 0.00040113968625731493,
+      "ari": -0.026156521739130436,
+      "npmi": 0.00026680244851205005,
+      "c_v": 0.3647540582038468,
+      "redundancy": 0.09814814814814815,
+      "cost_usd": 0.0,
+      "wall_time_s": 28.529139280319214,
+      "n_categories": 6
+    },
+    {
+      "method": "single_shot",
+      "seed": 42,
+      "wall_time_total_s": 37.15889573097229,
+      "error": null,
+      "purity": 0.33557046979865773,
+      "nmi": 0.14284395796809957,
+      "ari": 0.03579236477054474,
+      "npmi": 0.02503201776728788,
+      "c_v": 0.3476562967320366,
+      "redundancy": 0.20283224400871458,
+      "cost_usd": 0.008844,
+      "wall_time_s": 33.71239519119263,
+      "n_categories": 10
+    },
+    {
+      "method": "topicgpt_style",
+      "seed": 42,
+      "wall_time_total_s": 76.05395245552063,
+      "error": null,
+      "purity": 0.3221476510067114,
+      "nmi": 0.07486944936833285,
+      "ari": 0.03330736701535722,
+      "npmi": 0.019727859390491365,
+      "c_v": 0.3368948051043776,
+      "redundancy": 0.07527806444215113,
+      "cost_usd": 0.010677,
+      "wall_time_s": 73.76274585723877,
+      "n_categories": 3
+    }
+  ]
+}
