@@ -111,3 +111,12 @@ example/out/
 
 # Streamlit secrets file (must never be committed).
 .streamlit/secrets.toml
+
+# Eval artifacts (LLM outputs, regenerable)
+eval_runs/
+eval_data/hybrid_build/
+eval_data/cot_candidates.jsonl
+eval_data/cot_patterns_hybrid.jsonl
+eval_data/*_with_advice.jsonl.bak
+eval_data/*_pre_repair.jsonl.bak
+eval_data/*_pre_anon.jsonl.bak
