@@ -5,21 +5,22 @@
 TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate
 human-readable topic labels and short definitions directly from sampled
 documents, then assigns each remaining document to one of the generated
-topics. It demonstrated that LLM-produced topics are substantially more
-interpretable than classical BERTopic clusters, but the workflow is
-essentially a two-stage prompt: there is no typed edit vocabulary, no
-explicit refinement loop with validation, and no first-class notion of
-cost or partial progress. TnT-LLM~\citep{wan2024tntllm} from Microsoft
-stages a heavier two-phase pipeline in which an LLM first summarises
-batches of a conversational corpus into candidate labels and a second
-phase distils a lightweight classifier that scales the labelling to the
-full corpus. TnT-LLM is closer in spirit to our setting -- it uses LLMs
-as label generators and as labellers -- but it is structured as an
-offline production pipeline rather than an interactive agent, the
-``refine'' step is a single summarisation pass over batches rather than
-an iterative critique loop driven by per-item don't-fit signals, and
-the system is not released as an open tool with live cost accounting
-or a UI.
+topics; it includes a refinement pass that merges and prunes topics
+discovered in earlier rounds. It demonstrated that LLM-produced topics
+are substantially more interpretable than classical BERTopic clusters,
+but the refinement is operationally bundled into the prompt rather
+than expressed as a typed edit vocabulary, and the system is not
+released as an interactive tool with first-class cost or
+partial-progress accounting. TnT-LLM~\citep{wan2024tntllm} from
+Microsoft stages a heavier two-phase pipeline in which an LLM first
+summarises batches of a conversational corpus into candidate labels
+and a second phase distils a lightweight classifier that scales the
+labelling to the full corpus. TnT-LLM is closer in spirit to our
+setting -- it already separates a label-generator role from a labeller
+role, anticipating our orchestrator--judge split -- but its
+``refine'' step is a single batched summarisation rather than a
+per-item don't-fit-driven loop, and it is structured as an offline
+production pipeline rather than an interactive demo.
 
 \paragraph{Classical topic modelling.}
 BERTopic~\citep{grootendorst2022bertopic} represents the strongest
@@ -53,8 +54,11 @@ human-in-the-loop layer can sit on top of.
 TaxoAdapt~\citep{taxoadapt2025} adapts an existing taxonomy to a new
 domain via LLM-guided edits, sharing our intuition that taxonomy
 construction is naturally an edit problem rather than a generation
-problem; it focuses on taxonomy \emph{adaptation} given a seed,
-whereas we discover from scratch under a typed DSL.
+problem; its edit vocabulary overlaps with ours
+(add/merge/split being natural for taxonomy maintenance), and it
+focuses on taxonomy \emph{adaptation} given a seed, whereas we
+discover from scratch under a typed DSL with validate-before-mutate
+and per-op failure isolation.
 LLM-guided semantic-aware clustering~\citep{llmguided2025} uses an LLM
 to steer the clustering objective itself, blurring the line between
 classical clustering and LLM topic discovery. The recent EMNLP~2024
@@ -62,25 +66,27 @@ survey on LLMs for data annotation~\citep{tan2024llmannot} places this
 family of work in the broader annotation landscape and motivates the
 operational concerns -- cost, reproducibility, interruption-safety --
 that our system targets.
+\todo{audit bibkeys: codetect2025, taxoadapt2025, llmguided2025,
+tan2024llmannot, and the CoT-Pattern citations
+(dubois2026sycophancy, liu2026posthoc, hase2026rewardhack,
+niimi2026hallucination, paul2024faithcot) -- replace any that
+do not resolve to a real venue with Lanham~2023, Turpin~2023,
+Sharma~2023, Chen~2024, Denison~2024.}
 
 \paragraph{Positioning of \textsc{taxonomy\_agent}.}
-Against TopicGPT and the single-shot LLM baseline, our system adds an
-explicit iterative loop with a typed edit vocabulary and a
-convergence criterion, rather than a one-shot prompt. Against TnT-LLM,
-we expose the refinement step as a small set of validated tool calls
-driven by per-item don't-fit signals, separate the expensive
-orchestrator from a cheap parallel judge, and ship the system as an
-interactive open-source demo with live cost accounting and
-partial-progress saving rather than an offline production pipeline.
-Against BERTopic and LDA, we produce human-readable categories with
-definitions and support post-hoc typed edits. Against goal-driven and
-human-in-the-loop systems (GoalEx, LLooM, Co-DETECT), we focus on the
-model-side edit loop and provide infrastructure -- the six-op DSL with
-validate-before-mutate, the orchestrator--judge split, the cost and
-progress streams -- on which interactive human workflows can be
-layered. Against TaxoAdapt and LLM-guided clustering, we operate
-without a seed taxonomy and externally validate our self-reported
-convergence signal. The combination -- orchestrator--judge separation,
-typed validated revise DSL, externally-validated self-reported
-convergence, native cost tracking, and an open-source model-agnostic
-Streamlit demo -- is, to our knowledge, novel.
+We do not claim a wholly new mechanism. Each individual element of
+our system has antecedents: TopicGPT iterates, TnT-LLM separates a
+generator from a labeller, ReAct-style agents~\citep{yao2022react}
+already structure tool-using LLMs, and the
+add/rename/merge/split/drop verbs are the standard taxonomy-edit
+vocabulary. What we package is a careful operational recomposition:
+(i)~the orchestrator's edit surface is narrowed to a typed validated
+DSL with per-op failure isolation, so that malformed edits cannot
+corrupt the working taxonomy and the trace remains auditable;
+(ii)~labelling is decoupled from editing into a parallel judge with
+an enforced \texttt{other} escape hatch, so the don't-fit rate is a
+meaningful (if not externally validated) convergence signal;
+(iii)~the system ships as an interactive demo with live cost
+tracking, partial-progress saving, and a Streamlit UI. For a demo
+track, this engineering recomposition is the contribution; the
+empirical case is made in \S\ref{sec:evaluation}.

@@ -14,22 +14,23 @@ We quantified this and pivoted.
 
 ## Leakage measurements
 
-We trained a TF-IDF + Logistic Regression supervised classifier on the text →
-pattern mapping under 5-fold stratified CV, and a simpler classifier on only
-14 surface features (length, count of "\boxed", "Step", "$", "\frac",
-newlines, "**", "User", "Wait", "the grader", "the answer is",
-"Reconsideration", "hack", "reward").
+We trained three baselines on the text → pattern mapping:
 
-| Corpus | TF-IDF ceiling | Surface-only | Source-only | Random | Verdict |
-|---|---|---|---|---|---|
-| **Hybrid (4 sources)** | 76% | **95%** | 89% | 20-25% | UNUSABLE — surface alone separates patterns |
-| **Synthetic-only-math500** | 26% | 73% | n/a (1 source) | 20% | ACCEPTABLE — TF-IDF barely beats random |
+- **TF-IDF + Logistic Regression** under 5-fold stratified CV — supervised.
+- **14 surface features** (length, counts of `\boxed`, `Step`, `$`, `\frac`, newlines, `**`, `User`, `Wait`, `the grader`, `the answer is`, `Reconsideration`, `hack`, `reward`) + LR under 5-fold stratified CV — supervised.
+- **K-means (k=5) on the same 14 surface features** with optimal cluster-to-class mapping via the Hungarian algorithm — **unsupervised** (median over 5 random seeds). This is the proper head-to-head with taxonomy_agent's discovery purity.
+
+| Corpus | TF-IDF supervised | Surface supervised | **Surface unsupervised** | Source-only | Random | Verdict |
+|---|---|---|---|---|---|---|
+| **Hybrid (4 sources)** | 76% | **95%** | (not computed) | 89% | 20-25% | UNUSABLE — surface alone separates patterns |
+| **Synthetic-only-math500** | 26% | 73% | **50%** | n/a (1 source) | 20% | ACCEPTABLE — proper unsupervised baseline well below taxonomy_agent |
 
 The synthetic-only corpus has **dramatically less surface leakage** in
-TF-IDF features (26% vs 76%). The surface-feature classifier still hits 73%
-because the patterns have inherently different structural shapes (sycophantic
-CoTs are long, reward-hack CoTs mention grading, etc.) — this is mostly real
-pattern signal, not pure surface artifact.
+TF-IDF features (26% vs 76%). More importantly, the *unsupervised*
+surface-feature baseline (k-means) achieves 50% purity — the proper
+comparator for taxonomy_agent's unsupervised discovery. The supervised
+ceiling at 73% is an oracle bound (it sees gold labels during training),
+not a head-to-head baseline.
 
 ## Repairs applied
 
@@ -61,11 +62,13 @@ Both corpora had the following post-processing applied before measurement:
 2. Synthetic generation. The CoTs are produced by Gemini under explicit
    pattern-targeting prompts — they are caricatures of the patterns rather
    than naturalistic occurrences in deployed model outputs.
-3. Surface features predict pattern at 73% accuracy. Taxonomy_agent's
-   discovered-pattern purity should be interpreted against this baseline:
-   purity meaningfully exceeding 73% suggests semantic discovery; purity
-   at-or-below 73% would suggest the system is picking up structural
-   shape rather than the named pattern.
+3. **Three distinct baselines**: random (20%), unsupervised k-means on
+   surface features (50%), and supervised oracle on surface features (73%).
+   The unsupervised k-means is the proper apples-to-apples comparator —
+   taxonomy_agent's purity meaningfully exceeding 50% indicates real
+   discovery beyond what surface features alone afford. Exceeding the 73%
+   supervised oracle is a stronger claim (the system finds structure that
+   supervised baselines miss).
 4. The 5 patterns are not exhaustive of the safety/alignment CoT-failure
    literature — we chose them for their 2024-2026 citation centrality and
    their elicit-ability via simple injector prompts.

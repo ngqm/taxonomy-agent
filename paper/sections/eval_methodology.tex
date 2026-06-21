@@ -1,0 +1,147 @@
+\subsection{Evaluation Methodology}
+\label{sec:eval-method}
+
+We evaluate \textsc{taxonomy\_agent} on two benchmarks chosen to stress
+complementary capabilities: (i)~\textbf{20~Newsgroups}~\citep{lang1995newsgroups},
+a standard topic-discovery testbed with known-good gold structure, and
+(ii)~the \textbf{CoT-Pattern} corpus, a novel safety-relevant benchmark of
+chain-of-thought failure modes drawn from the 2024--2026 alignment
+literature. The first probes whether the orchestrator--judge loop matches
+established topic-modeling baselines on familiar territory; the second
+asks whether it can rediscover conceptually subtle patterns whose
+linguistic signatures were not designed to be lexically obvious.
+
+\paragraph{Methods.}
+We compare four systems on both benchmarks:
+(1)~\textsc{taxonomy\_agent} (ours; Claude Sonnet orchestrator with a
+DeepSeek judge);
+(2)~\textbf{BERTopic}~\citep{grootendorst2022bertopic}, using
+\texttt{all-MiniLM-L6-v2} sentence
+embeddings~\citep{reimers2019sbert},
+\texttt{UMAP}~\citep{mcinnes2018umap} dimensionality reduction, and
+\texttt{HDBSCAN}~\citep{mcinnes2017hdbscan} clustering;
+(3)~a \textbf{single-shot LLM} baseline that asks one DeepSeek call to
+propose a taxonomy from a corpus sample, then labels the full corpus in
+parallel;
+(4)~a \textbf{TopicGPT-style}~\citep{pham2024topicgpt} iterative LLM
+proposer with no separate judge.
+
+\paragraph{20~Newsgroups protocol.}
+We sample 500 items stratified across the 20 classes, repeated under
+3 random seeds, and run all 4 methods on each seed (12 runs total).
+Gold labels are the 20~Newsgroups class assignments. We report
+\emph{external} metrics --- purity, normalized mutual information
+(NMI), and adjusted Rand index (ARI) --- against gold, alongside
+\emph{intrinsic} topic-quality metrics --- NPMI and $C_v$
+coherence~\citep{rehurek2010gensim} computed from the discovered
+cluster--label assignments, plus a redundancy score that penalizes
+near-duplicate category labels.
+
+\paragraph{CoT-Pattern corpus.}
+We construct a 149-item corpus of chain-of-thought traces exhibiting
+five distinct failure modes anchored in the recent safety literature:
+
+\begin{itemize}
+  \item \textbf{sycophantic\_capitulation} --- the model abandons a
+        correct answer after a user expresses disagreement
+        \citep{dubois2026sycophancy};
+  \item \textbf{post\_hoc\_rationalization} --- the visible reasoning
+        is constructed to justify an answer already chosen
+        \citep{liu2026posthoc};
+  \item \textbf{unfaithful\_paraphrase} --- the model silently restates
+        the problem in a non-equivalent form and solves the new one
+        \citep{lanham2023faithfulness};
+  \item \textbf{reward\_hack\_verbalization} --- the trace explicitly
+        reasons about exploiting graders, test cases, or verifiers
+        \citep{hase2026rewardhack};
+  \item \textbf{hallucinated\_premise} --- the model introduces a
+        non-existent fact or constraint and reasons from it
+        \citep{niimi2026hallucination}.
+\end{itemize}
+
+Because corpus quality (not orchestrator stochasticity) is the unit of
+analysis here, we run each method under a single seed. We acknowledge
+this asymmetry with the 3-seed 20NG protocol below; a multi-seed CoT
+re-run would tighten confidence intervals but was beyond our compute
+budget at the time of writing.
+\todo{multi-seed CoT re-run (3 seeds) to bootstrap a confidence
+interval around the 0.866 purity number.}
+
+\paragraph{Why a single-source synthetic corpus.}
+Before settling on the synthetic design, we surveyed five public CoT
+sources and found that none of them, individually or in combination,
+supports clean pattern-discovery evaluation across our five patterns.
+The Sharma et al.\ sycophancy
+stimuli~\citep{sharma2023sycophancy}%
+\todo{add bibkey sharma2023sycophancy (``Towards Understanding Sycophancy in Language Models'', 2023)}
+are user-side prompts rather than annotated CoT pivots;
+the Perez et al.\ model-written
+evaluations~\citep{perez2022discovering}%
+\todo{add bibkey perez2022discovering (``Discovering Language Model Behaviors with Model-Written Evaluations'', 2022)}
+are statistical proxies rather than per-trace structural labels;
+FaithCoT-Bench~\citep{paul2024faithcot} conflates arithmetic errors
+with hallucinations and does not separate post-hoc rationalisation
+from unfaithful paraphrase; the Denison sycophancy-to-subterfuge
+transcripts~\citep{denison2024subterfuge} contain only roughly seven
+explicit reward-hack-verbalisation examples;
+PRM800K~\citep{lightman2023prm800k} labels per-step correctness, not
+the named pattern. \textbf{No public dataset provides annotated CoT
+pivots for more than one of our five patterns}, and combining
+datasets to cover all five makes source detection a near-perfect
+proxy for pattern detection (the hybrid corpus, Appendix~A: 95\%
+surface-feature accuracy vs.\ 73\% on the single-source corpus,
+i.e.\ the hybrid is unevaluable, not merely noisy). Construct-validity
+arguments for single-source-synthetic CoT evaluation in this regime
+follow the precedents established by~\citet{lanham2023faithfulness}
+and~\citet{turpin2023biased}%
+\todo{add bibkey turpin2023biased (``Language Models Don't Always Say What They Think'', NeurIPS 2023)}.
+
+\emph{All} 149 items are accordingly drawn from
+\textbf{MATH-500 Level~4--5}
+problems~\citep{hendrycks2021math} and generated by
+\textbf{Gemini-3.1-Flash-Lite} under five pattern-specific injector
+prompts. Each generated trace is verified by a
+\textbf{Claude Opus 4.8} majority-vote ensemble of three independent
+classifiers; only items the ensemble unanimously assigns to the
+intended pattern enter the corpus. We note that this verification
+ensemble is a different model family from the orchestrator
+(Claude~Sonnet), so vendor cross-contamination between
+gold-label construction and orchestrator inference is partial rather
+than absent --- we flag this in \S\ref{sec:limitations}.
+
+The single-source synthetic corpus is methodologically cleaner than
+the hybrid alternative: TF-IDF accuracy drops to 26\% (barely above
+the 20\% random baseline), and a 14-feature surface-feature
+classifier (length, count of \texttt{\textbackslash boxed},
+\texttt{Step}, \texttt{\$}, \ldots), trained under 5-fold
+cross-validation on the same 149 items the discovery systems see,
+achieves 73\% accuracy. The residual surface signal is structural
+rather than lexical --- sycophantic traces are longer, reward-hack
+traces mention grading --- and reflects genuine pattern shape rather
+than a source artifact.
+
+\paragraph{Interpreting CoT results.}
+The 73\% surface baseline is a 5-fold-cross-validated supervised
+classifier (logistic regression on the 14 surface features) trained
+on the same 149 items the discovery systems see; it is therefore a
+\emph{supervised oracle ceiling} for what surface shape alone can do
+on this corpus. Taxonomy\_agent's purity, by contrast, is the
+optimal-mapping purity of an unsupervised discovered partition.
+These two quantities are not strictly commensurable. We therefore
+report taxonomy\_agent's CoT result two ways in
+\S\ref{sec:eval-results-cot}: (a)~accuracy on the 109 non-\texttt{other}
+items, which is the directly comparable quantity to the 73\%
+supervised baseline, and (b)~coverage-adjusted purity over all 149
+items, treating \texttt{other} as a sixth class. Even with this
+clarification, the metrics cannot cleanly distinguish ``modest
+semantic discovery on top of surface shape'' from ``sharper surface
+extraction with no additional semantic content''
+(see \S\ref{sec:limitations}). The random baseline is 20\% (five
+balanced classes).
+
+\paragraph{Operational metrics.}
+For both benchmarks we additionally report dollar cost (from OpenRouter
+\texttt{usage.cost}), wall-clock time, and number of iterations, and
+on 20NG we cross-check the orchestrator's self-reported convergence
+signal (the judge's terminal don't-fit rate) against external purity
+and NPMI across the 12 runs.

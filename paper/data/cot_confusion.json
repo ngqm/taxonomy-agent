@@ -1,0 +1,39 @@
+{
+  "matrix": {
+    "sycophantic_capitulation": {
+      "other": 4,
+      "sycophantic_capitulation": 26
+    },
+    "post_hoc_rationalization": {
+      "other": 11,
+      "post_hoc_rationalization": 19
+    },
+    "unfaithful_paraphrase": {
+      "other": 2,
+      "unfaithful_paraphrase": 28
+    },
+    "reward_hack_verbalization": {
+      "reward_hack_verbalization": 27,
+      "other": 3
+    },
+    "hallucinated_premise": {
+      "other": 20,
+      "hallucinated_premise": 9
+    }
+  },
+  "gold_labels": [
+    "sycophantic_capitulation",
+    "post_hoc_rationalization",
+    "unfaithful_paraphrase",
+    "reward_hack_verbalization",
+    "hallucinated_premise"
+  ],
+  "discovered_labels": [
+    "sycophantic_capitulation",
+    "post_hoc_rationalization",
+    "unfaithful_paraphrase",
+    "reward_hack_verbalization",
+    "hallucinated_premise",
+    "other"
+  ]
+}
