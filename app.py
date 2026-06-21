@@ -13,6 +13,8 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import signal
 import subprocess
 import sys
 import tempfile
@@ -59,7 +61,8 @@ def _count_items(path: str | None) -> int | None:
     if not p.exists():
         return None
     try:
-        return sum(1 for ln in open(p) if ln.strip())
+        with open(p) as f:
+            return sum(1 for ln in f if ln.strip())
     except Exception:
         return None
 
@@ -90,10 +93,40 @@ _PRICE_SOURCE_LABEL = {
 }
 
 
+MODEL_ID_RE = re.compile(r"^[\w.-]+/[\w.\-:]+$")
+
+
+def _render_taxonomy_preview(box, state_path: "Path") -> None:
+    """Render the evolving taxonomy from taxonomy_state.json during a run."""
+    if not state_path.exists():
+        box.caption("Taxonomy will appear after the first revise…")
+        return
+    try:
+        body = json.loads(state_path.read_text())
+    except Exception:
+        return
+    tax = body.get("taxonomy", []) or []
+    n_calls = body.get("n_classify_calls", 0)
+    with box.container():
+        st.caption(
+            f"Working taxonomy after round {n_calls} — {len(tax)} categories"
+        )
+        if not tax:
+            return
+        # Hand-rolled markdown table — st.dataframe is too tall for this preview.
+        md = ["| Name | Description | Round |", "| --- | --- | --- |"]
+        for cat in tax:
+            name = str(cat.get("name", "?")).replace("|", "\\|")
+            desc = str(cat.get("description", "")).replace("|", "\\|").replace("\n", " ")
+            md.append(f"| **{name}** | {desc} | {n_calls} |")
+        st.markdown("\n".join(md))
+
+
 def _render_cost_panel(box, cost_path: "Path") -> None:
     """Read cost.json (if present) and render a small live-cost panel.
     Resilient to a half-written file mid-flush."""
     if not cost_path.exists():
+        box.caption("waiting for first cost flush…")
         return
     try:
         body = json.loads(cost_path.read_text())
@@ -289,7 +322,8 @@ with run_tab:
             tmp.write_bytes(up.getvalue())
             items_path = str(tmp)
             try:
-                n = sum(1 for ln in open(items_path) if ln.strip())
+                with open(items_path) as f:
+                    n = sum(1 for ln in f if ln.strip())
                 st.success(f"Loaded {n} items from {up.name}")
             except Exception as e:
                 st.error(f"Could not read uploaded file: {e}")
@@ -347,8 +381,8 @@ with run_tab:
         effective_n = min(n_items_known, int(pool_limit)) if pool_limit and pool_limit > 0 else n_items_known
         est = _estimate_cost(effective_n, int(max_iters), int(probe_size))
         st.info(
-            f"**Estimated upper bound:** ~**\\${est['total']:.2f}** "
-            f"(orchestrator ~\\${est['orchestrator']:.2f} + judge ~\\${est['judge']:.2f}), "
+            f"**Estimated upper bound:** ~**USD {est['total']:.2f}** "
+            f"(orchestrator ~USD {est['orchestrator']:.2f} + judge ~USD {est['judge']:.2f}), "
             f"up to ~**{est['minutes']} min** wall time on **{effective_n} items**. "
             f"Both can be much lower if the orchestrator converges before "
             f"`max_iters={int(max_iters)}` iterations. "
@@ -357,13 +391,59 @@ with run_tab:
     else:
         st.caption(
             "Cost estimate appears once items are loaded. Rule of thumb: "
-            "~\\$0.10 per orchestrator iteration plus ~\\$0.0003 per judge call "
+            "~USD 0.10 per orchestrator iteration plus ~USD 0.0003 per judge call "
             "(probes + finalize)."
         )
 
-    c1, c2 = st.columns([1, 5])
-    start = c1.button("▶ Start run", type="primary", disabled=ss.running)
+    # Validate Custom… model IDs up front so Start can be disabled.
+    custom_model_err: str | None = None
+    if orch_choice == "Custom…" and not MODEL_ID_RE.match((orchestrator or "").strip()):
+        custom_model_err = (
+            "Custom orchestrator model ID must match `provider/model-id` "
+            "(e.g. `anthropic/claude-sonnet-4.6`)."
+        )
+    elif judge_choice == "Custom…" and not MODEL_ID_RE.match((judge or "").strip()):
+        custom_model_err = (
+            "Custom judge model ID must match `provider/model-id` "
+            "(e.g. `meta-llama/llama-3.3-70b-instruct`)."
+        )
 
+    c1, c2 = st.columns([1, 5])
+    start = c1.button(
+        "▶ Start run", type="primary",
+        disabled=ss.running or custom_model_err is not None,
+    )
+    if custom_model_err:
+        st.error(custom_model_err)
+
+    # Stop button — only visible during a live run. The PID file is written
+    # right after Popen, so the run-in-another-tab case still works.
+    if ss.running:
+        pid_path_str = ss.get("pid_path")
+        stop = st.button("■ Stop run", type="primary", use_container_width=True)
+        if stop and pid_path_str:
+            try:
+                pid = int(Path(pid_path_str).read_text().strip())
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+                ss.running = False
+                st.warning("Run stopped by user.")
+            except Exception as e:
+                st.error(f"Could not stop run: {e}")
+        # Reset escape hatch: if the tracked process is gone, let the user
+        # unwedge the UI without restarting Streamlit.
+        if pid_path_str and Path(pid_path_str).exists():
+            try:
+                pid = int(Path(pid_path_str).read_text().strip())
+                os.kill(pid, 0)
+                alive = True
+            except Exception:
+                alive = False
+            if not alive:
+                if st.button("Reset", help="Tracked process is gone — clear stuck state."):
+                    ss.running = False
+                    st.rerun()
+
+    taxonomy_preview_box = st.empty()
     cost_box = st.empty()
     log_box = st.empty()
 
@@ -380,6 +460,8 @@ with run_tab:
                 f"max iterations ({int(max_iters)}) — the floor would be "
                 f"unreachable."
             )
+        elif custom_model_err:
+            st.error(custom_model_err)
         else:
             ss.log_lines = []
             ss.running = True
@@ -437,11 +519,15 @@ with run_tab:
                         cwd=str(PROJECT_ROOT),
                         start_new_session=True,  # detach: outlive Streamlit
                     )
+                    pid_path = out_path / "run.pid"
+                    pid_path.write_text(str(proc.pid))
+                    ss.pid_path = str(pid_path)
                     # Tail the log file. The subprocess survives if Streamlit
                     # tears down this script — the parent's log_w handle goes
                     # away but the subprocess still has its own fd.
                     log_r = open(log_path, "r")
                     cost_path = out_path / "cost.json"
+                    state_path = out_path / "taxonomy_state.json"
                     while proc.poll() is None:
                         line = log_r.readline()
                         if line:
@@ -449,14 +535,17 @@ with run_tab:
                             log_box.code(
                                 "\n".join(ss.log_lines[-400:]), language="text",
                             )
+                            _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
                         else:
+                            _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
                             time.sleep(0.3)
                     # Drain anything written between the last readline and exit
                     for line in log_r.read().splitlines():
                         ss.log_lines.append(line)
                     log_box.code("\n".join(ss.log_lines[-400:]), language="text")
+                    _render_taxonomy_preview(taxonomy_preview_box, state_path)
                     _render_cost_panel(cost_box, cost_path)
                     log_r.close()
                     log_w.close()
@@ -506,18 +595,21 @@ with runs_tab:
             row = {"dir": str(d), "name": d.name, "mtime": d.stat().st_mtime}
             if meta_path.exists():
                 try:
-                    row.update(json.load(open(meta_path)))
+                    with open(meta_path) as f:
+                        row.update(json.load(f))
                 except Exception:
                     pass
             cost_path = d / "cost.json"
             if cost_path.exists():
                 try:
-                    row["cost"] = json.load(open(cost_path))
+                    with open(cost_path) as f:
+                        row["cost"] = json.load(f)
                 except Exception:
                     pass
             if tax_path.exists():
                 try:
-                    art = json.load(open(tax_path))
+                    with open(tax_path) as f:
+                        art = json.load(f)
                     row["n_categories"] = len(art.get("taxonomy", []))
                     row["n_items"] = art.get("n_items")
                     row["n_judge_errors"] = art.get("n_judge_errors")
