@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import pytest
 
-from taxonomy_agent.agent import _load_items
+from taxonomy_agent.agent import _load_items, run
 
 
 def test_loads_jsonl(tmp_path):
@@ -60,3 +60,17 @@ def test_rejects_duplicate_id_in_iterable():
 def test_iterable_missing_field():
     with pytest.raises(ValueError, match="every item must have"):
         _load_items([{"id": "a"}])
+
+
+# === run() argument validation (pool_limit) ===
+
+def test_pool_limit_zero_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "dummy")
+    with pytest.raises(ValueError, match="pool_limit"):
+        run([{"id": "a", "text": "x"}], "ignored", str(tmp_path), pool_limit=0)
+
+
+def test_pool_limit_negative_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "dummy")
+    with pytest.raises(ValueError, match="pool_limit"):
+        run([{"id": "a", "text": "x"}], "ignored", str(tmp_path), pool_limit=-1)

@@ -123,9 +123,14 @@ def run(
         raise ValueError(f"min_iterations ({min_iterations}) cannot exceed "
                          f"max_iterations ({max_iterations}) — the floor would "
                          f"be unreachable.")
+    if pool_limit is not None and (not isinstance(pool_limit, int)
+                                    or isinstance(pool_limit, bool)
+                                    or pool_limit <= 0):
+        raise ValueError(f"pool_limit must be None or a positive int, got "
+                         f"{pool_limit!r}")
 
     items_list = _load_items(items)
-    if pool_limit:
+    if pool_limit is not None and pool_limit > 0:
         items_list = items_list[:pool_limit]
     if not items_list:
         raise ValueError("no items to classify.")
