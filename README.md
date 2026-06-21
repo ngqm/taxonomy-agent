@@ -14,10 +14,28 @@ The package is fully self-contained — copy this folder into any project.
 
 ---
 
+## Motivation
+
+Manual taxonomy construction is labor-intensive and inconsistent: annotators
+drift, codebooks balloon, and reconciling disagreement is expensive. The same
+shape of problem recurs across annotation codebooks, summary categorization,
+content moderation, customer-support routing, and qualitative analysis — wherever
+a free-form corpus has to be flattened onto an interpretable axis.
+
+Recent LLM approaches (TopicGPT, TnT-LLM) attack this, but either as a one-shot
+prompt over the whole corpus or as an offline multi-stage pipeline. `taxonomy_agent`
+instead does **iterative refinement** through a typed op DSL (`add` / `rename` /
+`edit` / `merge` / `split` / `drop`), with operational features — live cost,
+partial-progress saving, resumable runs — that make it usable beyond a single
+notebook demo.
+
+---
+
 ## Quick start
 
 ```bash
 # 1. clone and install (editable; registers a `taxonomy` console script)
+#    Requires Python >= 3.10.
 git clone https://github.com/ngqm/taxonomy-agent.git
 cd taxonomy-agent
 pip install -e .
@@ -203,6 +221,28 @@ items.jsonl
 taxonomy.json  +  trace.jsonl
 ```
 
+### The six tools
+
+The orchestrator drives the loop entirely through these tool calls:
+
+- `sample_items` — pull a batch of K items for inspection
+- `get_taxonomy` — return the current working taxonomy
+- `revise_taxonomy` — apply a list of structured ops (see below)
+- `classify_with_judge` — label a batch via the judge LLM
+- `propose_novelties_with_judge` — ask the judge for category proposals on misfits
+- `finalize_classify` — label every item with the converged taxonomy
+
+### The six revise ops
+
+`revise_taxonomy` takes a list of typed ops:
+
+- `add(name, description)` — new category
+- `rename(from, to, description?)` — rename; assignments stay conceptually stable
+- `edit(name, description)` — refine the description
+- `merge(sources, into, description?)` — collapse multiple categories
+- `split(source, into=[(name, description), ...])` — break one into many
+- `drop(name)` — remove a category
+
 ---
 
 ## Programmatic use
@@ -276,6 +316,45 @@ python -m pytest taxonomy_agent/tests/ -v
 tools' behaviours, the judge's retry path, cost accounting (native OpenRouter
 + static-table fallback), and partial-save streaming. They use stub judges so
 the suite runs offline in under a second — no API key required.
+
+---
+
+## Troubleshooting
+
+- **Bad API key** → the judge raises `JudgeAuthError` and the run exits
+  immediately rather than burning the orchestrator's budget on doomed retries.
+- **Model id typo** → fails fast at startup; cross-check against the
+  [OpenRouter model list](https://openrouter.ai/models).
+- **Rate limits** → judge calls do exponential backoff up to 3 retries on HTTP
+  429; persistent 429s surface as `n_judge_errors`, not as don't-fit signal.
+- **Resuming a crashed run** → `taxonomy_state.json` and `classifications.jsonl`
+  are written incrementally. Re-open the same `output_dir` in the Streamlit
+  Results tab; partial outputs render even when `taxonomy.json` is missing.
+
+---
+
+## Screenshots
+
+> Screenshots TBD — see `docs/screenshots/` for live demo captures
+> (forthcoming).
+
+---
+
+## Citation
+
+If you use `taxonomy_agent` in academic work, please cite:
+
+```bibtex
+@inproceedings{nguyen2026taxonomyagent,
+  title  = {taxonomy_agent: Iterative LLM-Driven Taxonomy Discovery with Live Cost Tracking},
+  author = {Nguyen, Quang Minh},
+  booktitle = {Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing: System Demonstrations},
+  year   = {2026},
+  note   = {Preprint forthcoming.}
+}
+```
+
+A machine-readable `CITATION.cff` is in the repo root.
 
 ---
 
