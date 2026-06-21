@@ -1,0 +1,68 @@
+% =====================================================================
+% taxonomy_agent: EMNLP 2026 System Demonstration
+%
+% This skeleton uses the ACL/EMNLP shared style files. Download
+% `acl.sty` and `acl_natbib.bst` from
+%   https://github.com/acl-org/acl-style-files
+% and place them alongside main.tex before building. If the style file
+% is unavailable, the fallback \documentclass below renders a generic
+% article so that drafting can proceed.
+%
+% Build:
+%   latexmk -pdf main.tex
+% or
+%   pdflatex main && bibtex main && pdflatex main && pdflatex main
+% =====================================================================
+
+\documentclass[11pt]{article}
+
+% --- ACL style ---------------------------------------------------------
+% Uncomment the next line once acl.sty is in place. The [demo] option
+% triggers the System Demonstration track formatting.
+% \usepackage[demo]{acl}
+
+% --- Fallback packages (used when acl.sty is absent) -------------------
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{url}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% Visible TODOs during drafting. Remove or set \usepackage[disable]{todonotes}
+% for the camera-ready build.
+\usepackage{todonotes}
+
+\title{taxonomy\_agent: An Orchestrator--Judge Agent for Iterative Taxonomy Discovery}
+
+\author{Quang Minh Nguyen \\
+  KAIST \\
+  \texttt{qm.nguyen@kaist.ac.kr} \\
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/system}
+\input{sections/implementation}
+\input{sections/evaluation}
+\input{sections/related}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\bibliographystyle{acl_natbib}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,33 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate \textsc{taxonomy\_agent} against three baselines on a
+20~Newsgroups subset, measuring both intrinsic topic-coherence metrics
+and external clustering metrics, alongside cost and wall-time. The
+evaluation is also designed to externally validate the system's
+self-reported convergence signal.
+\todo{All numbers pending eval runs.}
+
+\begin{itemize}
+  \item \textbf{Corpus.} 20~Newsgroups subset, $K$ seeded categories.
+        \todo{Specify $K$, sampling protocol, train/test split.}
+  \item \textbf{Methods.} \textsc{taxonomy\_agent} (ours);
+        BERTopic~\citep{grootendorst2022bertopic};
+        TopicGPT-style prompt~\citep{pham2024topicgpt}; a single-shot
+        LLM baseline that asks the orchestrator model for a taxonomy
+        in one call.
+  \item \textbf{Metrics.} External: purity, NMI, ARI against the
+        20~Newsgroups labels. Intrinsic: NPMI and
+        $C_v$~\citep{rehurek2010gensim} coherence, label redundancy.
+        Operational: dollar cost (from OpenRouter
+        \texttt{usage.cost}), wall-clock time, number of iterations.
+  \item \textbf{Convergence validation.} Scatter plot of the judge's
+        terminal don't-fit rate against external purity / NPMI over
+        repeated runs, to test whether the self-reported signal
+        correlates with real quality.
+  \item \textbf{Tables and figures.}
+        \todo{Main results table (methods $\times$ metrics).}
+        \todo{Scatter plot of don't-fit rate vs.\ external purity.}
+        \todo{Ablation: revise-op vocabulary, judge model, min\_iter
+        floor.}
+\end{itemize}

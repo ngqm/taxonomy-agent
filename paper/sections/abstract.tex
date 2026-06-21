@@ -1,0 +1,11 @@
+\todo[inline]{Final abstract pending eval numbers.}
+We present \textsc{taxonomy\_agent}, an open-source system-demonstration tool that
+discovers and refines a labelled taxonomy over an unlabelled text corpus through
+a two-tier orchestrator--judge agent. A capable orchestrator LLM proposes
+edits in a small typed revise vocabulary (add, rename, edit, merge, split,
+drop) which are validated before mutation; a cheap parallel judge LLM scores
+items and surfaces don't-fit signals that drive convergence. The system
+ships with native OpenRouter cost accounting, partial-progress saving, and a
+Streamlit UI for live inspection. \todo{One-sentence headline result on
+20 Newsgroups vs.\ TopicGPT / BERTopic / single-shot LLM, with cost and
+wall-time deltas.}

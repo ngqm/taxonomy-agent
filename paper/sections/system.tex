@@ -1,0 +1,52 @@
+\section{System Overview}
+\label{sec:system}
+
+\textsc{taxonomy\_agent} is structured as an orchestrator LLM that holds
+the running taxonomy as state and a parallel judge LLM that scores
+sampled items against that taxonomy each iteration. The orchestrator
+interacts with the corpus exclusively through six tools; all taxonomy
+mutations go through a typed revise DSL that is validated before being
+applied. The loop terminates when the judge's don't-fit rate falls
+below a threshold, subject to a minimum iteration floor.
+\todo{Insert system diagram (figures/architecture.pdf).}
+
+\subsection{Tools}
+\label{sec:system:tools}
+
+The orchestrator's action space is the following six tools:
+\begin{itemize}
+  \item \texttt{sample\_items} -- draw a batch of unlabelled documents.
+  \item \texttt{get\_taxonomy} -- read the current taxonomy state.
+  \item \texttt{revise\_taxonomy} -- apply a typed list of revise ops.
+  \item \texttt{classify\_with\_judge} -- dispatch the current batch to
+        the parallel judge for scoring.
+  \item \texttt{propose\_novelties\_with\_judge} -- ask the judge to
+        surface candidate categories from don't-fit items.
+  \item \texttt{finalize\_classify} -- run the judge over the full
+        corpus once convergence is declared.
+\end{itemize}
+\todo{Flesh out each tool's I/O signature and prompt template.}
+
+\subsection{Revise DSL}
+\label{sec:system:revise}
+
+All taxonomy mutations are expressed as a list of typed operations:
+\textsc{add}, \textsc{rename}, \textsc{edit}, \textsc{merge},
+\textsc{split}, \textsc{drop}. Each op is validated against the current
+taxonomy (target labels must exist, new labels must not collide,
+splits must specify children) before any mutation is applied; an
+invalid batch is rejected as a whole so the taxonomy is never left in
+a partially-edited state.
+\todo{Table of op signatures and validation rules; worked example of a
+two-op merge+rename batch.}
+
+\subsection{Convergence}
+\label{sec:system:convergence}
+
+Convergence is decided by the judge's don't-fit rate over the last
+sampled batch, gated by a configurable minimum-iteration floor to
+prevent premature termination on small early samples. An escape hatch
+allows the orchestrator to terminate explicitly when it judges further
+edits unproductive.
+\todo{State the threshold formula, default floor, and behaviour when
+the orchestrator triggers the escape hatch.}

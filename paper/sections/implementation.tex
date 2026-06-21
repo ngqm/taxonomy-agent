@@ -1,0 +1,35 @@
+\section{Implementation}
+\label{sec:impl}
+
+The system is a small Python package (orchestrator, judge, tools,
+cost, UI) built on LangGraph for the orchestrator state machine and
+plain HTTP for the judge fan-out. All LLM traffic flows through
+OpenRouter, which keeps the system model-agnostic and provides per-call
+usage accounting that we prefer over static price tables.
+\todo{Add codebase map figure or table.}
+
+\begin{itemize}
+  \item \textbf{Orchestrator runtime.} LangGraph drives the
+        sequential tool-calling loop; state is the taxonomy plus a
+        bounded scratchpad of past judge reports.
+  \item \textbf{Judge fan-out.} Raw \texttt{requests.post} calls in a
+        threadpool, sized to the cheap-model concurrency budget; no
+        framework overhead per item.
+  \item \textbf{Provider abstraction.} OpenRouter is the single
+        backend, so swapping orchestrator or judge models is a CLI
+        flag. Defaults: orchestrator
+        \texttt{anthropic/claude-sonnet-4.6}, judge
+        \texttt{meta-llama/llama-3.3-70b-instruct}.
+  \item \textbf{Cost tracking.} Per-call cost is read from
+        OpenRouter's native \texttt{usage.cost} field when present and
+        falls back to a static price table otherwise; running totals
+        are streamed to the UI.
+  \item \textbf{Partial progress.} Taxonomy state is checkpointed to
+        \texttt{taxonomy\_state.json} after every iteration and
+        classifications are streamed line-by-line to
+        \texttt{classifications.jsonl}, so a killed run resumes
+        cleanly.
+  \item \textbf{Streamlit UI.} Live view of cost, taxonomy state,
+        per-iteration revise ops, and per-item classifications, with
+        configurable model dropdowns.
+\end{itemize}

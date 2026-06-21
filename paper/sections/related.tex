@@ -1,0 +1,86 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{LLM-based topic discovery.}
+TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate
+human-readable topic labels and short definitions directly from sampled
+documents, then assigns each remaining document to one of the generated
+topics. It demonstrated that LLM-produced topics are substantially more
+interpretable than classical BERTopic clusters, but the workflow is
+essentially a two-stage prompt: there is no typed edit vocabulary, no
+explicit refinement loop with validation, and no first-class notion of
+cost or partial progress. TnT-LLM~\citep{wan2024tntllm} from Microsoft
+stages a heavier two-phase pipeline in which an LLM first summarises
+batches of a conversational corpus into candidate labels and a second
+phase distils a lightweight classifier that scales the labelling to the
+full corpus. TnT-LLM is closer in spirit to our setting -- it uses LLMs
+as label generators and as labellers -- but it is structured as an
+offline production pipeline rather than an interactive agent, the
+``refine'' step is a single summarisation pass over batches rather than
+an iterative critique loop driven by per-item don't-fit signals, and
+the system is not released as an open tool with live cost accounting
+or a UI.
+
+\paragraph{Classical topic modelling.}
+BERTopic~\citep{grootendorst2022bertopic} represents the strongest
+non-LLM baseline: it embeds documents with a sentence transformer,
+reduces dimensionality with UMAP, clusters with HDBSCAN, and labels
+clusters via class-based TF-IDF. It is fast, fully reproducible, and
+needs no API key, but its outputs are bag-of-keyword cluster
+descriptions rather than human-readable categories with definitions,
+and the taxonomy cannot be edited in a typed way once produced.
+Classical LDA~\citep{blei2003lda} remains a reference point but
+suffers from the same interpretability and editability issues at a
+larger margin.
+
+\paragraph{Goal-driven and human-in-the-loop systems.}
+GoalEx~\citep{wang2023goalex} formulates explanation as goal-driven
+clustering: a user specifies a natural-language goal and the system
+produces a set of explanations partitioning the corpus that satisfy
+that goal. LLooM~\citep{lam2024lloom} is a CHI~2024 mixed-initiative
+system that surfaces high-level concepts from unstructured text for
+analysts to inspect and edit interactively. Co-DETECT~\citep{codetect2025}
+is an EMNLP~2025 demonstration that supports collaborative codebook
+development with LLMs, with the human and the model alternating
+proposals and revisions. These systems share our concern with
+interactive refinement, but they target the human-loop side of the
+problem; \textsc{taxonomy\_agent} is complementary in that it
+formalises the \emph{model-side} edit loop -- including a typed revise
+vocabulary and a self-reported convergence signal -- which a future
+human-in-the-loop layer can sit on top of.
+
+\paragraph{Recent 2025 work.}
+TaxoAdapt~\citep{taxoadapt2025} adapts an existing taxonomy to a new
+domain via LLM-guided edits, sharing our intuition that taxonomy
+construction is naturally an edit problem rather than a generation
+problem; it focuses on taxonomy \emph{adaptation} given a seed,
+whereas we discover from scratch under a typed DSL.
+LLM-guided semantic-aware clustering~\citep{llmguided2025} uses an LLM
+to steer the clustering objective itself, blurring the line between
+classical clustering and LLM topic discovery. The recent EMNLP~2024
+survey on LLMs for data annotation~\citep{tan2024llmannot} places this
+family of work in the broader annotation landscape and motivates the
+operational concerns -- cost, reproducibility, interruption-safety --
+that our system targets.
+
+\paragraph{Positioning of \textsc{taxonomy\_agent}.}
+Against TopicGPT and the single-shot LLM baseline, our system adds an
+explicit iterative loop with a typed edit vocabulary and a
+convergence criterion, rather than a one-shot prompt. Against TnT-LLM,
+we expose the refinement step as a small set of validated tool calls
+driven by per-item don't-fit signals, separate the expensive
+orchestrator from a cheap parallel judge, and ship the system as an
+interactive open-source demo with live cost accounting and
+partial-progress saving rather than an offline production pipeline.
+Against BERTopic and LDA, we produce human-readable categories with
+definitions and support post-hoc typed edits. Against goal-driven and
+human-in-the-loop systems (GoalEx, LLooM, Co-DETECT), we focus on the
+model-side edit loop and provide infrastructure -- the six-op DSL with
+validate-before-mutate, the orchestrator--judge split, the cost and
+progress streams -- on which interactive human workflows can be
+layered. Against TaxoAdapt and LLM-guided clustering, we operate
+without a seed taxonomy and externally validate our self-reported
+convergence signal. The combination -- orchestrator--judge separation,
+typed validated revise DSL, externally-validated self-reported
+convergence, native cost tracking, and an open-source model-agnostic
+Streamlit demo -- is, to our knowledge, novel.
