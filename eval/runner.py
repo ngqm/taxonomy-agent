@@ -45,11 +45,11 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
     if method == "single_shot":
         from .baselines.single_shot_llm import run_single_shot
         return run_single_shot(items, instruction=instruction, model=model,
-                               api_key=api_key, seed=seed, **kw)
+                               api_key=api_key, seed=seed)
     if method == "topicgpt_style":
         from .baselines.topicgpt_style import run_topicgpt_style
         return run_topicgpt_style(items, instruction=instruction, model=model,
-                                  api_key=api_key, seed=seed, **kw)
+                                  api_key=api_key, seed=seed)
     if method == "taxonomy_agent":
         from .. import run as taxagent_run
         sub_dir = os.path.join(kw.get("_eval_output_dir", "."),
