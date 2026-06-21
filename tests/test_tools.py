@@ -10,7 +10,7 @@ import os
 
 import pytest
 
-from taxonomy_agent.tools import JUDGE_ERROR_RATIONALE
+from taxonomy_agent.tools import JUDGE_ERROR_RATIONALE, _coerce_category
 
 
 def _ids_from_sample(out: str) -> list[str]:
@@ -464,6 +464,37 @@ def test_finalize_truncates_stale_classifications_jsonl(items5, make_tool_set, t
     lines = open(jsonl_path).read().strip().splitlines()
     assert len(lines) == 5
     assert not any('"id": "stale"' in l for l in lines)
+
+
+# === _coerce_category (case-insensitive + escape hatches) ===
+
+def test_coerce_case_insensitive_match():
+    taxonomy = [{"name": "topic_a", "description": "d"}]
+    cat, _ = _coerce_category({"category": "Topic_A", "rationale": "r"}, taxonomy)
+    assert cat == "topic_a"
+
+
+def test_coerce_preserves_canonical_case():
+    taxonomy = [{"name": "topic_a", "description": "d"}]
+    cat, rat = _coerce_category({"category": "TOPIC_A", "rationale": "r"}, taxonomy)
+    assert cat == "topic_a"
+    assert not rat.startswith("[coerced")
+
+
+def test_coerce_other_still_works():
+    taxonomy = [{"name": "topic_a", "description": "d"}]
+    cat, rat = _coerce_category({"category": "Other", "rationale": "r"}, taxonomy)
+    assert cat == "other"
+    assert not rat.startswith("[coerced")
+
+
+def test_coerce_unknown_still_coerced_with_rationale():
+    taxonomy = [{"name": "topic_a", "description": "d"}]
+    cat, rat = _coerce_category(
+        {"category": "made_up_label", "rationale": "r"}, taxonomy,
+    )
+    assert cat == "other"
+    assert rat.startswith("[coerced from invented label 'made_up_label']")
 
 
 # === trace.jsonl ===

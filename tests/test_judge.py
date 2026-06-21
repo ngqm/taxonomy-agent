@@ -4,11 +4,24 @@ from __future__ import annotations
 import json as _json
 from unittest.mock import MagicMock, patch
 
-from taxonomy_agent.judge import make_judge_caller
+import pytest
+import requests
+
+from taxonomy_agent.judge import JudgeAuthError, make_judge_caller
+
+
+def _http_err_resp(status: int) -> MagicMock:
+    r = MagicMock()
+    r.status_code = status
+    err = requests.exceptions.HTTPError(f"HTTP {status}")
+    err.response = r
+    r.raise_for_status.side_effect = err
+    return r
 
 
 def _ok_resp(content: str = "ok") -> MagicMock:
     r = MagicMock()
+    r.status_code = 200
     r.raise_for_status = lambda: None
     r.json.return_value = {"choices": [{"message": {"content": content}}]}
     return r
@@ -88,6 +101,7 @@ def _ok_resp_with_usage(content: str = "ok",
                          completion_tokens: int = 5,
                          cost: float | None = None) -> MagicMock:
     r = MagicMock()
+    r.status_code = 200
     r.raise_for_status = lambda: None
     usage = {"prompt_tokens": prompt_tokens,
              "completion_tokens": completion_tokens,
@@ -108,7 +122,7 @@ def test_usage_sink_called_per_successful_call():
                return_value=_ok_resp_with_usage(prompt_tokens=42, completion_tokens=7)):
         call("prompt")
     assert captured == [{"prompt_tokens": 42, "completion_tokens": 7,
-                          "total_tokens": 49}]
+                          "total_tokens": 49, "http_status": 200}]
 
 
 def test_usage_sink_not_called_on_failure():
@@ -150,7 +164,8 @@ def test_usage_sink_forwards_native_cost():
                                                   cost=0.0042)):
         call("prompt")
     assert captured == [{"prompt_tokens": 100, "completion_tokens": 20,
-                          "total_tokens": 120, "cost": 0.0042}]
+                          "total_tokens": 120, "cost": 0.0042,
+                          "http_status": 200}]
 
 
 def test_usage_sink_error_does_not_break_call():
@@ -183,6 +198,65 @@ def test_parallel_on_reply_fires_per_completion():
     assert out == ["reply_to_a", "reply_to_b", "reply_to_c"]
     # All three indices appear (order across threads isn't guaranteed).
     assert sorted(received) == [(0, "reply_to_a"), (1, "reply_to_b"), (2, "reply_to_c")]
+
+
+def test_call_raises_on_401():
+    call, _ = make_judge_caller("k", "model")
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_http_err_resp(401)):
+        with pytest.raises(JudgeAuthError):
+            call("prompt")
+
+
+def test_call_raises_on_403():
+    call, _ = make_judge_caller("k", "model")
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_http_err_resp(403)):
+        with pytest.raises(JudgeAuthError):
+            call("prompt")
+
+
+def test_call_retries_with_backoff_on_429():
+    call, _ = make_judge_caller("k", "model")
+    posts: list[int] = []
+
+    def fake_post(*a, **k):
+        posts.append(1)
+        return _http_err_resp(429)
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.time.sleep") as fake_sleep:
+        out = call("prompt")
+
+    assert out is None
+    # original + 3 retries = 4 posts
+    assert len(posts) == 4
+    sleeps = [c.args[0] for c in fake_sleep.call_args_list]
+    assert sleeps == [1.0, 2.0, 4.0]
+
+
+def test_call_retries_on_500_then_succeeds():
+    call, _ = make_judge_caller("k", "model")
+    responses = [_http_err_resp(500), _ok_resp("recovered")]
+
+    def fake_post(*a, **k):
+        return responses.pop(0)
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.time.sleep") as fake_sleep:
+        assert call("prompt") == "recovered"
+    fake_sleep.assert_called_once_with(1.0)
+
+
+def test_usage_sink_receives_http_status():
+    captured: list[dict] = []
+    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    resp = _ok_resp_with_usage(prompt_tokens=10, completion_tokens=5)
+    resp.status_code = 200
+    with patch("taxonomy_agent.judge.requests.post", return_value=resp):
+        call("prompt")
+    assert len(captured) == 1
+    assert captured[0]["http_status"] == 200
 
 
 def test_parallel_on_reply_fires_for_failures_too():

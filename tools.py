@@ -77,13 +77,16 @@ def _parse_json_block(text: str | None) -> Any:
 
 def _coerce_category(parsed: Any, taxonomy: list[dict]) -> tuple[str, str]:
     """Map judge replies to (category, rationale). Out-of-taxonomy labels collapse to 'other'."""
-    valid = {c["name"] for c in taxonomy}
+    # Case-insensitive lookup keyed on lowercased name → canonical name, so a
+    # judge reply of "Topic_A" against taxonomy ["topic_a"] still matches.
+    lookup = {c["name"].lower(): c["name"] for c in taxonomy}
     if not isinstance(parsed, dict):
         return "other", "[unparseable judge reply]"
     raw = str(parsed.get("category", "other")).strip()
     rat = str(parsed.get("rationale", ""))
-    if raw in valid:
-        return raw, rat
+    canonical = lookup.get(raw.lower())
+    if canonical is not None:
+        return canonical, rat
     if raw.lower() == "other":
         return "other", rat
     return "other", f"[coerced from invented label '{raw}'] {rat}"
