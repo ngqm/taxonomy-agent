@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+title: "taxonomy_agent: Iterative LLM-Driven Taxonomy Discovery"
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Nguyen
+    given-names: Quang Minh
+    affiliation: KAIST
+    email: qm.nguyen@kaist.ac.kr
+repository-code: "https://github.com/ngqm/taxonomy-agent"
+license: MIT
+preferred-citation:
+  type: conference-paper
+  title: "taxonomy_agent: Iterative LLM-Driven Taxonomy Discovery with Live Cost Tracking"
+  authors:
+    - family-names: Nguyen
+      given-names: Quang Minh
+  collection-title: "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing: System Demonstrations"
+  year: 2026
+  notes: "Preprint forthcoming."
