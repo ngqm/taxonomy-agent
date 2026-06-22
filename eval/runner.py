@@ -72,6 +72,11 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
     if method == "bertopic":
         from .baselines.bertopic_baseline import run_bertopic
         return run_bertopic(items, seed=seed)
+    if method == "lda":
+        from .baselines.lda_baseline import run_lda
+        return run_lda(items, seed=seed,
+                       **{k: v for k, v in kw.items()
+                          if k in ("n_topics", "max_features", "max_iter")})
     if method == "single_shot":
         from .baselines.single_shot_llm import run_single_shot
         return run_single_shot(items, instruction=instruction, model=model,
@@ -80,16 +85,28 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
         from .baselines.topicgpt_style import run_topicgpt_style
         return run_topicgpt_style(items, instruction=instruction, model=model,
                                   api_key=api_key, seed=seed)
-    if method == "taxonomy_agent":
+    if method == "embed_cluster_llm":
+        from .baselines.embed_cluster_llm import run_embed_cluster_llm
+        return run_embed_cluster_llm(
+            items, instruction=instruction, model=model,
+            api_key=api_key, seed=seed,
+            **{k: v for k, v in kw.items()
+               if k in ("k", "samples_per_cluster", "concurrency")},
+        )
+    if method in ("taxonomy_agent", "taxonomy_agent_prose"):
         from .. import run as taxagent_run
+        prose = (method == "taxonomy_agent_prose")
+        sub_label = "taxonomy_agent_prose" if prose else "taxonomy_agent"
         sub_dir = os.path.join(kw.get("_eval_output_dir", "."),
-                               f"taxonomy_agent_seed{seed}")
+                               f"{sub_label}_seed{seed}")
         os.makedirs(sub_dir, exist_ok=True)
         t0 = time.time()
         passthrough = {k: v for k, v in kw.items()
                        if k in ("max_iterations", "min_iterations",
                                 "converge_below", "probe_size", "pool_limit",
                                 "concurrency", "recursion_limit")}
+        if prose:
+            passthrough["prose_revise"] = True
         rrun = taxagent_run(
             items=items,
             instruction=instruction,

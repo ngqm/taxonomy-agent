@@ -243,10 +243,73 @@ def _apply_ops(state: _TaxonomyState,
     return tax, log
 
 
+def _apply_ops_loose(state: _TaxonomyState,
+                     operations: list[dict]) -> tuple[list[dict], list[dict]]:
+    """ABLATION: skip every validate-before-mutate check.
+
+    No source-existence check on rename/edit/merge/split; no name-collision
+    check on add/rename; no malformed-entry guard on split; missing required
+    keys default to empty strings instead of skipping the op. Used by the
+    ``--prose-revise`` ablation to test what the typed dispatcher actually
+    buys.
+    """
+    tax = [dict(c) for c in state.taxonomy]
+    log: list[dict] = []
+    for op_dict in operations or []:
+        d = op_dict or {}
+        op = d.get("op")
+        if op == "add":
+            tax.append({"name": d.get("name", ""),
+                        "description": d.get("description", "")})
+            log.append({"op": "add", "name": d.get("name", ""), "result": "ok"})
+        elif op == "rename":
+            old = d.get("old_name", "")
+            new = d.get("new_name", "")
+            tax = [{**c, "name": new} if c["name"] == old else dict(c)
+                   for c in tax]
+            log.append({"op": "rename", "from": old, "to": new, "result": "ok"})
+        elif op == "edit":
+            name = d.get("name", "")
+            desc = d.get("description", "")
+            tax = [{**c, "description": desc} if c["name"] == name else dict(c)
+                   for c in tax]
+            log.append({"op": "edit", "name": name, "result": "ok"})
+        elif op == "drop":
+            name = d.get("name", "")
+            tax = [c for c in tax if c["name"] != name]
+            log.append({"op": "drop", "name": name, "result": "ok"})
+        elif op == "merge":
+            into = d.get("into", "")
+            sources = d.get("from", []) or []
+            desc = d.get("description")
+            tax = [c for c in tax if c["name"] not in sources]
+            if not any(c["name"] == into for c in tax):
+                tax.append({"name": into,
+                            "description": desc or ""})
+            elif desc:
+                tax = [{**c, "description": desc} if c["name"] == into
+                       else dict(c) for c in tax]
+            log.append({"op": "merge", "into": into, "from": sources,
+                        "result": "ok"})
+        elif op == "split":
+            src = d.get("from", "")
+            new_cats = d.get("into", []) or []
+            tax = [c for c in tax if c["name"] != src]
+            for nc in new_cats:
+                tax.append({"name": (nc or {}).get("name", ""),
+                            "description": (nc or {}).get("description", "")})
+            log.append({"op": "split", "from": src, "result": "ok"})
+        else:
+            log.append({"op": op, "result": f"unknown op '{op}'"})
+            continue
+    state.taxonomy = tax
+    return tax, log
+
+
 def make_tools(items: list[dict], run_id: str, output_dir: str,
                judge_call, judge_parallel,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
-               min_iterations: int = 0):
+               min_iterations: int = 0, prose_revise: bool = False):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -323,7 +386,8 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
           {"op": "drop",   "name": <existing>}
 
         Operations apply in order. Returns a per-op result log and the resulting taxonomy."""
-        new_tax, applied = _apply_ops(state, operations)
+        _ops_fn = _apply_ops_loose if prose_revise else _apply_ops
+        new_tax, applied = _ops_fn(state, operations)
         _append_trace(trace_path, run_id, "revise", {
             "operations": operations,
             "applied": applied,

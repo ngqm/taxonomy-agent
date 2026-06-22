@@ -73,6 +73,7 @@ def run(
     api_key: str | None = None,
     base_url: str = "https://openrouter.ai/api/v1",
     temperature: float = 0.2,
+    prose_revise: bool = False,
 ) -> dict:
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -156,6 +157,7 @@ def run(
         "size_hint": size_hint,
         "category_focus": category_focus,
         "min_iterations": min_iterations,
+        "prose_revise": prose_revise,
         "status": "running",
     }
     with open(meta_path, "w") as f:
@@ -173,7 +175,8 @@ def run(
     )
     tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
                        concurrency=concurrency, max_iters=max_iterations,
-                       min_iterations=min_iterations)
+                       min_iterations=min_iterations,
+                       prose_revise=prose_revise)
 
     llm = ChatOpenAI(
         model=orchestrator_model,
