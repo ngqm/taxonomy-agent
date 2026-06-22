@@ -111,8 +111,8 @@ def _scan_runs(roots: list[Path], max_depth: int = 3) -> list[dict]:
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
 st.title("Taxonomy Agent")
 st.caption(
-    "Discover a taxonomy of patterns in a text corpus and classify every item. "
-    "Driven by a strong orchestrator LLM that calls a cheaper judge LLM through six tools."
+    "Discover a labelled taxonomy over an unlabelled text corpus, then "
+    "classify every item against it."
 )
 
 ss = st.session_state
@@ -220,20 +220,20 @@ def _render_cost_panel(box, cost_path: "Path") -> None:
         c1, c2, c3, c4 = st.columns(4)
         c1.metric(
             "Total cost",
-            f"${total_usd:.4f}" if total_usd is not None else "—",
+            f"${total_usd:.2f}" if total_usd is not None else "—",
             help=f"Source: {source_help}. Tokens are tracked regardless of "
                  f"whether USD pricing is available.",
         )
         c2.metric(
             "Orchestrator",
-            f"${orch.get('usd'):.4f}" if orch.get("usd") is not None else "—",
+            f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
             help=f"{orch.get('n_calls', 0)} calls · "
                  f"{orch.get('input_tokens', 0):,} in / "
                  f"{orch.get('output_tokens', 0):,} out tokens",
         )
         c3.metric(
             "Judge",
-            f"${judge.get('usd'):.4f}" if judge.get("usd") is not None else "—",
+            f"${judge.get('usd'):.2f}" if judge.get("usd") is not None else "—",
             help=f"{judge.get('n_calls', 0)} calls · "
                  f"{judge.get('input_tokens', 0):,} in / "
                  f"{judge.get('output_tokens', 0):,} out tokens",
@@ -320,6 +320,9 @@ with st.sidebar:
             )
         else:
             orchestrator = orch_choice
+        # Show the full model id below the dropdown so the user can read what
+        # was selected even when the dropdown clips on a narrow sidebar.
+        st.caption(f"→ `{orchestrator}`" if orchestrator else "→ (not set)")
 
         judge_choice = st.selectbox(
             "Judge model",
@@ -336,6 +339,7 @@ with st.sidebar:
             )
         else:
             judge = judge_choice
+        st.caption(f"→ `{judge}`" if judge else "→ (not set)")
 
     with st.expander("Discovery loop", expanded=True):
         max_iters = st.number_input(
@@ -376,7 +380,7 @@ with st.sidebar:
         )
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
-run_tab, runs_tab, results_tab = st.tabs(["Run", "Runs", "Results"])
+run_tab, runs_tab, results_tab = st.tabs(["Run", "History", "Inspect"])
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
@@ -634,7 +638,7 @@ with run_tab:
             st.info(
                 f"Running: `{' '.join(cmd[:5])} …`  →  output: `{out_abs}`\n\n"
                 f"This run is **detached** — closing this tab is safe; the run "
-                f"continues in the background. Find it later in the **Runs** tab."
+                f"continues in the background. Find it later in the **History** tab."
             )
             with st.spinner("Agent running — streaming logs below…"):
                 try:
@@ -685,7 +689,7 @@ with run_tab:
             ss.running = False
             if proc.returncode == 0:
                 ss.result_dir = out_abs
-                st.success(f"Done. Open the **Results** tab to inspect `{out_abs}`.")
+                st.success(f"Done. Open the **Inspect** tab to view `{out_abs}`.")
             else:
                 st.error(f"Agent exited with code {proc.returncode}. Inspect the log above.")
     elif ss.log_lines:
@@ -768,16 +772,16 @@ with runs_tab:
                     total_usd = (r.get("cost") or {}).get("total_usd")
                     cols[3].metric(
                         "Cost",
-                        f"${total_usd:.4f}" if total_usd is not None else "—",
+                        f"${total_usd:.2f}" if total_usd is not None else "—",
                     )
                     if r.get("orchestrator_model"):
                         st.caption(f"Orchestrator: `{r['orchestrator_model']}` · "
                                    f"Judge: `{r.get('judge_model', '?')}`")
                     st.caption(f"Path: `{r['dir']}`")
-                    if st.button("Load in Results tab", key=f"load_{r['dir']}"):
+                    if st.button("Load in Inspect tab", key=f"load_{r['dir']}"):
                         ss.result_dir = r["dir"]
                         st.success(
-                            "Loaded — switch to the **Results** tab to view."
+                            "Loaded — switch to the **Inspect** tab to view."
                         )
                     log_path = Path(r["dir"]) / "run.log"
                     if log_path.exists():
@@ -788,49 +792,67 @@ with runs_tab:
                             except Exception as e:
                                 st.warning(f"Could not read log: {e}")
 
-# ── Results tab ─────────────────────────────────────────────────────────────
+# ── Inspect tab ─────────────────────────────────────────────────────────────
 with results_tab:
-    st.subheader("Load a run")
-    candidate = st.text_input(
-        "Run output directory",
-        value=ss.result_dir or "",
-        help="Directory containing taxonomy.json (and optionally trace.jsonl).",
-    )
+    st.subheader("Pick a run to inspect")
 
-    # Recent-runs picker — shown when no path is entered yet, so first-time
-    # demo visitors can click instead of typing a path they don't know.
-    if not (candidate or "").strip():
-        recent = _scan_runs(_discover_runs_roots())
-        # Only completed runs are interesting in Results.
-        recent = [r for r in recent if r.get("status") == "ok"][:10]
-        if recent:
-            st.caption("Or pick a recent completed run:")
-            labels = []
-            for r in recent:
-                started = r.get("started_at") or datetime.fromtimestamp(
-                    r["mtime"]).isoformat(timespec="seconds")
-                cost = (r.get("cost") or {}).get("total_usd")
-                cost_s = f" · ${cost:.2f}" if cost is not None else ""
-                cats = r.get("n_categories")
-                cats_s = f" · {cats} cats" if cats is not None else ""
-                labels.append(
-                    f"{r['name']}  ({started}{cats_s}{cost_s})"
-                )
-            pick = st.selectbox(
-                "Recent runs",
-                options=["— choose one —", *labels],
-                index=0,
-                label_visibility="collapsed",
+    # Recent-runs picker is the primary entry path. If nothing is loaded yet
+    # we surface it first; the directory text input lives behind an "Advanced"
+    # expander below for users who really want to type a path.
+    recent_for_picker = _scan_runs(_discover_runs_roots())
+    recent_for_picker = [
+        r for r in recent_for_picker if r.get("status") == "ok"
+    ][:10]
+    candidate: str = ss.result_dir or ""
+
+    if recent_for_picker:
+        labels = []
+        for r in recent_for_picker:
+            started = r.get("started_at") or datetime.fromtimestamp(
+                r["mtime"]).isoformat(timespec="seconds")
+            cost = (r.get("cost") or {}).get("total_usd")
+            cost_s = f" · ${cost:.2f}" if cost is not None else ""
+            cats = r.get("n_categories")
+            cats_s = f" · {cats} cats" if cats is not None else ""
+            labels.append(f"{r['name']}  ({started}{cats_s}{cost_s})")
+        # Default selection: the currently-loaded run if it matches, else placeholder.
+        try:
+            default_idx = next(
+                i + 1
+                for i, r in enumerate(recent_for_picker)
+                if r["dir"] == candidate
             )
-            if pick != "— choose one —":
-                idx = labels.index(pick)
-                ss.result_dir = recent[idx]["dir"]
+        except StopIteration:
+            default_idx = 0
+        pick = st.selectbox(
+            "Recent completed runs",
+            options=["— choose one —", *labels],
+            index=default_idx,
+            label_visibility="collapsed",
+        )
+        if pick != "— choose one —":
+            idx = labels.index(pick)
+            chosen = recent_for_picker[idx]["dir"]
+            if chosen != candidate:
+                ss.result_dir = chosen
                 st.rerun()
-        else:
-            st.caption(
-                "No completed runs found yet. Click **Quick demo** on the "
-                "**Run** tab to generate one in about a minute."
-            )
+            candidate = chosen
+    else:
+        st.caption(
+            "No completed runs found yet. Click **Quick demo** on the "
+            "**Run** tab to generate one in about a minute."
+        )
+
+    with st.expander("Or type a run directory path", expanded=False):
+        typed = st.text_input(
+            "Run output directory",
+            value=ss.result_dir or "",
+            help="Directory containing taxonomy.json (and optionally trace.jsonl).",
+            label_visibility="collapsed",
+        )
+        if typed and typed != candidate:
+            ss.result_dir = typed
+            candidate = typed
 
     if candidate:
         cand_path = Path(candidate).expanduser()
@@ -903,18 +925,18 @@ with results_tab:
                     c1, c2, c3 = st.columns(3)
                     c1.metric(
                         "Total",
-                        f"${total_usd:.4f}" if total_usd is not None else "—",
+                        f"${total_usd:.2f}" if total_usd is not None else "—",
                     )
                     c2.metric(
                         "Orchestrator",
-                        f"${orch.get('usd'):.4f}" if orch.get("usd") is not None else "—",
+                        f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
                         help=f"{orch.get('n_calls', 0)} calls · "
                              f"{orch.get('input_tokens', 0):,}/"
                              f"{orch.get('output_tokens', 0):,} tokens",
                     )
                     c3.metric(
                         "Judge",
-                        f"${judge.get('usd'):.4f}" if judge.get("usd") is not None else "—",
+                        f"${judge.get('usd'):.2f}" if judge.get("usd") is not None else "—",
                         help=f"{judge.get('n_calls', 0)} calls · "
                              f"{judge.get('input_tokens', 0):,}/"
                              f"{judge.get('output_tokens', 0):,} tokens",
@@ -925,13 +947,28 @@ with results_tab:
             counts: dict = art.get("category_counts", {}) or {}
 
             st.subheader("Taxonomy")
-            for cat in art.get("taxonomy", []):
+            # Expand the three largest categories by default so the discovered
+            # structure is visible at a glance; smaller ones stay collapsed.
+            tax_list = art.get("taxonomy", []) or []
+            top3 = {
+                name
+                for name, _ in sorted(
+                    counts.items(), key=lambda kv: -kv[1]
+                )[:3]
+            }
+            for cat in tax_list:
                 name = cat.get("name", "?")
                 desc = cat.get("description", "")
-                with st.expander(f"**{name}**  —  {counts.get(name, 0)} items"):
+                with st.expander(
+                    f"**{name}**  ·  {counts.get(name, 0)} items",
+                    expanded=name in top3,
+                ):
                     st.write(desc)
             if counts.get("other"):
-                with st.expander(f"**other**  —  {counts['other']} items"):
+                with st.expander(
+                    f"**other**  ·  {counts['other']} items",
+                    expanded=False,
+                ):
                     st.write("Items that did not fit any discovered category.")
 
             if counts:
@@ -941,9 +978,28 @@ with results_tab:
                         [{"category": k, "count": v} for k, v in counts.items()]
                     )
                     .sort_values("count", ascending=False)
-                    .set_index("category")
                 )
-                st.bar_chart(df_counts)
+                # Horizontal bars via altair: category names render in full and
+                # the largest-first ordering matches the Taxonomy panel above.
+                try:
+                    import altair as alt
+                    chart = (
+                        alt.Chart(df_counts)
+                        .mark_bar()
+                        .encode(
+                            x=alt.X("count:Q", title="items"),
+                            y=alt.Y(
+                                "category:N",
+                                sort="-x",
+                                title=None,
+                            ),
+                            tooltip=["category", "count"],
+                        )
+                        .properties(height=max(180, 28 * len(df_counts)))
+                    )
+                    st.altair_chart(chart, use_container_width=True)
+                except Exception:
+                    st.bar_chart(df_counts.set_index("category"))
 
             rows = art.get("classifications", []) or []
             if rows:
