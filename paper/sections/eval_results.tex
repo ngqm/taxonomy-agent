@@ -4,14 +4,13 @@
 Throughout, \textsc{taxonomy\_agent} is run with a Claude~Sonnet~4.6
 orchestrator and a DeepSeek-v4-Flash judge. The system's installed
 default judge is Llama-3.3-70B; we override it to DeepSeek-v4-Flash on
-the benchmarks for a cheaper-yet-current evaluation pair. The
-\textsc{single\_shot} and \textsc{topicgpt\_style} LLM baselines also
-use DeepSeek-v4-Flash. BERTopic uses no LLM. Table~\ref{tab:models}
+the benchmarks for a judge that is cheaper while remaining current.
+The \textsc{single\_shot} and \textsc{iterative\_proposal} LLM baselines
+also use DeepSeek-v4-Flash. BERTopic uses no LLM. Table~\ref{tab:models}
 pins the configuration.
 
 \begin{table}[t]
 \centering
-\small
 \begin{tabular}{lll}
 \toprule
 Benchmark & Orchestrator & Judge / LLM \\
@@ -30,18 +29,17 @@ because it sits at a comparable cost--capability point.}
 \subsection{20~Newsgroups Results}
 \label{sec:eval-results-20ng}
 
-We report mean $\pm$ standard deviation over three seeds
-(42, 43, 44) on a 487-document stratified subsample of
+We report mean $\pm$ standard deviation over three independently
+sampled random seeds on a 487-document stratified subsample of
 20~Newsgroups (sampled at 25/class; 13 empty post-stripping
 documents are dropped, leaving 487). All four methods see the same
-documents under the same seed. Table~\ref{tab:20ng} gives the headline
+documents under the same seed. Table~\ref{tab:20ng} gives the primary
 numbers; BERTopic is reported at the library default
 \texttt{min\_topic\_size=10} in the main table and revisited under a
 parameter sweep in the Intrinsic-coherence paragraph below.
 
 \begin{table*}[t]
 \centering
-\small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccccrr}
 \toprule
@@ -57,7 +55,7 @@ single\_shot
   & 0.253$_{\pm.026}$ & 0.345$_{\pm.056}$ & 0.101$_{\pm.041}$
   & 0.052$_{\pm.016}$ & 0.330$_{\pm.027}$ & 0.144$_{\pm.019}$
   & 10.0$_{\pm0.0}$ & 0.024$_{\pm.000}$ & 169$_{\pm25}$ \\
-topicgpt\_style
+iterative\_proposal
   & 0.185$_{\pm.094}$ & 0.222$_{\pm.128}$ & 0.043$_{\pm.043}$
   & \textbf{0.106}$_{\pm.041}$ & 0.322$_{\pm.035}$ & \textbf{0.053}$_{\pm.010}$
   & 16.0$_{\pm5.2}$ & 0.030$_{\pm.012}$ & 162$_{\pm60}$ \\
@@ -67,7 +65,7 @@ bertopic
   & 2.0$_{\pm0.0}$ & 0.00 & 15$_{\pm5}$ \\
 \bottomrule
 \end{tabular}
-\caption{20~Newsgroups results (mean $\pm$ stddev over seeds 42--44, $n=487$).
+\caption{20~Newsgroups results (mean $\pm$ stddev over three seeds, $n=487$).
 Best per column in bold. $|\mathcal{T}|$ is the number of discovered
 categories. BERTopic is reported at library defaults
 (\texttt{min\_topic\_size=10}, $|\mathcal{T}|{=}2$); a
@@ -81,14 +79,14 @@ sampling stochasticity.}
 
 \paragraph{Supervised metrics.}
 Against the 20~Newsgroups gold labels, taxonomy\_agent leads
-on the metric that resists splitting --- ARI 0.336 vs.\
-single\_shot's 0.101 and topicgpt\_style's 0.043. On NMI it leads
-the LLM baselines at 0.656 vs.\ single\_shot's 0.345, but the lead over
-BERTopic-at-default narrows substantially under tuning (see
-``Intrinsic coherence'' below). On purity it leads the LLM baselines
+on the metric that resists splitting, with ARI 0.336 vs.\
+single\_shot's 0.101 and iterative\_proposal's 0.043. On NMI it leads
+the LLM baselines at 0.656 vs.\ single\_shot's 0.345, but the lead
+over the default BERTopic narrows substantially once BERTopic is
+tuned (see ``Intrinsic coherence'' below). On purity it leads the LLM baselines
 at 0.367 vs.\ single\_shot's 0.253, but a tuned BERTopic at
 \texttt{min\_topic\_size=2} achieves higher purity (0.552) by emitting
-60 micro-clusters --- a granularity confound we treat in the next
+60 micro-clusters, a granularity confound we treat in the next
 paragraph. The cross-seed standard deviations are smaller for
 taxonomy\_agent than for the LLM baselines (NMI std 0.012 vs.\ 0.056
 for single\_shot), suggesting the agentic loop converges to a similar
@@ -98,7 +96,7 @@ three seeds.
 
 \paragraph{Intrinsic coherence and the BERTopic sweep.}
 Coherence metrics are not uniformly in taxonomy\_agent's favour.
-topicgpt\_style wins NPMI (0.106 vs.\ our 0.065) by emitting
+iterative\_proposal wins NPMI (0.106 vs.\ our 0.065) by emitting
 finer-grained, more lexically-focused categories (16 vs.\ 7);
 this also yields the lowest label redundancy. BERTopic at library
 defaults wins $C_v$ by a wide margin (0.767 vs.\ our 0.322), but
@@ -114,17 +112,19 @@ three seeds. The default and larger values all collapse to
 $|\mathcal{T}|{=}2$ with identical degenerate scores; aggressive
 \texttt{min\_topic\_size=2} emits $\sim$60 micro-clusters
 ($60.0{\pm}2.8$) and reaches purity $0.528{\pm}0.019$ and NMI
-$0.537{\pm}0.025$. This BERTopic-at-mts=2 configuration outscores
-taxonomy\_agent on purity ($+0.16$ from 60$\times$ finer granularity)
-and narrows NMI to a $1.22\times$ ratio, but loses on ARI
+$0.537{\pm}0.025$. The BERTopic configuration at
+\texttt{min\_topic\_size=2} outscores
+taxonomy\_agent on purity ($+0.16$, driven by 60$\times$ finer
+granularity) and narrows NMI to a $1.22\times$ ratio, but loses on
+ARI
 ($0.127{\pm}0.038$ vs.\ our $0.336{\pm}0.035$, a $2.6\times$ gap):
-ARI penalises the over-splitting that boosts BERTopic's purity, while
-the qualitative analysis below shows taxonomy\_agent converging on
-mid-granularity ($|\mathcal{T}|{=}7$--8) semantic macro-clusters. We
-read this as: BERTopic at default is a strawman; BERTopic
-under aggressive tuning is competitive on splitting-friendly metrics
-but not on the lumping-vs-splitting-balanced ARI, and the
-mid-granularity story below is what differentiates the systems.
+ARI penalises the over-splitting that boosts BERTopic's purity, and
+because ARI balances lumping against splitting it is the metric on
+which our system retains a lead. The qualitative analysis below
+shows taxonomy\_agent converging on coherent macro-clusters at 7--8
+categories. BERTopic at default settings is a strawman; under
+aggressive tuning it becomes competitive on metrics that reward
+splitting, but not on ARI.
 
 \paragraph{Cost.}
 Taxonomy\_agent costs USD\,1.86 per run on 20NG, dominated by the
@@ -139,7 +139,7 @@ requests (\S\ref{sec:limitations}). Wall-clock time at 258\,s on
 average is roughly $1.5\times$ the LLM baselines and $17\times$
 BERTopic at the same corpus size. The cost ratios against the LLM
 baselines (about $75\times$ single\_shot and $60\times$
-topicgpt\_style) are large but the absolute spend remains under
+iterative\_proposal) are large but the absolute spend remains under
 USD\,2 for a 487-document corpus, making the system financially
 practical for one-off codebook construction and impractical as a
 high-frequency drift monitor without the caching fix flagged in
@@ -149,22 +149,22 @@ limitations.
 The methodology promises a cross-check of the judge's terminal
 don't-fit rate against external metrics across the 12 classify
 events the three taxonomy\_agent runs generate. The realised
-trajectories are
-$[0.00,0.00,0.00,0.00]$ (seed 42),
-$[0.05,0.00,0.00,0.00]$ (seed 43), and
-$[0.10,0.05,0.00,0.05]$ (seed 44):
+trajectories across the three seeds are
+$[0.00,0.00,0.00,0.00]$,
+$[0.05,0.00,0.00,0.00]$, and
+$[0.10,0.05,0.00,0.05]$:
 the signal is roughly bounded between 0.00 and 0.10, descends quickly
 toward the floor in two of three seeds, and shows a non-monotone
-$0.00\!\rightarrow\!0.05$ bounce at the end of seed 44. Across the
+$0.00\!\rightarrow\!0.05$ bounce at the end of the third seed. Across the
 three terminal $(\text{don't-fit},\text{purity})$ pairs the Spearman
 correlation is $\rho{=}-0.87$ ($p{=}0.33$ at $n{=}3$), with the same
-sign for NMI and an opposite sign for NPMI. We read this as evidence
-that the signal saturates at the floor too quickly to function as a
-quantitative leading indicator of external metric quality, and we
-correspondingly soften the introduction's earlier ``externally
-validated'' phrasing to ``cross-checked'' --- the signal qualitatively
-tracks convergence but is not statistically validated against an
-external metric at the sample size available.
+sign for NMI and an opposite sign for NPMI. The signal saturates at
+the floor too quickly to function as a quantitative leading indicator
+of external metric quality, and we correspondingly soften the
+introduction's earlier ``externally validated'' phrasing to
+``cross-checked'': the signal qualitatively tracks convergence but is
+not statistically validated against an external metric at the sample
+size available.
 
 \subsection{CoT-Pattern Results}
 \label{sec:eval-results-cot}
@@ -182,7 +182,6 @@ Table~\ref{tab:cot} summarises.
 
 \begin{table*}[t]
 \centering
-\small
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcccccccrr}
 \toprule
@@ -196,19 +195,19 @@ taxonomy\_agent (ours)
   & 5 & 2.23 & 196 \\
 single\_shot & 0.336 & 0.143 & 0.036 & 0.025 & 0.348 & 0.203
   & 10 & 0.009 & 34 \\
-topicgpt\_style & 0.322 & 0.075 & 0.033 & 0.020 & 0.337 & \textbf{0.075}
+iterative\_proposal & 0.322 & 0.075 & 0.033 & 0.020 & 0.337 & \textbf{0.075}
   & 3 & 0.011 & 74 \\
 bertopic & 0.201 & 0.000 & $-$0.026 & 0.000 & 0.365 & 0.098
   & 6 & 0.00 & 29 \\
 \midrule
 \multicolumn{10}{l}{\textit{Baselines (not discovery systems):}} \\
-k-means@surface ($k{=}5$, oracle) & 0.497 & --- & --- & --- & --- & --- & 5 & 0.00 & ${<}1$ \\
-LR@surface (supervised, 5-fold CV) & 0.730 & --- & --- & --- & --- & --- & 5 & 0.00 & ${<}1$ \\
-LR@TF-IDF (supervised, 5-fold CV) & 0.260 & --- & --- & --- & --- & --- & 5 & 0.00 & ${<}1$ \\
-random floor                       & 0.200 & --- & --- & --- & --- & --- & 5 & 0.00 & --- \\
+k-means@surface ($k{=}5$, oracle) & 0.497 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & ${<}1$ \\
+LR@surface (supervised, 5-fold CV) & 0.730 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & ${<}1$ \\
+LR@TF-IDF (supervised, 5-fold CV) & 0.260 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & ${<}1$ \\
+random floor                       & 0.200 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & n/a \\
 \bottomrule
 \end{tabular}
-\caption{CoT-pattern corpus, single seed (42), $n=149$. Top block:
+\caption{CoT-pattern corpus, single seed, $n=149$. Top block:
 discovery systems with all six taxonomy-quality metrics. Bottom block:
 calibration baselines reported on purity only (k-means is unsupervised
 with $k$ chosen at the gold cardinality; LR@surface is a supervised
@@ -230,7 +229,7 @@ protocols, and per-class confusion matrix.}):
 \textbf{(i) unsupervised k-means} on 14 surface features
 ($k{=}5$ at the gold cardinality, optimal cluster--class mapping via
 the Hungarian algorithm, median over 5 random seeds) achieves
-0.497~purity --- the closest \emph{unsupervised} comparator, though it
+0.497~purity, the closest \emph{unsupervised} comparator, though it
 receives the oracle assists of $k{=}5$ and pattern-targeted features
 not available to taxonomy\_agent; \textbf{(ii) supervised
 surface-feature LR} (5-fold stratified CV with full gold-label access)
@@ -240,7 +239,7 @@ signal alone can do; \textbf{(iii) supervised TF-IDF LR} attains
 uninformative.
 
 The comparison is not single-number: purity at 73\%~coverage and
-accuracy at full coverage measure different things. We decompose the
+accuracy at full coverage measure different things. We report the
 gap at matched coverage operating points: \emph{(a)} on the 109 items
 the system labels, taxonomy\_agent's accuracy is $104/109{=}95.4\%$,
 which sits 22 points above the supervised surface oracle's 73\% (if
@@ -249,40 +248,41 @@ that oracle's per-item accuracy held uniformly on those 109 items);
 \texttt{other} as a non-match, is $104/149{=}0.698$, which sits 3
 points \emph{below} the supervised oracle's 0.73; and \emph{(c)} the
 same 0.698 sits 20 points above the unsupervised k-means baseline at
-full coverage. The honest claim is that taxonomy\_agent is
-\emph{high-precision at moderate coverage}: clearly above the
-unsupervised surface baseline at all comparison points, modestly
-above the supervised surface oracle on items it labels, and slightly
-below the supervised oracle when forced to cover the full corpus.
+full coverage. The honest claim is that taxonomy\_agent is precise
+on the items it chooses to label but covers only 73\%\ of the
+corpus: above the unsupervised surface baseline at all
+comparison points, modestly above the supervised oracle on the
+labelled items, and slightly below the oracle when forced to cover
+the full corpus.
 
 \paragraph{Interpret with care.}
 Two caveats are needed before claiming semantic discovery, and one
 data point grounds them. \emph{First}, the corpus is single-domain
 (competition math) and synthetic: every CoT was produced by a
 generator instructed to inject a specific named pattern, so the
-patterns are caricatures rather than naturalistic occurrences.
-\emph{Second}, even reading 0.866 as a precision-at-coverage number,
-the supervised surface baseline of 0.73 already captures most of the
-gross structural differences between patterns (sycophantic CoTs end
-with capitulation phrases; reward-hack CoTs name the grader;
-unfaithful-paraphrase CoTs mention rewrites). A system that picks up
-these surface cues plus a small amount of semantic signal would land
-in roughly the 0.85--0.95 precision-at-coverage band that we observe
-on the 109 non-\texttt{other} items, so the gap is consistent with
-both ``modest semantic discovery on top of surface shape'' and
-``sharper surface-shape extraction with no semantic content'' --- we
-cannot distinguish them from the metrics alone. The grounding data
-point is \emph{differential under-recovery}: hallucinated-premise
-items, which lack the strong lexical tells of the other four patterns,
-are assigned only 9 categories of $\sim$30 gold items and
-disproportionately fall into \texttt{other}. We treat this as
-evidence for the surface-extraction reading and develop the implication
+patterns are caricatures of naturalistic occurrences.
+\emph{Second}, even reading 0.866 as accuracy on the items the
+system labels, the supervised baseline of 0.730 from surface features
+already captures most of the gross structural differences between
+patterns (sycophantic CoTs end with capitulation phrases; reward-hack
+CoTs name the grader; unfaithful paraphrase CoTs mention rewrites).
+A system that picks up these surface cues plus a small amount of
+semantic signal would land in roughly the 0.85--0.95 accuracy band
+that we observe on the 109 non-\texttt{other} items, so the gap is
+consistent with two interpretations: modest semantic discovery on top
+of surface shape, and sharper extraction of that same surface shape
+with no semantic content. We cannot distinguish them from the metrics
+alone. The grounding data point is \emph{differential under-recovery}:
+of the five patterns, \texttt{hallucinated\_premise} lacks the strong
+lexical tells the other four exhibit, and the system assigns only
+9 of $\sim$30 gold instances to it. This is evidence consistent with
+the surface-extraction interpretation, and we develop the implication
 formally in~\S\ref{sec:limitations}.
 
 \paragraph{Baselines collapse.}
 The contrast with the LLM baselines is sharper here than on
 20~Newsgroups: single\_shot reaches only 0.143 NMI and 0.036
-ARI, and topicgpt\_style is worse (NMI 0.075). BERTopic's NMI is
+ARI, and iterative\_proposal is worse (NMI 0.075). BERTopic's NMI is
 indistinguishable from zero. All three LLM methods used the same
 DeepSeek model with comparable system prompts and were given the
 same probe size and classification instructions; we did not
@@ -297,50 +297,49 @@ collapse the pattern distinction.
 \subsection{Qualitative Analysis}
 \label{sec:eval-results-qual}
 
-\paragraph{20~Newsgroups (seed 42).} Taxonomy\_agent discovered
-8 categories. Three representative ones, with our best mapping to
-the 20-newsgroup gold labels:
+\paragraph{20~Newsgroups.} On a representative seed, taxonomy\_agent
+discovered 8 categories. Three representative ones, with our best
+mapping to the 20-newsgroup gold labels:
 \begin{itemize}
   \item \emph{computers\_and\_software} (``operating systems, software,
-    programming, Windows, DOS, general computing'') --- recovers
+    programming, Windows, DOS, general computing''), which recovers
     \texttt{comp.os.ms-windows.misc} and \texttt{comp.sys.ibm.pc.\linebreak hardware} cleanly.
   \item \emph{politics\_and\_society} (``politics, social issues, crime,
-    punishment, gun control, Middle East politics, civil rights'') ---
-    correctly fuses \texttt{talk.politics.misc}, \texttt{talk.politics.guns},
-    and \texttt{talk.politics.mideast}, which is arguably the right move
+    punishment, gun control, Middle East politics, civil rights''),
+    which fuses \texttt{talk.politics.misc}, \texttt{talk.politics.guns},
+    and \texttt{talk.politics.mideast}; this is arguably the right move
     semantically but counts against ARI because the gold taxonomy keeps them
     separate.
   \item \emph{recreation\_and\_sports} (``recreational activities, sports,
-    motorcycles, hobbies, for-sale listings'') --- pools four gold
+    motorcycles, hobbies, for-sale listings''), which pools four gold
     classes (\texttt{rec.autos}, \texttt{rec.motorcycles},
     \texttt{rec.sport.baseball}, \texttt{rec.sport.hockey}) and bleeds in
     \texttt{misc.forsale}. The fusion is defensible but again costs
     label-aware credit.
 \end{itemize}
-This pattern --- semantically coherent macro-clusters that
-nonetheless lose ARI to the fine-grained 20-way gold partition ---
-is consistent across seeds 43 and 44, which produced 7 categories each.
-We read it as evidence that the system's failure mode on supervised
-metrics is \emph{lumping}, not \emph{splitting}: it converges on a
-mid-granularity taxonomy that a human evaluator would call reasonable
-and that nevertheless costs supervised credit on a corpus whose
-gold labels are very fine-grained.
+This pattern of semantically coherent macro-clusters that
+nonetheless lose ARI to the fine-grained 20-way gold partition
+is consistent across the other two seeds, which produced 7 categories
+each. The system's failure mode on supervised metrics is \emph{lumping}: it
+converges on a mid-granularity taxonomy that a human evaluator would
+call reasonable, and that nevertheless costs supervised credit on a
+corpus whose gold labels are fine-grained.
 
-\paragraph{CoT-pattern (seed 42).} The agent discovered exactly five
+\paragraph{CoT-pattern.} The agent discovered exactly five
 categories, and their names match the five gold patterns
 (\emph{sycophantic\_capitulation}, \emph{unfaithful\_paraphrase},
 \emph{post\_hoc\_rationalization}, \emph{hallucinated\_premise},
 \emph{reward\_hack\_verbalization}). The orchestrator was told only
 to ``group these chain-of-thought reasoning traces into categories
 based on the dominant style, approach, or behavior visible in the
-reasoning'' --- it never saw the gold pattern names. Name agreement
+reasoning'', and it never saw the gold pattern names. Name agreement
 is therefore consistent with semantic discovery, although we cannot
 rule out the orchestrator drawing on prior literature knowledge of
 named CoT-failure modes (see~\S\ref{sec:limitations} on vendor
 contamination). The class-count distribution is \emph{sycophantic
 26, post-hoc 19, paraphrase 28, hallucinated-premise 9, reward-hack
 27, other 40}, with the under-recovery of \texttt{hallucinated\_premise}
-discussed in the headline paragraph and~\S\ref{sec:limitations}.
+discussed in the main-text paragraph and~\S\ref{sec:limitations}.
 
 \paragraph{Summary.} Across both corpora, taxonomy\_agent's
 strength is label-aware structure (ARI, and NMI vs.\ the LLM
@@ -367,9 +366,9 @@ algorithmic metrics above.
 Every run streams a \texttt{cost.json} that aggregates the
 \texttt{usage.cost} field from each OpenRouter response, broken down
 by orchestrator/judge. The Streamlit UI surfaces this as a live panel
-updated per response. By construction --- summing OpenRouter's own
+updated per response. By construction (summing OpenRouter's own
 per-response cost field, falling back to a versioned price table only
-when the field is absent --- the tracker inherits OpenRouter's
+when the field is absent), the tracker inherits OpenRouter's
 accounting, so the per-run totals in Table~\ref{tab:20ng} and
 Table~\ref{tab:cot} are not separately reconciled against an external
 invoice. The architectural lesson the tracker surfaces is the
@@ -384,9 +383,9 @@ to disk. The \texttt{trace.jsonl} records every tool call
 (\textsc{add}, \textsc{rename}, \textsc{merge}, \textsc{split},
 \textsc{drop}, \textsc{edit}) and every classify probe with sample
 size and don't-fit rate. If a run fails to finalize the
-\texttt{taxonomy.json} artifact --- the orchestrator hits an LLM
-error, the user kills the process, or the recursion limit
-trips --- the Streamlit UI's Results tab detects the missing
+\texttt{taxonomy.json} artifact, whether because the orchestrator
+hits an LLM error, the user kills the process, or the recursion
+limit trips, the Streamlit UI's Results tab detects the missing
 artifact and surfaces the last \texttt{taxonomy\_state.json} plus the
 streamed classifications, so the work the orchestrator did before the
 failure is recoverable. The system does not currently support
@@ -401,14 +400,15 @@ tracker, the typed revise DSL, the don't-fit logic, and the
 classification pipeline are all model-agnostic via OpenRouter. The
 installed system default is Sonnet orchestrator + Llama-3.3-70B
 judge; the reported numbers use Sonnet + DeepSeek-v4-Flash. We have
-not run a controlled non-Anthropic-orchestrator ablation, so the
-vendor-agnosticism claim covers code-paths and tracker behaviour but
-not validated cross-vendor quality; that is one of several
-under-tested operational properties flagged in~\S\ref{sec:limitations}.
+not run a controlled ablation with a non-Anthropic orchestrator, so
+the vendor-agnosticism claim covers the code path and the tracker
+behaviour but not validated quality across vendors; that is one of
+several operational properties that remain untested, flagged
+in~\S\ref{sec:limitations}.
 
 Figure~\ref{fig:ui-results} shows the Streamlit Results tab after
-loading the 20NG seed-42 run: an itemised cost panel (total
-\$1.8764, orchestrator \$1.8165, judge \$0.0600 --- the
+loading a 20NG run: an itemised cost panel (total
+\$1.8764, orchestrator \$1.8165, judge \$0.0600, the
 orchestrator-dominated split visible at a glance), the eight
 discovered categories with per-category item counts, a distribution
 chart, and a filterable classifications table for inspecting and
@@ -424,8 +424,8 @@ A screencast walkthrough accompanies the submission.
 \centering
 \includegraphics[width=0.49\textwidth]{figures/streamlit_04_results_loaded.png}\hfill
 \includegraphics[width=0.49\textwidth]{figures/streamlit_02_runs_tab.png}
-\caption{\textbf{Left:} Streamlit \emph{Results} tab loaded with the
-20NG seed-42 taxonomy\_agent run. Cost panel surfaces the
+\caption{\textbf{Left:} Streamlit \emph{Results} tab loaded with a
+20NG taxonomy\_agent run. Cost panel surfaces the
 orchestrator-dominated split discussed in
 \S\ref{sec:eval-results-20ng}. \textbf{Right:} \emph{Runs} tab
 listing the six runs reported in this paper plus the pilot, each

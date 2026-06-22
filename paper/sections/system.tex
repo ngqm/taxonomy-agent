@@ -20,18 +20,66 @@ make the system usable as a walk-up demo
 Figure~\ref{fig:architecture} sketches the run-time topology.
 \begin{figure}[t]
 \centering
-\fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}
-\textbf{Figure placeholder.}\\
-Orchestrator (Sonnet)~$\longleftrightarrow$~typed revise DSL~$\longleftrightarrow$~judge thread pool (DeepSeek/Llama).\\
-Cost tracker + partial-progress sink stream to disk.\\
-\vspace{2em}}}
-\caption{Run-time topology of \textsc{taxonomy\_agent}. (Diagram to
-be replaced before camera-ready.)}
+\begin{tikzpicture}[
+  font=\footnotesize,
+  node distance=4mm and 6mm,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt,
+              minimum height=7mm},
+  orch/.style={box, fill=blue!8},
+  judge/.style={box, fill=red!8},
+  store/.style={box, fill=gray!12},
+  ui/.style={box, fill=green!8},
+  flow/.style={-{Stealth[length=3pt]}, thick},
+  back/.style={-{Stealth[length=3pt]}, dashed, thick},
+]
+% Corpus on the left
+\node[store] (corpus) {Corpus\\(unlabelled)};
+% Orchestrator
+\node[orch, right=of corpus] (orch) {Orchestrator\\Sonnet 4.6};
+% Revise DSL
+\node[box, above=of orch, yshift=-2mm] (revise)
+  {Typed revise DSL\\\textsc{add} \textsc{rename} \textsc{edit}\\\textsc{merge} \textsc{split} \textsc{drop}};
+% Working taxonomy
+\node[store, right=of revise] (tax) {Working\\taxonomy};
+% Judge pool
+\node[judge, below=of orch, yshift=2mm] (judge)
+  {Judge pool (parallel)\\DeepSeek-v4-Flash};
+% Per-item labels
+\node[store, right=of judge] (labels) {Per-item\\labels};
+% Cost tracker
+\node[store, below=of corpus, yshift=2mm] (cost) {Cost tracker\\\texttt{usage.cost}};
+% Partial-progress sink
+\node[store, below=of judge, yshift=2mm] (sink)
+  {Partial-progress\\sink (disk)};
+% Streamlit
+\node[ui, right=of sink] (ui) {Streamlit UI};
+
+% Flows
+\draw[flow] (corpus) -- (orch);
+\draw[flow] (orch) -- node[midway, right, font=\scriptsize]{edit} (revise);
+\draw[back] (revise) -- node[midway, left, font=\scriptsize]{validate} (orch);
+\draw[flow] (revise) -- (tax);
+\draw[flow] (orch.south east) -- node[midway, above, font=\scriptsize]{classify} (judge.north east);
+\draw[back] (judge.north west) -- node[midway, below, font=\scriptsize]{don't-fit} (orch.south west);
+\draw[flow] (tax.south) |- (judge.east);
+\draw[flow] (judge) -- (labels);
+\draw[flow] (orch.west) |- (cost.east);
+\draw[flow] (judge) -- (sink);
+\draw[flow] (sink) -- (ui);
+\draw[flow] (cost.south) |- ($(sink.west)+(0,-2mm)$);
+\end{tikzpicture}
+\caption{Run-time topology. The orchestrator (Sonnet 4.6) holds the
+working taxonomy as closure state and edits it through a typed
+revise DSL of six verbs; each edit is validated before mutation.
+The judge pool (DeepSeek-v4-Flash, run in parallel) labels items
+against the current taxonomy and returns a don't-fit rate that
+drives termination. A cost tracker and a partial-progress sink
+stream to disk; the Streamlit UI reads both for live inspection
+during a run and post-hoc browsing afterwards.}
 \label{fig:architecture}
 \end{figure}
 Two roles are kept strictly separate. The \textbf{orchestrator} is a
-ReAct-style~\citep{yao2022react}%
-\todo{add bibkey yao2022react (Yao et al., ``ReAct: Synergizing Reasoning and Acting in Language Models'', ICLR 2023)}
+ReAct-style~\citep{yao2022react}
 agent built on LangGraph's
 \texttt{create\_react\_agent} \citep{langgraph}; it owns the working
 taxonomy as closure state and
@@ -56,8 +104,8 @@ can fill either role. The orchestrator defaults to
 formatting); the judge defaults to
 \texttt{meta-llama/llama-3.3-70b-instruct} (chosen for cost). Both can
 be swapped at the command line or in the UI without touching code, and
-mixed-vendor runs --- e.g.\ a Claude orchestrator with a Llama
-judge --- are the common case in our evaluation
+mixed-vendor runs (for instance, a Claude orchestrator paired with a
+Llama judge) are the common case in our evaluation
 (\S\ref{sec:evaluation}).
 
 Internally, the orchestrator runs as a LangGraph state machine: the
@@ -69,7 +117,7 @@ result to the message list. State persists in two places. The
 (\texttt{\_TaxonomyState} in \texttt{tools.py}) holds the working
 taxonomy, the set of item ids already sampled, a snapshot of the
 last-finalised taxonomy, and a budget counter for classify calls. The
-taxonomy lives only in this closure --- the orchestrator never has to
+taxonomy lives only in this closure, so the orchestrator never has to
 pass it as an argument, which both shrinks tool-call payloads and
 removes a class of bugs where the agent edits a stale copy.
 
@@ -86,7 +134,6 @@ discovers without us having to specify it.
 
 \begin{table*}[t]
 \centering
-\small
 \begin{tabular}{@{}p{0.27\textwidth}p{0.69\textwidth}@{}}
 \toprule
 \textbf{Tool} & \textbf{Behaviour} \\
@@ -127,16 +174,16 @@ only tool that writes the user-facing artifact.}
 Two design choices in this table are load-bearing. First,
 \texttt{classify\_with\_judge} and \texttt{finalize\_classify} both
 take a \emph{prompt string} written by the orchestrator at call time,
-rather than a fixed system prompt. This lets the orchestrator
-specialise the labelling instructions to the taxonomy it has built ---
-e.g.\ telling the judge to attend to rhetorical cues for a
+instead of a fixed system prompt. This lets the orchestrator
+specialise the labelling instructions to the taxonomy it has built;
+for instance, it can tell the judge to attend to rhetorical cues for a
 discourse-style corpus, or to named entities for a topic-style
-one --- without us having to anticipate every domain. Second,
-\texttt{propose\_novelties\_with\_judge} is a separate tool rather
-than a flag on \texttt{classify\_with\_judge} because the two prompt
+corpus, without us having to anticipate every domain. Second,
+\texttt{propose\_novelties\_with\_judge} is a separate tool; novelty proposal is not a
+flag on \texttt{classify\_with\_judge}, because the two prompt
 shapes are different: classification is one-of-N with a free-form
-escape, novelty proposal is open-ended generation. Conflating them
-hurt judge reliability in early prototypes.
+escape, while novelty proposal is open-ended generation. Conflating
+them hurt judge reliability in early prototypes.
 
 \subsection{The Revise DSL}
 \label{sec:system:revise}
@@ -175,7 +222,7 @@ wrong on the next step.
 \paragraph{Per-op failure isolation.} The dispatcher records failures
 per op and continues with the rest of the batch. A revise call of
 ``add A, rename B, merge X'' where the merge target is missing applies
-the add and the rename and skips only the merge --- the orchestrator
+the add and the rename and skips only the merge; the orchestrator
 sees the log, decides whether the partial application is acceptable,
 and either retries or moves on. This is much easier for the agent to
 recover from than an all-or-nothing rejection, and the log makes the
@@ -186,23 +233,24 @@ prose would put parsing burden on us, hide intent from the trace, and
 make it impossible to enforce the invariants above. The six verbs
 themselves are the standard taxonomy-edit vocabulary
 (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution here is the
-typed validate-before-mutate dispatcher and per-op failure isolation
-rather than the verb set itself. Across the corpora in
+typed dispatcher that validates each operation before applying it, with isolation between operations on failure,
+not the verb set itself. Across the corpora in
 \S\ref{sec:evaluation} we did not observe an orchestrator wanting an
 op outside this set, but we have not run a controlled ablation
-against free-form-prose edits and do not claim the six ops are
+against edits expressed in free-form prose, and do not claim the six ops are
 provably complete.
 
 \subsection{Convergence}
 \label{sec:system:convergence}
 
-Convergence is decided by the judge, not the orchestrator. After each
+Convergence is decided by the judge.
+After each
 \texttt{classify\_with\_judge} call, the system computes the
-\emph{don't-fit rate} --- the fraction of items the judge labelled
-\texttt{"other"} --- and the orchestrator is allowed to call
+\emph{don't-fit rate}, the fraction of items the judge labelled
+\texttt{"other"}, and the orchestrator is allowed to call
 \texttt{finalize\_classify} once that rate falls below a threshold
-(default $0.10$). This $0.10$ default is a usability choice rather
-than a calibrated value; we report terminal don't-fit rates alongside
+(default $0.10$). The $0.10$ default is a usability choice; it is not a
+calibrated value; we report terminal don't-fit rates alongside
 external purity and NMI in \S\ref{sec:evaluation} as a sanity check,
 but do not claim the rate is a quantitatively validated leading
 indicator. The threshold is also intentionally orchestrator-readable:
@@ -212,7 +260,7 @@ convergence (we flag this as a limitation in
 \S\ref{sec:limitations}). Three details make the signal usable in
 practice.
 
-\paragraph{Escape-hatch labels, not invented ones.} Every classify
+\paragraph{Escape-hatch labels only.} Every classify
 prompt is hardened with a fixed suffix instructing the judge to reply
 \texttt{"other"} whenever no listed category fits, and to never invent
 a new name. Judge replies are then mapped against the taxonomy
@@ -220,20 +268,20 @@ case-insensitively; any out-of-taxonomy label is coerced to
 \texttt{"other"} and the rationale is annotated to flag the coercion.
 This is what makes the don't-fit rate a meaningful convergence signal:
 a high rate genuinely reflects items the taxonomy does not cover,
-rather than a judge that hallucinated novel labels.
+and does not reflect a judge that hallucinated novel labels.
 
 \paragraph{Minimum-iteration floor.} A small probe can produce a
 deceptively low don't-fit rate when the taxonomy is still half-built.
 \texttt{finalize\_classify} therefore refuses to run until the
 orchestrator has completed at least \texttt{min\_iterations}
 classification rounds (default 3 in \texttt{run()}). This is a soft
-constraint --- the orchestrator gets an error message and keeps
-iterating --- not a hard wall, and it can be tuned per corpus.
+constraint, since the orchestrator gets an error message and keeps
+iterating, and it can be tuned per corpus.
 
 \paragraph{Judge-error isolation.} If the judge HTTP call itself fails
 after retries, the item is labelled \texttt{"other"} with the sentinel
 rationale \texttt{[judge call failed]} and \emph{excluded} from the
-don't-fit-rate denominator. A transient API outage should not trick
+denominator of the don't-fit rate. A transient API outage should not trick
 the orchestrator into thinking the taxonomy stopped fitting. The
 error count is reported back so the orchestrator (and the user) can
 see what happened.
@@ -242,15 +290,15 @@ see what happened.
 \label{sec:system:safeguards}
 
 Three engineering choices keep the system usable as a walk-up demo,
-not just a research prototype.
+and remains usable as a tool beyond the research prototype phase.
 
 \paragraph{Live cost tracking.} A \texttt{CostTracker} object receives
-usage from every LLM call --- both the streamed orchestrator
-\texttt{AIMessage}s and each judge HTTP reply --- and writes
+usage from every LLM call, including both the streamed orchestrator
+\texttt{AIMessage}s and each judge HTTP reply, and writes
 \texttt{cost.json} after every agent super-step. We pass OpenRouter's
 \texttt{usage: \{include: true\}} flag so each reply carries the
 \emph{actual} charge under \texttt{usage.cost}, and prefer that native
-value over a static per-million-token price table. The fallback table
+value over a static price table denominated per million tokens. The fallback table
 covers the common defaults (Sonnet, Llama 3.3 70B, Gemini Flash, etc.)
 for models that do not honour the flag.
 
@@ -275,7 +323,7 @@ the parameters that matter (orchestrator model, judge model,
 taxonomy size hint), shows live cost and wall-time estimates above
 the Start button, streams the working taxonomy as
 \texttt{revise\_taxonomy} mutates it, and lists past runs from
-\texttt{meta.json} for inspection. Crucially, the UI reads the same
-on-disk artifacts the CLI writes --- there is no privileged
-in-memory state --- so a run started from the command line can be
+\texttt{meta.json} for inspection. Importantly, the UI reads the same
+on-disk artifacts the CLI writes, with no privileged
+in-memory state, so a run started from the command line can be
 inspected in the UI without re-running anything.

@@ -1,20 +1,4 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \textsc{taxonomy\_agent}, an open-source orchestrator--judge
-agent for iterative taxonomy discovery with a typed revise DSL, a
-self-reported and externally-validated convergence signal, and
-operational features (cost tracking, partial-progress saving, a
-Streamlit UI) that make it usable as a real tool rather than a
-research artefact.
-\todo{One-sentence headline result and link to repo.}
-
-\begin{itemize}
-  \item Summarise the orchestrator--judge contribution and the typed
-        revise DSL.
-  \item Summarise headline eval numbers vs.\ TopicGPT / BERTopic /
-        single-shot baseline.
-  \item Future work: human-in-the-loop layer over the model-side edit
-        loop; multilingual corpora; hard cost budgets; learned
-        convergence criterion.
-\end{itemize}
+We presented \textsc{taxonomy\_agent}, an open-source orchestrator--judge agent for iterative taxonomy discovery. Its contribution is a careful engineering recomposition: a typed revise DSL of six verbs, validated before mutation, constrains the orchestrator's edit surface; a parallel judge decouples labelling from discovery; and operational tooling (cost accounting, partial-progress streaming, a browser UI) closes the gap between a research prototype and a tool a stranger can use at a demo booth. On 20~Newsgroups (three independently sampled random seeds, $n{=}487$), the system leads the LLM baselines by $1.9\times$ on NMI and retains a $2.6\times$ ARI lead over aggressively-tuned BERTopic. On a 149-item synthetic benchmark of chain-of-thought failure patterns from the 2024--2026 alignment literature, it produces precise labels on the items it chooses, though the supervised metrics cannot cleanly separate semantic discovery from sharper surface extraction. A naturalistic CoT corpus with multiple sources per pattern would dissociate the two signals by construction, turning a demo-ready prototype into a load-bearing instrument for alignment research. Code, corpora, and reproduction scripts are at \url{https://github.com/ngqm/taxonomy-agent}.
