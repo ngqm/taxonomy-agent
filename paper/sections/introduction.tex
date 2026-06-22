@@ -20,8 +20,13 @@ TnT-LLM~\citep{wan2024tntllm} stages a two-phase pipeline that first
 summarises a corpus into candidate labels and then distils a
 lightweight classifier. Iterative LLM edit loops also appear in
 goal-driven and human-in-the-loop systems such as
-GoalEx~\citep{wang2023goalex}, LLooM~\citep{lam2024lloom}, and
-Co-DETECT~\citep{codetect2025}. Against this backdrop, our contribution
+GoalEx~\citep{wang2023goalex} and LLooM~\citep{lam2024lloom}.
+Co-DETECT~\citep{codetect2025} is last year's EMNLP System
+Demonstration on collaborative codebook construction with LLMs and
+the closest peer to our submission; we sit at an orthogonal operating
+point (taxonomy discovery from scratch over an unlabelled corpus,
+without a seed sketch and without a human in the loop) and discuss
+the relationship in \S\ref{sec:related}. Against this backdrop, our contribution
 is a careful engineering recomposition; we make no claim of a wholly new mechanism, but we
 narrow the orchestrator's edit surface to a typed validated DSL with
 per-operation failure isolation, decouple labelling into a parallel judge,
@@ -60,14 +65,15 @@ same surface features it is $+20$ points at full coverage. As we discuss
 in \S\ref{sec:eval-results-cot}, the metrics alone cannot cleanly
 attribute the margin to semantic discovery and rule out sharper surface
 extraction.
-The system prefers the provider's native usage-cost field over static
-price tables, streams partial progress to disk so that long runs are
-interruptible, and ships with a web UI for live inspection of cost,
-taxonomy state, and per-item classifications. The output primitive is a
-partitioning taxonomy with single labels plus an explicit
-\texttt{other} escape, distinguishing it from concept-induction systems
-such as LLooM~\citep{lam2024lloom} that surface overlapping high-level
-axes.
+The output primitive is a partitioning taxonomy with single labels
+plus an explicit \texttt{other} escape, distinguishing it from
+concept-induction systems such as LLooM~\citep{lam2024lloom} that
+surface overlapping high-level axes. What turns these design choices
+into a tool a stranger can use are the operational pieces around them:
+live native cost accounting broken down by orchestrator and judge,
+partial-progress streaming to disk so a long run is interruptible,
+vendor-agnostic routing, and a web UI for live inspection of cost,
+taxonomy state, and per-item classifications.
 Our contributions are:
 \begin{itemize}
   \item \textbf{Operational tooling for a tool a stranger can use}

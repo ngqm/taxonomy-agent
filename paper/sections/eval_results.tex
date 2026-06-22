@@ -104,7 +104,7 @@ that $C_v$ is the coherence of a degenerate two-cluster solution:
 HDBSCAN's \texttt{min\_topic\_size=10} on 487 documents collapses
 the corpus to $|\mathcal{T}|{=}2$ on every seed, and a two-cluster
 solution trivially attains high within-top-$n$-word co-occurrence
-while failing the supervised metrics (NMI 0.158$\pm$0.004,
+while failing the supervised metrics (NMI 0.159$\pm$0.000,
 purity 0.097$\pm$0.000).
 To check whether BERTopic's poor showing is a tuning artefact, we
 swept \texttt{min\_topic\_size}~$\in\{2,5,10,15,25\}$ over the same
@@ -372,7 +372,7 @@ when the field is absent), the tracker inherits OpenRouter's
 accounting, so the per-run totals in Table~\ref{tab:20ng} and
 Table~\ref{tab:cot} are not separately reconciled against an external
 invoice. The architectural lesson the tracker surfaces is the
-orchestrator-dominated split (96--99\%\ orchestrator under no-cache,
+orchestrator-dominated split (96--98\%\ orchestrator under no-cache,
 per the cost paragraph in~\S\ref{sec:eval-results-20ng}), which would
 otherwise be invisible to a user reading only a single bulk total.
 
@@ -408,7 +408,7 @@ in~\S\ref{sec:limitations}.
 
 Figure~\ref{fig:ui-results} shows the Streamlit Results tab after
 loading a 20NG run: an itemised cost panel (total
-\$1.8764, orchestrator \$1.8165, judge \$0.0600, the
+\$1.88, orchestrator \$1.82, judge \$0.06, the
 orchestrator-dominated split visible at a glance), the eight
 discovered categories with per-category item counts, a distribution
 chart, and a filterable classifications table for inspecting and

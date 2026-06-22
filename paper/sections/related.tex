@@ -97,22 +97,13 @@ operational concerns (cost, reproducibility, interruption-safety)
 that our system targets.
 
 \paragraph{Positioning of \textsc{taxonomy\_agent}.}
-We do not claim a wholly new mechanism: TopicGPT already iterates,
-TnT-LLM already separates a generator from a labeller,
-ReAct-style agents~\citep{yao2022react} already structure tool-using
-LLMs, and the add/rename/merge/split/drop verbs are the standard
-taxonomy-edit vocabulary. What this paper packages is an operational
-recomposition along three axes:
-(i)~first-class operational tooling (live native provider cost
-accounting, partial-progress streaming so a killed run leaves
-recoverable state, a vendor-agnostic walk-up UI), which prior LLM
-topic-discovery and codebook systems (TopicGPT, TnT-LLM, LLooM,
-Co-DETECT) treat as out of scope;
-(ii)~a typed dispatcher that validates each operation before mutating
-the working taxonomy, with per-operation failure isolation so a
-malformed edit cannot corrupt state or break the audit trace; and
-(iii)~a parallel stateless judge with an enforced \texttt{other}
-escape hatch, whose don't-fit rate serves as a self-reported
-termination signal, qualitatively cross-checked against external
-purity and NMI but not quantitatively validated at the sample sizes
-we test. The empirical case is made in \S\ref{sec:evaluation}.
+We do not claim a wholly new mechanism: TopicGPT iterates, TnT-LLM
+separates a generator from a labeller, ReAct-style
+agents~\citep{yao2022react} structure tool-using LLMs, and the
+add/rename/merge/split/drop verbs are the standard taxonomy-edit
+vocabulary. The contribution is the operational recomposition the
+introduction enumerates: first-class operational tooling that prior
+LLM topic-discovery and codebook systems treat as out of scope, a
+typed dispatcher with per-operation failure isolation, and a parallel
+stateless judge with an \texttt{other} escape hatch and a saturated
+don't-fit rate. The empirical case is in~\S\ref{sec:evaluation}.
