@@ -406,6 +406,25 @@ behaviour but not validated quality across vendors; that is one of
 several operational properties that remain untested, flagged
 in~\S\ref{sec:limitations}.
 
+\paragraph{The trace as auditable evidence.}
+The intended question for an analyst inspecting a discovered taxonomy
+is ``what did the system do to my corpus?''. The on-disk
+\texttt{trace.jsonl} answers it. As a concrete example, the
+single CoT-Pattern run emits eight events: a single
+\textsc{novelties} call in which the judge proposes five candidate
+pattern names that exactly match the gold set, a single
+\textsc{revise} call applying five \textsc{add} operations to seed
+the taxonomy, and six \textsc{classify} probes with don't-fit rates
+of $[0.05, 0.23, 0.17, 0.50, 0.07, 0.00]$. The transient $0.50$ at
+probe~4 is the kind of variance that a probe of batch size $K{=}20$
+naturally has on a 149-item corpus; the
+\texttt{min\_iterations} floor exists to absorb it. The system does
+not over-correct by adding noise categories: subsequent probes
+resolve the variance and the run terminates at $0.00$ don't-fit. The
+Streamlit Inspect tab surfaces this trace as an iteration timeline
+(Figure~\ref{fig:ui-trace}) so an analyst can read the run instead
+of re-deriving it from logs.
+
 Figure~\ref{fig:ui-results} shows the Streamlit Results tab after
 loading a 20NG run: an itemised cost panel (total
 \$1.88, orchestrator \$1.82, judge \$0.06, the
@@ -432,6 +451,22 @@ listing the six runs reported in this paper plus the pilot, each
 clickable.}
 \label{fig:ui-results}
 \end{figure*}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/streamlit_05_cot_trace.png}
+\caption{Iteration timeline for the CoT-Pattern run in the Streamlit
+\emph{Inspect} tab. Each row is one tool call: the
+judge's \textsc{novelties} proposals, the orchestrator's
+\textsc{revise} operations, and \textsc{classify} probes with their
+don't-fit rates visualised as bars. The eight events recover the
+narrative summarised in the ``trace as auditable evidence''
+paragraph: the orchestrator nails the five gold patterns from the
+first probe, and six classify probes with don't-fit rates
+$[5\%, 23\%, 17\%, 50\%, 7\%, 0\%]$ verify across noise before the
+loop terminates.}
+\label{fig:ui-trace}
+\end{figure}
 
 \begin{figure}[t]
 \centering

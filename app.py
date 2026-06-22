@@ -201,6 +201,97 @@ def _render_taxonomy_preview(box, state_path: "Path") -> None:
         st.markdown("\n".join(md))
 
 
+def _render_iteration_trace(box, trace_path: "Path") -> None:
+    """Render the per-round iteration timeline from trace.jsonl.
+
+    Each event is a row in trace.jsonl: a `novelties` call (judge proposes
+    new category names from items that did not fit), a `revise` call (the
+    orchestrator applies a list of typed edits), or a `classify` call (the
+    judge labels a fresh probe of items and reports the don't-fit rate).
+    We render them in chronological order, with each event as one card so a
+    reviewer or demo visitor can see the loop converging in concrete terms.
+    """
+    if not trace_path.exists():
+        box.caption("No trace.jsonl on disk.")
+        return
+    try:
+        events = [
+            json.loads(line)
+            for line in trace_path.read_text().splitlines()
+            if line.strip()
+        ]
+    except Exception as e:
+        box.warning(f"Could not read trace.jsonl: {e}")
+        return
+    if not events:
+        box.caption("Trace is empty.")
+        return
+
+    classify_events = [e for e in events if e.get("kind") == "classify"]
+    revise_events = [e for e in events if e.get("kind") == "revise"]
+    dont_fits = [e.get("dont_fit_rate") for e in classify_events
+                 if e.get("dont_fit_rate") is not None]
+    final_dont_fit = dont_fits[-1] if dont_fits else None
+
+    with box.container():
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Events", len(events))
+        c2.metric("Revise calls", len(revise_events))
+        c3.metric(
+            "Final don't-fit",
+            f"{final_dont_fit:.0%}" if final_dont_fit is not None else "—",
+        )
+
+        for i, e in enumerate(events):
+            kind = e.get("kind", "?")
+            if kind == "novelties":
+                proposed = e.get("proposed", []) or []
+                if not proposed:
+                    st.markdown(
+                        f"`{i:02d}` · **novelties** — judge found no new "
+                        f"categories to propose."
+                    )
+                    continue
+                names = [str(p.get("name", "?")) for p in proposed]
+                names_md = " ".join(f"`{n}`" for n in names[:8])
+                more = f" (+{len(names) - 8} more)" if len(names) > 8 else ""
+                st.markdown(
+                    f"`{i:02d}` · **novelties** — judge proposed "
+                    f"{len(proposed)} candidate name(s): {names_md}{more}"
+                )
+            elif kind == "revise":
+                ops = e.get("operations", []) or []
+                applied = e.get("applied", []) or []
+                tax_after = e.get("taxonomy_after", []) or []
+                op_summary = []
+                for op in ops:
+                    verb = op.get("op", "?")
+                    label = op.get("name") or op.get("old_name") \
+                        or op.get("into") or op.get("from") or "?"
+                    op_summary.append(f"`{verb}`({label})")
+                ops_md = ", ".join(op_summary[:6])
+                more = f" + {len(ops) - 6} more" if len(ops) > 6 else ""
+                ok_count = sum(
+                    1 for a in applied if a.get("result") == "ok"
+                )
+                st.markdown(
+                    f"`{i:02d}` · **revise** — {ok_count}/{len(ops)} ops "
+                    f"applied → {len(tax_after)} categories: "
+                    f"{ops_md}{more}"
+                )
+            elif kind == "classify":
+                rate = e.get("dont_fit_rate")
+                rate_str = f"{rate:.0%}" if rate is not None else "?"
+                bar = "█" * int(round((rate or 0) * 20))
+                pad = "░" * (20 - len(bar))
+                st.markdown(
+                    f"`{i:02d}` · **classify** probe — don't-fit "
+                    f"{rate_str}  `{bar}{pad}`"
+                )
+            else:
+                st.markdown(f"`{i:02d}` · {kind}")
+
+
 def _render_cost_panel(box, cost_path: "Path") -> None:
     """Read cost.json (if present) and render a small live-cost panel.
     Resilient to a half-written file mid-flush."""
@@ -943,6 +1034,18 @@ with results_tab:
                     )
                 except Exception:
                     pass
+
+            # Iteration timeline — read trace.jsonl and walk the reader
+            # through each round (novelties / revise / classify).
+            trace_path = cand_path / "trace.jsonl"
+            if trace_path.exists():
+                st.subheader("Iteration timeline")
+                st.caption(
+                    "Every tool call the orchestrator and judge made on the "
+                    "way to the final taxonomy, in order. Auditable trace "
+                    "evidence for the discovered codebook."
+                )
+                _render_iteration_trace(st.container(), trace_path)
 
             counts: dict = art.get("category_counts", {}) or {}
 
