@@ -380,16 +380,6 @@ run_tab, runs_tab, results_tab = st.tabs(["Run", "Runs", "Results"])
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
-    # First-time onboarding callout — only shown when nothing is loaded yet
-    # and no run is in progress. Disappears once the user gets going.
-    if not ss.running and not ss.log_lines and not ss.result_dir:
-        st.info(
-            "**New here?** The fastest path is the green **Quick demo** "
-            "button below — it spins up a ~60-second run on the bundled "
-            "example so you can see the agent in action. Otherwise, walk "
-            "through the three numbered sections below."
-        )
-
     # ── Quick demo: one-click 60-second run on the bundled example. ─────────
     # Sets a small pool + low iter budget, picks the bundled example preset,
     # then falls through into the regular Start-run code path via `start=True`.
