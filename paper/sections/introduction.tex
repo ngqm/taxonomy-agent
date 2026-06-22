@@ -64,20 +64,21 @@ The system prefers the provider's native usage-cost field over static
 price tables, streams partial progress to disk so that long runs are
 interruptible, and ships with a web UI for live inspection of cost,
 taxonomy state, and per-item classifications. The output primitive is a
-partitioning taxonomy with one-of-N labels plus an explicit
+partitioning taxonomy with single labels plus an explicit
 \texttt{other} escape, distinguishing it from concept-induction systems
 such as LLooM~\citep{lam2024lloom} that surface overlapping high-level
 axes.
 Our contributions are:
 \begin{itemize}
-  \item \textbf{Operational tooling for a tool a stranger can use.}
-        Live native provider cost accounting broken down by orchestrator
-        and judge, partial-progress streaming to disk so a killed run
-        leaves recoverable state, vendor-agnostic routing across any
-        chat-completions model on the provider, a web UI that surfaces
-        all of the above live, and a ratio of test code to source code near 0.7 over
-        114 offline-runnable tests with bug-numbered regression locks.
-        We claim this layer as the strongest demonstration contribution.
+  \item \textbf{Operational tooling for a tool a stranger can use}
+        (\S\ref{sec:eval-demo}). Live native provider cost accounting
+        broken down by orchestrator and judge, partial-progress
+        streaming to disk so a killed run leaves recoverable state,
+        vendor-agnostic routing across any chat-completions model on
+        the provider, a web UI that surfaces all of the above live,
+        and a disciplined test suite that locks each fixed bug with a
+        named regression test. We claim this layer as the strongest
+        demonstration contribution.
   \item \textbf{A typed dispatcher that validates before mutating} over
         six standard verbs (\textit{add, rename, edit, merge, split,
         drop}) with per-operation failure isolation, providing an

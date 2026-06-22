@@ -27,8 +27,8 @@ BERTopic~\citep{grootendorst2022bertopic} represents the strongest
 non-LLM baseline: it embeds documents with a sentence transformer,
 reduces dimensionality with UMAP, clusters with HDBSCAN, and labels
 clusters via class-based TF-IDF. It is fast, fully reproducible, and
-needs no API key, but its outputs are bag-of-keyword cluster
-descriptions instead of human-readable categories with definitions,
+needs no API key, but its outputs are clusters described as bags of keywords, with no
+human-readable category names or definitions,
 and the taxonomy cannot be edited in a typed way once produced.
 Classical LDA~\citep{blei2003lda} remains a reference point but
 suffers from the same interpretability and editability issues at a
@@ -48,7 +48,7 @@ discover a candidate taxonomy from scratch over an unlabelled corpus
 without a seed sketch and without a human inside the loop, then
 hand off the trace.jsonl, the working taxonomy, and the per-item
 classifications for downstream human review or for Co-DETECT-style
-refinement to take over. We do not run a head-to-head against
+refinement to take over. We do not run a direct comparison against
 Co-DETECT because the input contracts differ (seed codebook plus edge
 cases versus unlabelled corpus plus goal instruction), and because no
 publicly released Co-DETECT artefact ran on either of our two
@@ -71,7 +71,7 @@ concepts from unstructured text for analysts to inspect and edit
 interactively. The LLooM concept-induction primitive is different
 from ours: LLooM outputs overlapping high-level axes that a single
 document can score on multiple of, whereas \textsc{taxonomy\_agent}
-outputs a partitioning taxonomy with one-of-N labels plus an
+outputs a partitioning taxonomy with single labels plus an
 \texttt{other} escape. Choosing between them is a question of
 downstream use: a thematic analyst inspecting concepts wants LLooM's
 overlapping axes, whereas a downstream classifier or content-policy
@@ -85,7 +85,7 @@ iterative revision than by single-shot generation; its edit
 vocabulary overlaps with ours
 (add/merge/split are natural for taxonomy maintenance), and it
 focuses on taxonomy \emph{adaptation} given a seed, whereas we
-discover from scratch under a typed DSL that validates each
+discover from scratch under a typed dispatcher that validates each
 operation before applying it, with isolation between operations on
 failure.
 LLM-guided semantic-aware clustering~\citep{llmguided2025} uses an LLM
@@ -97,19 +97,22 @@ operational concerns (cost, reproducibility, interruption-safety)
 that our system targets.
 
 \paragraph{Positioning of \textsc{taxonomy\_agent}.}
-We do not claim a wholly new mechanism. Each individual element of
-our system has antecedents: TopicGPT iterates, TnT-LLM separates a
-generator from a labeller, ReAct-style agents~\citep{yao2022react}
-already structure tool-using LLMs, and the
-add/rename/merge/split/drop verbs are the standard taxonomy-edit
-vocabulary. What we package is a careful operational recomposition:
-(i)~the orchestrator's edit surface is narrowed to a typed validated
-DSL with per-op failure isolation, so that malformed edits cannot
-corrupt the working taxonomy and the trace remains auditable;
-(ii)~labelling is decoupled from editing into a parallel judge with
-an enforced \texttt{other} escape hatch, so the rate of items that do
-not fit becomes a meaningful (if not externally validated) convergence
-signal; (iii)~the system ships as an interactive demo with live cost
-tracking, partial-progress saving, and a Streamlit UI. For a demo
-track, this engineering recomposition is the contribution; the
-empirical case is made in \S\ref{sec:evaluation}.
+We do not claim a wholly new mechanism: TopicGPT already iterates,
+TnT-LLM already separates a generator from a labeller,
+ReAct-style agents~\citep{yao2022react} already structure tool-using
+LLMs, and the add/rename/merge/split/drop verbs are the standard
+taxonomy-edit vocabulary. What this paper packages is an operational
+recomposition along three axes:
+(i)~first-class operational tooling (live native provider cost
+accounting, partial-progress streaming so a killed run leaves
+recoverable state, a vendor-agnostic walk-up UI), which prior LLM
+topic-discovery and codebook systems (TopicGPT, TnT-LLM, LLooM,
+Co-DETECT) treat as out of scope;
+(ii)~a typed dispatcher that validates each operation before mutating
+the working taxonomy, with per-operation failure isolation so a
+malformed edit cannot corrupt state or break the audit trace; and
+(iii)~a parallel stateless judge with an enforced \texttt{other}
+escape hatch, whose don't-fit rate serves as a self-reported
+termination signal, qualitatively cross-checked against external
+purity and NMI but not quantitatively validated at the sample sizes
+we test. The empirical case is made in \S\ref{sec:evaluation}.

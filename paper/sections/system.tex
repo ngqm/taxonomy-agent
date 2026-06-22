@@ -181,7 +181,7 @@ discourse-style corpus, or to named entities for a topic-style
 corpus, without us having to anticipate every domain. Second,
 \texttt{propose\_novelties\_with\_judge} is a separate tool; novelty proposal is not a
 flag on \texttt{classify\_with\_judge}, because the two prompt
-shapes are different: classification is one-of-N with a free-form
+shapes are different: classification assigns a single category with a free-form
 escape, while novelty proposal is open-ended generation. Conflating
 them hurt judge reliability in early prototypes.
 

@@ -85,9 +85,9 @@ the LLM baselines at 0.656 vs.\ single\_shot's 0.345, but the lead
 over the default BERTopic narrows substantially once BERTopic is
 tuned (see ``Intrinsic coherence'' below). On purity it leads the LLM baselines
 at 0.367 vs.\ single\_shot's 0.253, but a tuned BERTopic at
-\texttt{min\_topic\_size=2} achieves higher purity (0.552) by emitting
-60 micro-clusters, a granularity confound we treat in the next
-paragraph. The cross-seed standard deviations are smaller for
+\texttt{min\_topic\_size=2} achieves higher purity ($0.528{\pm}0.019$)
+by emitting 60 micro-clusters, a granularity confound we treat in the
+next paragraph. The cross-seed standard deviations are smaller for
 taxonomy\_agent than for the LLM baselines (NMI std 0.012 vs.\ 0.056
 for single\_shot), suggesting the agentic loop converges to a similar
 taxonomy structure on each run; the qualitative analysis below

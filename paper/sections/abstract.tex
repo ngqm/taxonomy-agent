@@ -1,29 +1,32 @@
 We present \textsc{taxonomy\_agent}, an open-source system that
 discovers and refines a labelled taxonomy over an unlabelled text
-corpus through a two-tier orchestrator--judge agent. A capable
-orchestrator LLM proposes edits in a small typed revise vocabulary
+corpus and ships with the operational tooling a stranger needs to
+actually use it: live native provider cost accounting split by
+orchestrator and judge, partial-progress streaming to disk so a killed
+run leaves recoverable state, vendor-agnostic routing across any
+chat-completions provider, and an interactive web UI for live
+inspection. Beneath sits a two-tier agent: an orchestrator LLM
+proposes edits through a typed revise dispatcher over six verbs
 (\textit{add, rename, edit, merge, split, drop}), each validated
-before mutation with per-op failure isolation; a cheap, parallel
-judge LLM scores items and produces a misfit signal that drives
-termination. The system prefers the inference provider's reported
-cost over static price tables, streams partial progress to disk so
-long runs are interruptible, and ships with an interactive UI for
-live inspection of cost, taxonomy state, and per-item
-classifications. On a 487-document 20~Newsgroups subsample with three
-independently sampled random seeds, \textsc{taxonomy\_agent}
-outperforms a one-shot LLM baseline and a minimal iterative-proposal
-LLM baseline by $1.9\times$ on NMI and $3.3\times$ on ARI, and
-retains a $2.6\times$ ARI lead over BERTopic even under an aggressive
-sweep of the minimum cluster size that closes most of the purity gap by
-splitting BERTopic into 60 micro-clusters. We do not run the
-released TopicGPT package and do not claim a comparison against it.
-On a 149-item synthetic corpus of chain-of-thought failure patterns
-drawn from the 2024--2026 alignment literature, the system labels
-109 of 149 items with 95.4\%\ accuracy and reaches 0.698 purity over
-the full corpus, sitting $-3$ points against a supervised ceiling of
-0.730 from a 14-feature surface classifier and $+20$ points above an
-unsupervised k-means baseline on the same features. We caution that
-the metrics alone cannot cleanly attribute the margin between
-semantic discovery and sharper surface extraction. Code,
-reproduction scripts, and the corpora are released at
-\url{https://github.com/ngqm/taxonomy-agent}.
+before mutation with per-operation failure isolation, while a cheap
+parallel judge scores items and produces a don't-fit rate the
+orchestrator uses as a termination self-report. We cross-check the
+rate against external clustering metrics on 20~Newsgroups but stop
+short of claiming it is a quantitatively validated leading indicator;
+in practice it saturates at the floor.
+On a 487-document 20~Newsgroups subsample with three independently
+sampled random seeds, \textsc{taxonomy\_agent} outperforms a one-shot
+LLM baseline and a minimal iterative-proposal LLM baseline by
+$1.9\times$ on NMI and $3.3\times$ on ARI, and retains a $2.6\times$
+ARI lead over BERTopic under an aggressive sweep of the minimum
+cluster size that closes most of the purity gap by splitting BERTopic
+into 60 micro-clusters. On a 149-item synthetic corpus of failure
+patterns in chain-of-thought reasoning drawn from the 2024--2026
+alignment literature, the system labels 109 of 149 items at 95.4\%\
+accuracy and reaches 0.698 purity over the full corpus, sitting
+$+22$ points on the labelled items and $-3$ at full coverage against
+a 0.730 ceiling from a 14-feature surface classifier, and $+20$
+points above an unsupervised k-means baseline on the same features.
+We caution that the metrics alone cannot separate semantic discovery
+from sharper surface extraction. Code, reproduction scripts, and the
+corpora are at \url{https://github.com/ngqm/taxonomy-agent}.
