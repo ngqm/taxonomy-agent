@@ -13,27 +13,41 @@ linguistic signatures were not designed to be lexically obvious.
 
 \paragraph{Methods.}
 We compare four systems on both benchmarks:
-(1)~\textsc{taxonomy\_agent} (ours; Claude Sonnet orchestrator with a
-DeepSeek judge);
+(1)~\textsc{taxonomy\_agent} (ours; Claude Sonnet 4.6 orchestrator with
+a DeepSeek-v4-Flash judge --- the latter overrides the
+installed default of Llama-3.3-70B for a comparable-quality but cheaper
+publication pair; see Table~\ref{tab:models});
 (2)~\textbf{BERTopic}~\citep{grootendorst2022bertopic}, using
 \texttt{all-MiniLM-L6-v2} sentence
 embeddings~\citep{reimers2019sbert},
 \texttt{UMAP}~\citep{mcinnes2018umap} dimensionality reduction, and
-\texttt{HDBSCAN}~\citep{mcinnes2017hdbscan} clustering;
-(3)~a \textbf{single-shot LLM} baseline that asks one DeepSeek call to
-propose a taxonomy from a corpus sample, then labels the full corpus in
-parallel;
+\texttt{HDBSCAN}~\citep{mcinnes2017hdbscan} clustering at library
+defaults, with a \texttt{min\_topic\_size}~$\in\{2,5,10,15,25\}$ sweep
+reported in \S\ref{sec:eval-results-20ng};
+(3)~a \textbf{single-shot LLM} baseline that asks one DeepSeek-v4-Flash
+call to propose a taxonomy from a corpus sample, then labels the full
+corpus in parallel;
 (4)~a \textbf{TopicGPT-style}~\citep{pham2024topicgpt} iterative LLM
-proposer with no separate judge.
+proposer with no separate judge. We use ``TopicGPT-style'' rather
+than ``TopicGPT'' because this is our reimplementation; relative to
+the released \texttt{topicgpt} package
+(\url{github.com/chtmp223/topicgpt}) we keep the proposer-refine loop
+and the topic-name-plus-definition output format, and drop the
+explicit merge-and-prune pass and the human-readable hierarchy
+construction step. We did not run the released package; the relative
+ordering is a comparison against our reimplementation, not against the
+original system.
 
 \paragraph{20~Newsgroups protocol.}
-We sample 500 items stratified across the 20 classes, repeated under
-3 random seeds, and run all 4 methods on each seed (12 runs total).
-Gold labels are the 20~Newsgroups class assignments. We report
-\emph{external} metrics --- purity, normalized mutual information
-(NMI), and adjusted Rand index (ARI) --- against gold, alongside
-\emph{intrinsic} topic-quality metrics --- NPMI and $C_v$
-coherence~\citep{rehurek2010gensim} computed from the discovered
+We sample 25 items per class stratified across the 20 classes (a
+target of 500), keep the 487 that survive sklearn's default
+header/footer/quote stripping (13 documents are emptied by the
+filter), repeat under 3 random seeds, and run all 4 methods on each
+seed (12 runs total). Gold labels are the 20~Newsgroups class
+assignments. We report \emph{external} metrics --- purity, normalized
+mutual information (NMI), and adjusted Rand index (ARI) --- against
+gold, alongside \emph{intrinsic} topic-quality metrics --- NPMI and
+$C_v$ coherence~\citep{rehurek2010gensim} computed from the discovered
 cluster--label assignments, plus a redundancy score that penalizes
 near-duplicate category labels.
 
@@ -141,7 +155,14 @@ balanced classes).
 
 \paragraph{Operational metrics.}
 For both benchmarks we additionally report dollar cost (from OpenRouter
-\texttt{usage.cost}), wall-clock time, and number of iterations, and
-on 20NG we cross-check the orchestrator's self-reported convergence
-signal (the judge's terminal don't-fit rate) against external purity
-and NPMI across the 12 runs.
+\texttt{usage.cost}, broken down by orchestrator and judge) and
+wall-clock time. On 20NG we additionally cross-check the
+orchestrator's self-reported convergence signal (the judge's
+don't-fit rate logged on every classify probe; 12 events total across
+the three taxonomy\_agent runs) against terminal external purity, NMI,
+and NPMI. The convergence-signal data, Spearman correlations, and the
+interpretation that prompts the reframing of the introduction's
+``cross-checked'' claim are reported in
+\S\ref{sec:eval-results-20ng}; per-iteration partial-purity was not
+logged, so the cross-check is conducted at the terminal-pair level
+($n{=}3$ seeds).

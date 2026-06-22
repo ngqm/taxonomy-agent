@@ -18,7 +18,17 @@ make the system usable as a walk-up demo
 \label{sec:system:arch}
 
 Figure~\ref{fig:architecture} sketches the run-time topology.
-\todo{architecture diagram}
+\begin{figure}[t]
+\centering
+\fbox{\parbox{0.9\columnwidth}{\centering\vspace{2em}
+\textbf{Figure placeholder.}\\
+Orchestrator (Sonnet)~$\longleftrightarrow$~typed revise DSL~$\longleftrightarrow$~judge thread pool (DeepSeek/Llama).\\
+Cost tracker + partial-progress sink stream to disk.\\
+\vspace{2em}}}
+\caption{Run-time topology of \textsc{taxonomy\_agent}. (Diagram to
+be replaced before camera-ready.)}
+\label{fig:architecture}
+\end{figure}
 Two roles are kept strictly separate. The \textbf{orchestrator} is a
 ReAct-style~\citep{yao2022react}%
 \todo{add bibkey yao2022react (Yao et al., ``ReAct: Synergizing Reasoning and Acting in Language Models'', ICLR 2023)}
@@ -34,10 +44,11 @@ effects: (i) a weak orchestrator cannot bluff a label past the judge,
 because the judge re-derives it from the item text; (ii) the
 orchestrator's context never bloats with per-item labels, so its
 prompt stays small across long corpora; and (iii) the judge is
-trivially parallelisable via a thread pool, which dominates wall time
-on corpora larger than a few hundred items. The first two effects are
-asserted by design rather than ablated; we report the realised
-parallel speed-up in \S\ref{sec:evaluation}.
+trivially parallelisable via a thread pool. All three effects are
+architectural commitments we did not separately ablate; the wall-clock
+and cost numbers in \S\ref{sec:eval-results-20ng} are end-to-end and
+reflect both the parallel-judge dispatcher and the orchestrator-loop
+overhead together.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
 can fill either role. The orchestrator defaults to

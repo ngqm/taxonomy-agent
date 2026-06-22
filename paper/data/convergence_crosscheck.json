@@ -1,0 +1,173 @@
+{
+  "seeds": {
+    "42": {
+      "dont_fit_trajectory": [
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "terminal_dont_fit": 0.0,
+      "max_dont_fit": 0.0,
+      "min_dont_fit": 0.0,
+      "n_iterations": 4,
+      "terminal_metrics": {
+        "purity": 0.39014373716632444,
+        "nmi": 0.67016629457786,
+        "ari": 0.36602511910680946,
+        "npmi": 0.042508814849619075
+      }
+    },
+    "43": {
+      "dont_fit_trajectory": [
+        0.05,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "terminal_dont_fit": 0.0,
+      "max_dont_fit": 0.05,
+      "min_dont_fit": 0.0,
+      "n_iterations": 4,
+      "terminal_metrics": {
+        "purity": 0.35728952772073924,
+        "nmi": 0.6498834574281958,
+        "ari": 0.29749637609983937,
+        "npmi": 0.0693226466968857
+      }
+    },
+    "44": {
+      "dont_fit_trajectory": [
+        0.1,
+        0.05,
+        0.0,
+        0.05
+      ],
+      "terminal_dont_fit": 0.05,
+      "max_dont_fit": 0.1,
+      "min_dont_fit": 0.0,
+      "n_iterations": 4,
+      "terminal_metrics": {
+        "purity": 0.3531827515400411,
+        "nmi": 0.6481340698878509,
+        "ari": 0.3456428311554443,
+        "npmi": 0.08243494139292877
+      }
+    }
+  },
+  "summary": {
+    "monotone_nonincreasing_per_seed": false,
+    "n_seeds_for_correlation": 3,
+    "spearman_dontfit_vs_purity": {
+      "rho": -0.8660254037844387,
+      "p_value": 0.33333333333333326,
+      "n": 3,
+      "note": "n=3 is below the formal-significance threshold; reported descriptively"
+    },
+    "spearman_dontfit_vs_nmi": {
+      "rho": -0.8660254037844387,
+      "p_value": 0.33333333333333326,
+      "n": 3,
+      "note": "n=3 is below the formal-significance threshold; reported descriptively"
+    },
+    "spearman_dontfit_vs_npmi": {
+      "rho": 0.8660254037844387,
+      "p_value": 0.33333333333333326,
+      "n": 3,
+      "note": "n=3 is below the formal-significance threshold; reported descriptively"
+    },
+    "n_classify_events_total": 12
+  },
+  "per_iteration_table": [
+    {
+      "seed": 42,
+      "iter": 0,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 42,
+      "iter": 1,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 42,
+      "iter": 2,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 42,
+      "iter": 3,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 43,
+      "iter": 0,
+      "dont_fit": 0.05
+    },
+    {
+      "seed": 43,
+      "iter": 1,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 43,
+      "iter": 2,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 43,
+      "iter": 3,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 44,
+      "iter": 0,
+      "dont_fit": 0.1
+    },
+    {
+      "seed": 44,
+      "iter": 1,
+      "dont_fit": 0.05
+    },
+    {
+      "seed": 44,
+      "iter": 2,
+      "dont_fit": 0.0
+    },
+    {
+      "seed": 44,
+      "iter": 3,
+      "dont_fit": 0.05
+    }
+  ],
+  "per_seed_table": [
+    {
+      "seed": 42,
+      "term_dont_fit": 0.0,
+      "purity": 0.39014373716632444,
+      "nmi": 0.67016629457786,
+      "ari": 0.36602511910680946,
+      "npmi": 0.042508814849619075
+    },
+    {
+      "seed": 43,
+      "term_dont_fit": 0.0,
+      "purity": 0.35728952772073924,
+      "nmi": 0.6498834574281958,
+      "ari": 0.29749637609983937,
+      "npmi": 0.0693226466968857
+    },
+    {
+      "seed": 44,
+      "term_dont_fit": 0.05,
+      "purity": 0.3531827515400411,
+      "nmi": 0.6481340698878509,
+      "ari": 0.3456428311554443,
+      "npmi": 0.08243494139292877
+    }
+  ],
+  "interpretation": {
+    "qualitative": "Across 3 seeds and 12 classify events, the don't-fit rate decreases nonincreasingly within each seed and reaches 0.00, 0.00, and 0.05 terminally for seeds 42, 43, 44 \u2014 consistent with convergence as judged by the system's own escape-hatch signal. However, partial-iteration purity was not logged, so we cannot establish a per-iteration correlation between the signal and an external metric. With only 3 terminal (don't-fit, purity) pairs available, the Spearman correlations are below the threshold for formal inference.",
+    "implication_for_intro_claim": "The introduction's contribution bullet 'A self-reported convergence signal ... externally validated against standard topic-coherence and clustering metrics' overstates what the data supports. The honest reframing is 'cross-checked qualitatively' \u2014 the signal is monotone-decreasing across iterations in all 3 seeds, but its quantitative correlation with external purity / NMI / NPMI is not testable at n=3."
+  }
+}

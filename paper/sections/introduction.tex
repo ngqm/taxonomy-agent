@@ -42,13 +42,22 @@ via the judge's don't-fit rate with a minimum iteration floor and an
 explicit escape hatch; we cross-check this self-report against external
 purity and NMI on 20~Newsgroups, but stop short of claiming
 the don't-fit rate is a quantitatively validated leading indicator.
-Empirically, the system dominates LLM and BERTopic baselines on
-20~Newsgroups (NMI 0.656, $1.9\times$ next-best), while on the
-synthetic CoT-Pattern corpus it improves over a 14-feature surface
-baseline (0.866 vs.\ 0.73 purity on the same 149 items) by a margin
-that, as we discuss in \S\ref{sec:eval-results-cot}, the metrics alone
-cannot cleanly attribute to semantic discovery rather than sharper
-surface extraction.
+Empirically, the system leads the LLM baselines on 20~Newsgroups by
+$1.9\times$ on NMI and $3.3\times$ on ARI, and leads BERTopic at
+library defaults; under a BERTopic \texttt{min\_topic\_size} sweep the
+purity and NMI gaps narrow substantially but the ARI lead is robust
+($2.6\times$ over the best-tuned BERTopic on 20NG, see
+\S\ref{sec:eval-results-20ng}). On the synthetic CoT-Pattern corpus
+the system attains 0.866 precision-at-coverage on the 109 of 149
+items it chooses to label (95.4\%\ accuracy on the labelled items),
+which decomposes against a supervised surface-feature ceiling of
+0.730~accuracy at full coverage to: $+22$ points on the labelled
+items, $-3$ points if forced to cover the full corpus
+($0.698$~coverage-adjusted vs.\ $0.730$~oracle), and $+20$ points
+over the unsupervised k-means surface baseline at full coverage.
+As we discuss in \S\ref{sec:eval-results-cot}, the metrics alone
+cannot cleanly attribute the margin to semantic discovery rather
+than sharper surface extraction.
 The system is built on LangGraph and OpenRouter, prefers OpenRouter's
 native \texttt{usage.cost} field over static price tables, streams
 partial progress to disk so that long runs are interruptible, and ships
@@ -60,8 +69,11 @@ per-item classifications. Our contributions are:
   \item A typed six-op revise DSL with validate-before-mutate
         semantics, exposed to the orchestrator as tool calls.
   \item A self-reported convergence signal (don't-fit rate, minimum
-        iteration floor, escape hatch) externally validated against
-        standard topic-coherence and clustering metrics.
+        iteration floor, escape hatch) qualitatively cross-checked
+        against external clustering metrics on 20~Newsgroups; the
+        signal saturates at the floor too quickly to function as a
+        quantitative leading indicator at the sample size available
+        (\S\ref{sec:eval-results-20ng}).
   \item An operational demo: native cost accounting, partial-progress
         saving, and a Streamlit UI, distributed as an open-source
         Python package that is model-agnostic via OpenRouter.

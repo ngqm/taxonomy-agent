@@ -19,20 +19,23 @@ CoT pivots; we have neither, and we do not claim the CoT result
 settles the question.
 
 \paragraph{Self-reported convergence is circular even with a
-model split.} The don't-fit rate that terminates the loop is computed
-by the same judge LLM that produced the labels. The
-orchestrator--judge model split (Sonnet orchestrator, Llama/DeepSeek
-judge) breaks the cross-role training-data overlap but does not break
-the loop: a stable terminal don't-fit just says the judge is
-self-consistent with respect to its own labelling function. Because
-the orchestrator authors the classify prompt, it can in principle
-drive the don't-fit rate down with a permissive prompt without
-genuine convergence. We report taxonomy quality against external gold
-labels on 20~Newsgroups and CoT, but in the deployment case the
-system is sold for --- discovery on a corpus with no gold ---
-external validation is exactly what is unavailable, and the
-convergence signal alone should not be treated as evidence the
-discovered taxonomy is correct.
+model split, and saturates at the floor in practice.} The don't-fit
+rate that terminates the loop is computed by the same judge LLM that
+produced the labels. The orchestrator--judge model split (Sonnet
+orchestrator, DeepSeek-v4-Flash judge in the eval; Llama-3.3-70B in
+the installed default) breaks the cross-role training-data overlap but
+does not break the loop: a stable terminal don't-fit just says the
+judge is self-consistent with respect to its own labelling function.
+Empirically the signal also saturates at the floor too quickly to
+function as a quantitative leading indicator: across the 12 classify
+events in the three 20NG runs, 9 of 12 report \texttt{dont\_fit\_rate}
+$\leq 0.05$ and 7 of 12 report exactly 0.0, including a
+non-monotone $0.0 \to 0.05$ bounce in seed 44
+(\S\ref{sec:eval-results-20ng}). In the deployment case the system
+is sold for --- discovery on a corpus with no gold --- external
+validation is exactly what is unavailable, and the convergence
+signal alone should not be treated as evidence the discovered
+taxonomy is correct.
 
 \paragraph{Researcher degrees of freedom in convergence calibration.}
 Both the orchestrator prompt and the judge prompt were iterated by
@@ -114,3 +117,30 @@ All CoT experiments are English-only and mathematics-only; the
 evidence about cross-lingual transfer of the typed revise
 vocabulary, nor about generalisation to long-form scientific text,
 code, multi-turn dialogue, or non-mathematical reasoning domains.
+
+\paragraph{No component-level ablations.}
+The four architectural choices we describe in
+\S\ref{sec:system} --- the orchestrator/judge model split, the typed
+six-op revise DSL with validate-before-mutate semantics, the
+don't-fit terminal criterion, and the parallel judge dispatcher ---
+are not independently ablated in
+\S\ref{sec:eval-results-20ng}--\S\ref{sec:eval-results-cot}. The
+empirical comparison set is end-to-end taxonomy\_agent against three
+external baselines, plus the indirect single\_shot~$\to$~topicgpt-style
+comparison that contrasts no-iteration with iteration-without-judge-split.
+We are therefore unable to isolate which architectural choice
+drives the gains. The most informative single missing experiment is
+taxonomy\_agent with free-form prose revise instead of the typed DSL on
+the CoT corpus; we estimate roughly USD\,0.30 of OpenRouter spend for
+a single-seed run.
+
+\paragraph{Untested vendor-agnosticism and resume-from-kill.}
+The system is engineered for vendor agnosticism via OpenRouter and
+for partial-progress streaming to disk, but the operational
+properties we report in~\S\ref{sec:eval-demo} are
+code-path-and-tracker properties, not validated quality properties.
+We did not run a non-Anthropic-orchestrator quality comparison, and
+re-launching a killed run to continue from the saved
+\texttt{taxonomy\_state.json} is not implemented --- the Streamlit UI
+displays partial state for inspection but does not resume the
+orchestrator.

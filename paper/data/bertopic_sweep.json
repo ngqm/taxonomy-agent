@@ -1,0 +1,124 @@
+{
+  "corpus_20ng": [
+    {
+      "corpus": "20ng",
+      "n_items": 487,
+      "min_topic_size": 2,
+      "wall_s": 13.627966165542603,
+      "purity": 0.5523613963039015,
+      "nmi": 0.5531733076021097,
+      "ari": 0.18519925049518046,
+      "n_categories": 60,
+      "n_outliers": 79
+    },
+    {
+      "corpus": "20ng",
+      "n_items": 487,
+      "min_topic_size": 5,
+      "wall_s": 4.974940061569214,
+      "purity": 0.09650924024640657,
+      "nmi": 0.15887439798409345,
+      "ari": 0.01697747649333259,
+      "n_categories": 2,
+      "n_outliers": 0
+    },
+    {
+      "corpus": "20ng",
+      "n_items": 487,
+      "min_topic_size": 10,
+      "wall_s": 4.830138444900513,
+      "purity": 0.09650924024640657,
+      "nmi": 0.15887439798409345,
+      "ari": 0.01697747649333259,
+      "n_categories": 2,
+      "n_outliers": 0
+    },
+    {
+      "corpus": "20ng",
+      "n_items": 487,
+      "min_topic_size": 15,
+      "wall_s": 5.06978178024292,
+      "purity": 0.09650924024640657,
+      "nmi": 0.15887439798409345,
+      "ari": 0.01697747649333259,
+      "n_categories": 2,
+      "n_outliers": 0
+    },
+    {
+      "corpus": "20ng",
+      "n_items": 487,
+      "min_topic_size": 25,
+      "wall_s": 4.978736877441406,
+      "purity": 0.09650924024640657,
+      "nmi": 0.15887439798409345,
+      "ari": 0.01697747649333259,
+      "n_categories": 2,
+      "n_outliers": 0
+    }
+  ],
+  "corpus_cot": [
+    {
+      "corpus": "cot",
+      "n_items": 149,
+      "min_topic_size": 2,
+      "wall_s": 4.640183925628662,
+      "purity": 0.2080536912751678,
+      "nmi": 0.005636240892148958,
+      "ari": -0.04795477768827687,
+      "n_categories": 28,
+      "n_outliers": 0
+    },
+    {
+      "corpus": "cot",
+      "n_items": 149,
+      "min_topic_size": 5,
+      "wall_s": 4.619622230529785,
+      "purity": 0.20134228187919462,
+      "nmi": 0.0002657638129914103,
+      "ari": -0.03496764137837563,
+      "n_categories": 8,
+      "n_outliers": 5
+    },
+    {
+      "corpus": "cot",
+      "n_items": 149,
+      "min_topic_size": 10,
+      "wall_s": 4.5844972133636475,
+      "purity": 0.20134228187919462,
+      "nmi": 0.000401139686257315,
+      "ari": -0.026156521739130436,
+      "n_categories": 6,
+      "n_outliers": 0
+    },
+    {
+      "corpus": "cot",
+      "n_items": 149,
+      "min_topic_size": 15,
+      "wall_s": 4.509976148605347,
+      "purity": 0.20134228187919462,
+      "nmi": 0.0001696551833424325,
+      "ari": -0.023486419927443485,
+      "n_categories": 4,
+      "n_outliers": 15
+    },
+    {
+      "corpus": "cot",
+      "n_items": 149,
+      "min_topic_size": 25,
+      "wall_s": 4.564722061157227,
+      "purity": 0.20134228187919462,
+      "nmi": 0.0,
+      "ari": 0.0,
+      "n_categories": 0,
+      "n_outliers": 149
+    }
+  ],
+  "sweep": [
+    2,
+    5,
+    10,
+    15,
+    25
+  ],
+  "note": "min_topic_size is BERTopic's parameter that sets HDBSCAN's min_cluster_size. Library default is 10."
+}
