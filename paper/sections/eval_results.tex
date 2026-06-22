@@ -145,6 +145,27 @@ practical for one-off codebook construction and impractical as a
 high-frequency drift monitor without the caching fix flagged in
 limitations.
 
+\paragraph{Cost projection.}
+The decomposition extrapolates naturally: across the four
+taxonomy\_agent runs we report, the orchestrator costs
+USD\,1.75--USD\,2.20 per run irrespective of corpus size, since the
+orchestrator only sees probe samples and revise targets, while the
+judge costs USD\,$1.4 \times 10^{-4}$ per item averaged across the
+four runs. A linear projection to corpus sizes a practitioner might
+plausibly target therefore lands at approximately USD\,3 for a
+10{,}000-item corpus (USD\,1.90 orchestrator + USD\,1.40 judge) and
+USD\,16 for a 100{,}000-item corpus (USD\,1.90 + USD\,14). This
+projection holds the iteration count at the four to six rounds we
+observe and ignores the orchestrator's documented $O(k^2)$
+input-token growth at higher iteration counts
+(\S\ref{sec:limitations}); the figures are therefore a lower bound
+on cost in the converges-quickly regime. Even under that caveat,
+the projections sit two to three orders of magnitude below the
+USD\,0.10--USD\,1.00 per item rates typical of human annotation,
+which is the relevant comparison for the upstream codebook
+construction use case; the topic-modelling baselines are a different
+operating point.
+
 \paragraph{Convergence signal vs.\ external metrics.}
 The methodology promises a cross-check of the judge's terminal
 don't-fit rate against external metrics across the 12 classify
