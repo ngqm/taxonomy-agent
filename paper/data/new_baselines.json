@@ -1,0 +1,48 @@
+{
+  "lda_20ng": {
+    "purity_mean": 0.155,
+    "purity_std": 0.011,
+    "nmi_mean": 0.147,
+    "nmi_std": 0.008,
+    "ari_mean": 0.012,
+    "ari_std": 0.004,
+    "n_cats": 16,
+    "cost_per_run": 0,
+    "wall_s_per_run": 22
+  },
+  "lda_cot": {
+    "purity": 0.201,
+    "nmi": 0.0004,
+    "ari": -0.026,
+    "n_cats": 5,
+    "cost": 0,
+    "wall_s": 0.5
+  },
+  "ecl_20ng": {
+    "purity_mean": 0.434,
+    "purity_std": 0.005,
+    "nmi_mean": 0.488,
+    "nmi_std": 0.013,
+    "ari_mean": 0.243,
+    "ari_std": 0.01,
+    "n_cats": 16,
+    "cost_per_run_mean": 0.021,
+    "wall_s_per_run": 110
+  },
+  "ecl_cot": {
+    "purity": 0.268,
+    "nmi": 0.039,
+    "ari": -0.004,
+    "n_cats": 5,
+    "cost": 0.013,
+    "wall_s": 98
+  },
+  "prose_ablation_cot": {
+    "partial": true,
+    "events_logged": 4,
+    "revise_calls": 0,
+    "cost_at_kill": 1.35,
+    "wall_s_at_kill": 90,
+    "note": "killed at $1.35 with no revise progress; orchestrator stuck in novelties/classify loop with empty proposals"
+  }
+}

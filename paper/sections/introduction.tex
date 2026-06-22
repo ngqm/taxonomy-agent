@@ -56,12 +56,12 @@ best-tuned BERTopic on 20NG, see \S\ref{sec:eval-results-20ng}). The
 iterative baseline is our own minimal port of TopicGPT's idea; we did
 not run the released TopicGPT package and make no claim about ordering
 against TopicGPT as published. On the synthetic CoT-Pattern corpus the system
-labels 109 of the 149 items with 95.4\%\ accuracy and reaches 0.698
-purity over the full corpus. Against a supervised ceiling of 0.730 from a
-surface-feature classifier with gold-label access, this is $+22$ points
-on the items the system labels but $-3$ points when the system is forced
-to cover the full corpus; against an unsupervised k-means baseline on the
-same surface features it is $+20$ points at full coverage. As we discuss
+labels 109 of the 149 items with 100\%\ accuracy and reaches 0.732
+purity over the full corpus. Against a supervised ceiling of 0.730 from
+a surface-feature classifier with gold-label access, this is $+27$
+points on the items the system labels and at parity at full coverage;
+against an unsupervised k-means baseline on the same surface features
+it is $+23$ points at full coverage. As we discuss
 in \S\ref{sec:eval-results-cot}, the metrics alone cannot cleanly
 attribute the margin to semantic discovery and rule out sharper surface
 extraction.

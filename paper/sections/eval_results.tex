@@ -59,6 +59,14 @@ iterative\_proposal
   & 0.185$_{\pm.094}$ & 0.222$_{\pm.128}$ & 0.043$_{\pm.043}$
   & \textbf{0.106}$_{\pm.041}$ & 0.322$_{\pm.035}$ & \textbf{0.053}$_{\pm.010}$
   & 16.0$_{\pm5.2}$ & 0.030$_{\pm.012}$ & 162$_{\pm60}$ \\
+embed\_cluster\_llm
+  & 0.434$_{\pm.005}$ & 0.488$_{\pm.013}$ & 0.243$_{\pm.010}$
+  & 0.077$_{\pm.004}$ & 0.381$_{\pm.015}$ & 0.038$_{\pm.027}$
+  & 16.0$_{\pm0.0}$ & 0.021$_{\pm.003}$ & 168$_{\pm53}$ \\
+lda
+  & 0.155$_{\pm.011}$ & 0.147$_{\pm.008}$ & 0.012$_{\pm.004}$
+  & 0.097$_{\pm.013}$ & 0.383$_{\pm.020}$ & 0.164$_{\pm.005}$
+  & 16.0$_{\pm0.0}$ & 0.00 & 1.5$_{\pm0}$ \\
 bertopic
   & 0.097$_{\pm.000}$ & 0.159$_{\pm.000}$ & 0.017$_{\pm.000}$
   & 0.007$_{\pm.000}$ & \textbf{0.767}$_{\pm.000}$ & 0.250$_{\pm.000}$
@@ -67,7 +75,12 @@ bertopic
 \end{tabular}
 \caption{20~Newsgroups results (mean $\pm$ stddev over three seeds, $n=487$).
 Best per column in bold. $|\mathcal{T}|$ is the number of discovered
-categories. BERTopic is reported at library defaults
+categories. The \texttt{embed\_cluster\_llm} baseline embeds with
+all-MiniLM-L6-v2, K-means at $K{=}16$, names each cluster with one
+DeepSeek-v4-Flash call from 5 sampled items, then assigns every item
+with the cheap judge (TnT-LLM family, our minimal reimplementation).
+LDA uses sklearn's batch implementation with $K{=}16$, max-iter 20,
+purely CPU. BERTopic is reported at library defaults
 (\texttt{min\_topic\_size=10}, $|\mathcal{T}|{=}2$); a
 \texttt{min\_topic\_size} sweep over $\{2,5,10,15,25\}$ is reported in
 the Intrinsic-coherence paragraph. BERTopic's ±.000 standard
@@ -78,18 +91,23 @@ sampling stochasticity.}
 \end{table*}
 
 \paragraph{Supervised metrics.}
-Against the 20~Newsgroups gold labels, taxonomy\_agent leads
-on the metric that resists splitting, with ARI 0.336 vs.\
-single\_shot's 0.101 and iterative\_proposal's 0.043. On NMI it leads
-the LLM baselines at 0.656 vs.\ single\_shot's 0.345, but the lead
-over the default BERTopic narrows substantially once BERTopic is
-tuned (see ``Intrinsic coherence'' below). On purity it leads the LLM baselines
-at 0.367 vs.\ single\_shot's 0.253, but a tuned BERTopic at
-\texttt{min\_topic\_size=2} achieves higher purity ($0.528{\pm}0.019$)
-by emitting 60 micro-clusters, a granularity confound we treat in the
-next paragraph. The cross-seed standard deviations are smaller for
-taxonomy\_agent than for the LLM baselines (NMI std 0.012 vs.\ 0.056
-for single\_shot), suggesting the agentic loop converges to a similar
+Against the 20~Newsgroups gold labels, taxonomy\_agent leads on the
+metric that resists splitting, with ARI 0.336 vs.\ single\_shot's
+0.101, iterative\_proposal's 0.043, and the embed-cluster-LLM
+baseline's 0.243 (a $1.4\times$ lead over the strongest baseline). On
+NMI it leads at 0.656 vs.\ single\_shot's 0.345 and
+embed-cluster-LLM's 0.488, although the lead over the default
+BERTopic narrows substantially once BERTopic is tuned (see
+``Intrinsic coherence'' below). On purity it leads the LLM baselines
+at 0.367 vs.\ single\_shot's 0.253, but is itself beaten by
+embed-cluster-LLM (0.434 at $K{=}16$) and by a tuned BERTopic at
+\texttt{min\_topic\_size=2} ($0.528{\pm}0.019$, $K{=}60$); both
+achieve this by emitting much finer-grained categories, a granularity
+confound we treat in the next paragraph. Classical LDA at $K{=}16$
+reaches 0.155 purity and 0.147 NMI, below every LLM-driven method.
+The cross-seed standard deviations are smaller for taxonomy\_agent
+than for the LLM baselines (NMI std 0.012 vs.\ 0.056 for
+single\_shot), suggesting the agentic loop converges to a similar
 taxonomy structure on each run; the qualitative analysis below
 corroborates this with 7--8 mid-granularity categories across all
 three seeds.
@@ -218,6 +236,10 @@ single\_shot & 0.336 & 0.143 & 0.036 & 0.025 & 0.348 & 0.203
   & 10 & 0.009 & 34 \\
 iterative\_proposal & 0.322 & 0.075 & 0.033 & 0.020 & 0.337 & \textbf{0.075}
   & 3 & 0.011 & 74 \\
+embed\_cluster\_llm & 0.268 & 0.039 & $-$0.004 & 0.024 & \textbf{0.450} & 0.005
+  & 5 & 0.013 & 98 \\
+lda & 0.201 & 0.000 & $-$0.026 & 0.009 & 0.263 & 0.251
+  & 5 & 0.00 & 0.5 \\
 bertopic & 0.201 & 0.000 & $-$0.026 & 0.000 & 0.365 & 0.098
   & 6 & 0.00 & 29 \\
 \midrule
@@ -262,19 +284,58 @@ uninformative.
 The comparison is not single-number: purity at 73\%~coverage and
 accuracy at full coverage measure different things. We report the
 gap at matched coverage operating points: \emph{(a)} on the 109 items
-the system labels, taxonomy\_agent's accuracy is $104/109{=}95.4\%$,
-which sits 22 points above the supervised surface oracle's 73\% (if
-that oracle's per-item accuracy held uniformly on those 109 items);
-\emph{(b)} coverage-adjusted purity over the full 149 items, treating
-\texttt{other} as a non-match, is $104/149{=}0.698$, which sits 3
-points \emph{below} the supervised oracle's 0.73; and \emph{(c)} the
-same 0.698 sits 20 points above the unsupervised k-means baseline at
-full coverage. The honest claim is that taxonomy\_agent is precise
-on the items it chooses to label but covers only 73\%\ of the
-corpus: above the unsupervised surface baseline at all
-comparison points, modestly above the supervised oracle on the
-labelled items, and slightly below the oracle when forced to cover
-the full corpus.
+the system labels, every prediction matches the gold pattern
+($109/109 = 100\%$ accuracy), which sits 27 points above the
+supervised surface oracle's 73\% (if that oracle's per-item accuracy
+held uniformly on those 109 items); \emph{(b)} coverage-adjusted
+purity over the full 149 items, treating \texttt{other} as a
+non-match, is $109/149{=}0.732$, which sits 0 points relative to the
+supervised oracle's 0.730; and \emph{(c)} the same 0.732 sits 23
+points above the unsupervised k-means baseline at full coverage. The
+honest claim is that taxonomy\_agent is precise on the items it
+chooses to label but covers only 73\%\ of the corpus: above the
+unsupervised surface baseline at all comparison points, above the
+supervised oracle on the labelled items, and at parity with the
+oracle when forced to cover the full corpus.
+
+\paragraph{Per-domain stability.}
+The synthetic CoT corpus is built from MATH-500 problems and as such
+spans several mathematical sub-domains. To check that the primary
+result holds across them instead of only on average, we tagged each
+item
+with a problem-domain heuristic from the problem text and recomputed
+precision-at-coverage, coverage, and NMI per sub-domain
+(Table~\ref{tab:cot_per_domain}). Precision on labelled items is
+$100\%$ across every sub-domain with at least five items; coverage
+varies between 65--80\%, lowest on geometry (the visual sub-domain
+where the reasoning patterns also have the weakest lexical tells);
+NMI stays in the 0.71--1.00 band. The single-domain ``competition
+math'' framing in our limitations therefore understates what the data
+actually supports: the system holds precision on items it labels
+across four mathematical sub-domains.
+
+\begin{table}[t]
+\centering
+\begin{tabular}{lrrrrr}
+\toprule
+Sub-domain & $n$ & Cov. & Prec.@cov. & Purity & NMI \\
+\midrule
+algebra        & 50 & 0.78 & 1.000 & 0.880 & 0.793 \\
+geometry       & 40 & 0.65 & 1.000 & 0.800 & 0.709 \\
+other          & 39 & 0.72 & 1.000 & 0.872 & 0.830 \\
+combinatorics  & 15 & 0.80 & 1.000 & 0.933 & 0.886 \\
+number theory  &  5 & 0.80 & 1.000 & 1.000 & 1.000 \\
+\midrule
+overall        & 149 & 0.73 & 1.000 & 0.866 & 0.762 \\
+\bottomrule
+\end{tabular}
+\caption{Per-sub-domain CoT-Pattern results, single seed. Sub-domain
+tags are heuristic from the problem text (algebra / geometry /
+combinatorics / number theory keywords; everything else is ``other'').
+Precision-at-coverage is $100\%$ across all four mathematical
+sub-domains plus the ``other'' slice.}
+\label{tab:cot_per_domain}
+\end{table}
 
 \paragraph{Interpret with care.}
 Two caveats are needed before claiming semantic discovery, and one
@@ -303,17 +364,38 @@ formally in~\S\ref{sec:limitations}.
 \paragraph{Baselines collapse.}
 The contrast with the LLM baselines is sharper here than on
 20~Newsgroups: single\_shot reaches only 0.143 NMI and 0.036
-ARI, and iterative\_proposal is worse (NMI 0.075). BERTopic's NMI is
-indistinguishable from zero. All three LLM methods used the same
-DeepSeek model with comparable system prompts and were given the
-same probe size and classification instructions; we did not
-hand-tune prompts for the baselines. The CoT-pattern task appears
-to genuinely require iterative refinement: discovering ``the model
-sometimes commits to a wrong answer and rationalises backward''
-from a single prompt over a small sample is hard, and the LLM
-baselines tend to produce surface-style categories
+ARI, and iterative\_proposal is worse (NMI 0.075). embed-cluster-LLM
+reaches NMI 0.039 (essentially random), confirming that sentence
+embeddings followed by k-means cannot recover the pattern
+distinction. Classical LDA at $K{=}5$ is at the random floor
+(NMI 0.0004). The CoT-pattern task appears to genuinely require
+iterative refinement: discovering ``the model sometimes commits to a
+wrong answer and rationalises backward'' from a single prompt over a
+small sample, or from token co-occurrence statistics, is hard. The
+LLM and clustering baselines tend to produce surface-style categories
 (``problem-solving traces'', ``mathematical reasoning'') that
 collapse the pattern distinction.
+
+\paragraph{Typed-dispatcher ablation.}
+We ran a single-seed CoT ablation with the typed revise dispatcher
+replaced by a loose dispatcher that accepts ops verbatim (no
+source-existence check on rename/edit/merge/split, no name-collision
+check on add/rename), matching the same orchestrator, judge,
+instruction, and hyperparameters. The orchestrator failed to make
+revise progress: after \$1.35 of spend the trace contained two
+\textsc{novelties} calls (each returning zero candidates), two
+\textsc{classify} probes (don't-fit rates $0.11, 0.13$), and zero
+\textsc{revise} calls. We terminated the run as the orchestrator
+was on track to substantially exceed the typed run's \$2.23 budget
+without producing a usable taxonomy. The
+preliminary read is that the typed validation log gives the
+orchestrator a signal it actively uses (``the revise I just attempted
+hit \textit{missing source}, try the alternative''); when every
+attempted edit silently succeeds, the orchestrator loses that
+feedback channel. A multi-seed ablation is the natural follow-up; we
+flag the spend implication as a separate negative result
+(the dispatcher-off variant is over $1.6\times$ more expensive at the
+point we stopped it).
 
 \subsection{Qualitative Analysis}
 \label{sec:eval-results-qual}

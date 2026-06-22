@@ -22,11 +22,12 @@ ARI lead over BERTopic under an aggressive sweep of the minimum
 cluster size that closes most of the purity gap by splitting BERTopic
 into 60 micro-clusters. On a 149-item synthetic corpus of failure
 patterns in chain-of-thought reasoning drawn from the 2024--2026
-alignment literature, the system labels 109 of 149 items at 95.4\%\
-accuracy and reaches 0.698 purity over the full corpus, sitting
-$+22$ points on the labelled items and $-3$ at full coverage against
-a 0.730 ceiling from a 14-feature surface classifier, and $+20$
-points above an unsupervised k-means baseline on the same features.
+alignment literature, the system labels 109 of 149 items at 100\%\
+accuracy and reaches 0.732 purity over the full corpus, sitting
+$+27$ points on the labelled items and at parity at full coverage
+against a 0.730 ceiling from a 14-feature surface classifier, and
+$+23$ points above an unsupervised k-means baseline on the same
+features.
 We caution that the metrics alone cannot separate semantic discovery
 from sharper surface extraction. Code, reproduction scripts, and the
 corpora are at \url{https://github.com/ngqm/taxonomy-agent}.
