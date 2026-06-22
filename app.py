@@ -645,6 +645,7 @@ with run_tab:
 
     taxonomy_preview_box = st.empty()
     cost_box = st.empty()
+    trace_box = st.empty()
     log_box = st.empty()
 
     # Quick demo overrides: when the user clicks the demo button, we ignore
@@ -751,6 +752,17 @@ with run_tab:
                     log_r = open(log_path, "r")
                     cost_path = out_path / "cost.json"
                     state_path = out_path / "taxonomy_state.json"
+                    trace_path = out_path / "trace.jsonl"
+
+                    def _render_trace_box():
+                        """Render the iteration timeline if any events exist;
+                        otherwise leave the box empty (avoids a flashing
+                        'no trace' message during the first few seconds)."""
+                        if trace_path.exists() and trace_path.stat().st_size > 0:
+                            with trace_box.container():
+                                st.markdown("##### Iteration timeline")
+                                _render_iteration_trace(st.container(), trace_path)
+
                     while proc.poll() is None:
                         line = log_r.readline()
                         if line:
@@ -760,9 +772,11 @@ with run_tab:
                             )
                             _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
+                            _render_trace_box()
                         else:
                             _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
+                            _render_trace_box()
                             time.sleep(0.3)
                     # Drain anything written between the last readline and exit
                     for line in log_r.read().splitlines():
@@ -770,6 +784,7 @@ with run_tab:
                     log_box.code("\n".join(ss.log_lines[-400:]), language="text")
                     _render_taxonomy_preview(taxonomy_preview_box, state_path)
                     _render_cost_panel(cost_box, cost_path)
+                    _render_trace_box()
                     log_r.close()
                     log_w.close()
                 except Exception as e:
