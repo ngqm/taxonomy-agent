@@ -48,18 +48,14 @@ or Co-DETECT-style refinement. The orchestrator-and-judge separation
 reduces the multi-agent coordination surface to a single ReAct loop.
 
 \paragraph{Chain-of-thought analysis.}
-The CoT-Pattern corpus borrows its five failure modes from the
-CoT-faithfulness literature~\citep{lanham2023faithfulness,
-turpin2023biased}; the hint taxonomy in
-\citet{chen2025reasoningmodels} maps almost one-to-one onto our
-labels. FaithCoT-Bench~\citep{xu2025faithcotbench} and
-PRMBench~\citep{song2025prmbench} ship instance-level and
-step-level CoT-failure benchmarks. \citet{lee2025stepwiseeval}
-survey step-level reasoning evaluation.
-\textsc{taxonomy\_agent} does not propose a new CoT analysis method;
-we use CoT-Pattern as a second-domain stress test of the discovery
-loop, motivated by the position paper of
-\citet{korbak2025cotmonitor}.
+The CoT-Pattern corpus borrows its five failure modes
+from~\citep{lanham2023faithfulness, turpin2023biased}; the hint
+taxonomy in \citet{chen2025reasoningmodels} maps almost one-to-one
+onto our labels. FaithCoT-Bench~\citep{xu2025faithcotbench} and
+PRMBench~\citep{song2025prmbench} ship instance- and step-level
+CoT-failure benchmarks; \citet{lee2025stepwiseeval} survey the
+literature. We use CoT-Pattern as a second-domain stress test,
+motivated by~\citet{korbak2025cotmonitor}.
 
 \paragraph{Positioning.}
 Iteration, proposer-and-labeller separation, and the

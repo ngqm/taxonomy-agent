@@ -1,0 +1,15 @@
+{
+  "seed": 43,
+  "model": "meta-llama/llama-3.2-3b-instruct",
+  "n_items_input": 482,
+  "n_items_kept_after_dedup": 481,
+  "n_clusters": 3,
+  "n_noise": 169,
+  "n_topics_discovered": 3,
+  "topics": [
+    "Medication Side Effects",
+    "Censorship",
+    "Motorcycles"
+  ],
+  "wall_time_s": 17.195619821548462
+}

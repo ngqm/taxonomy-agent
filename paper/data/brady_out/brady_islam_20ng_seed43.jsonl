@@ -1,0 +1,481 @@
+{"id": "20ng-10-14161", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-12077", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-763", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-5106", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-10-7482", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-15854", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-7933", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-7441", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-17820", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-18741", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-10807", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-17786", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-16766", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-7342", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-10-2912", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-363", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-10-15683", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-9417", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-10923", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-8678", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-8506", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-3711", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-10-12026", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-10-5228", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-11382", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-9378", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-2091", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-1879", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-13118", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-10928", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-506", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-10392", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-814", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-12666", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-2106", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-11492", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-2620", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-6722", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-777", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-6809", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-2182", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-15659", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-2180", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-15410", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-13849", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-18370", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-5922", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-3-8426", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-12826", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-8694", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-7135", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-14417", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-3335", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-14949", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-12346", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-1716", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-2603", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-11899", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-2950", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-16164", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-15632", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-71", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-8084", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-18666", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-11949", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-10916", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-11561", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-8108", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-7339", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-16086", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-3974", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-5836", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-17-15959", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-16160", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-15832", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-17503", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-11753", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-5162", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-9085", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-12872", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-12520", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-15057", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-9526", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-3071", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-17255", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-9114", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-16154", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-15272", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-7453", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-12291", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-8442", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-7682", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-13714", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-12174", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-18593", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-9245", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-4-7608", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-4222", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-8596", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-13128", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-12942", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-13180", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-14492", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-13569", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-18801", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-10980", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-13338", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-6197", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-18008", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-14114", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-6333", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-6371", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-4530", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-13907", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-17779", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-8614", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-10054", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-17442", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-17967", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-3393", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-6156", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-3741", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-12-17104", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-4910", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-1314", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-16755", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-10481", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-918", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-7254", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-9240", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-16686", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-9711", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-17138", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-11854", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-7553", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-2403", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-2752", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-13592", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-10081", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-8728", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-17727", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-1570", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-11922", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-19-9248", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-13461", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-15279", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-5493", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-17761", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-9303", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-11308", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-3845", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-2726", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-13218", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-5842", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-1697", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-11-1094", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-15283", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-18638", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-15052", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-3070", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-16444", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-12527", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-7300", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-15107", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-16282", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-11664", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-10176", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-11-18647", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-11-12228", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-18686", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-4161", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-1383", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-15327", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14849", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-10709", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-8136", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14891", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-7922", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-3246", "gold_label": 13, "gold_label_name": "sci.med", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-13-4660", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-7748", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-6284", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-17805", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-17970", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-408", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-6166", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-3449", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14427", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-1565", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-12631", "gold_label": 13, "gold_label_name": "sci.med", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-13-2259", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-4104", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-13078", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-13733", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-16401", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-15902", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-14994", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-11950", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-5335", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-56", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-13820", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-13085", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-12979", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-10167", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-13890", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-13802", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-11411", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-16971", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-9455", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-14995", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-2591", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-1850", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-8504", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-9912", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-6535", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-0-7563", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-1886", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-8-6399", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-559", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-8-3814", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-15875", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-14716", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-2012", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-1747", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-4248", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-150", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-14022", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-8-6273", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-8522", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-6216", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-17251", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-7620", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-8-2002", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-5330", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-2404", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-8-5536", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-5838", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-16426", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-16925", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-13482", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-8-15617", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-1460", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-8069", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-7-1254", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-6496", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-6642", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-16704", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-6208", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-7719", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-10053", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-4706", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-16404", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-7-7664", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-6685", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-7-4071", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-11864", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-7-10440", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-1607", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-11567", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-388", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-1490", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 1, "predicted_topic": "Vehicle Comparison"}
+{"id": "20ng-7-10409", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-5137", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-14160", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-12613", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-16654", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-17898", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-18797", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-4047", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-14238", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-10493", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-2254", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-7406", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-16913", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-5056", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-16955", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-7671", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-6998", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-6820", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-12215", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-6743", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-12658", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-4861", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-2050", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-2595", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-12081", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-5-12617", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-11850", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-7540", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-8908", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-5271", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-17101", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-6645", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-17081", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-6394", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-4734", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-8450", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-14203", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-15330", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-14724", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-3929", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-18310", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-12461", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-16600", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-12445", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-15011", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-1590", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-18142", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-9987", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-4297", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-8176", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-1-12627", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-7083", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-2816", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-14-2345", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-326", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-3179", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-14-3215", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-17352", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-13107", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-4671", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-13888", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-8255", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-11938", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-14520", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-15696", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-3201", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-13886", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-1374", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-2586", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-14-9132", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-14-16982", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-14-1903", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-10663", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-15922", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-8291", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-17168", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-12619", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-17512", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-13187", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-15428", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-8553", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-12415", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-14047", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-524", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-8542", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-8236", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-10821", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-5202", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-5194", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-3377", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-14319", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-16022", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-31", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-1827", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-13041", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-10642", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-11387", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-14708", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-16-4900", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-5999", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-10654", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-10924", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-10465", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-5924", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-15030", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-47", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-12129", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-5140", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-15228", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-13401", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-1579", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-13654", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-1365", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-3632", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-18629", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-5518", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-13162", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-11223", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-15226", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-6-15466", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-17370", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-465", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-13697", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-11657", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-15855", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-12370", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-5243", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-16327", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-513", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-18173", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-17456", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-18049", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-16805", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-16724", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-5645", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-5020", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-15920", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-17842", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-6773", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-12219", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-12047", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-17605", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-3895", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-14194", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-17155", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-3489", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-9-15486", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-2414", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-17304", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-1386", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-1206", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-5412", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-5591", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-2839", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-6676", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-11624", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-7263", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-5453", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-796", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-2810", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-17402", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-16469", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-10129", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-8705", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-18586", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-4219", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-15553", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-2533", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-13456", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-12164", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-18798", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-18-14862", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-9999", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-1635", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-2790", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-1343", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-9926", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-2098", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-17996", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-13578", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-7041", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-1714", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-10416", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-14226", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-4594", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-15668", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-11182", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-2789", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-15175", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-1586", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-17225", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-8263", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-3375", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-16566", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-2-16155", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-14329", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-1811", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-17680", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-5902", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-3378", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-15338", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-236", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-10187", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-13770", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-9866", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-11333", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-6126", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-16335", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-12732", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-5301", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-5071", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-1994", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-7634", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-17534", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-9078", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-5486", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-4724", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-2848", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}
+{"id": "20ng-15-16092", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-1109", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Internet Trolling"}

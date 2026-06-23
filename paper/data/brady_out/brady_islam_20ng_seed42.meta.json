@@ -1,0 +1,14 @@
+{
+  "seed": 42,
+  "model": "meta-llama/llama-3.2-3b-instruct",
+  "n_items_input": 484,
+  "n_items_kept_after_dedup": 484,
+  "n_clusters": 2,
+  "n_noise": 295,
+  "n_topics_discovered": 2,
+  "topics": [
+    "Hockey Trades",
+    "Computers"
+  ],
+  "wall_time_s": 15.660200595855713
+}

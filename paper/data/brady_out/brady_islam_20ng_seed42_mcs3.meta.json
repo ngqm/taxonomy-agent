@@ -1,0 +1,24 @@
+{
+  "seed": 42,
+  "model": "meta-llama/llama-3.2-3b-instruct",
+  "n_items_input": 484,
+  "n_items_kept_after_dedup": 484,
+  "n_clusters": 12,
+  "n_noise": 382,
+  "n_topics_discovered": 12,
+  "topics": [
+    "Hockey",
+    "Baseball",
+    "Gun Control",
+    "Computer Port Issues",
+    "Computer Compatibility",
+    "Computer Memory",
+    "Israel-Palestine",
+    "Religious Criticism",
+    "Ethnic Conflict",
+    "Computer Compatibility",
+    "Encryption",
+    "Used Computer Sales"
+  ],
+  "wall_time_s": 35.18454098701477
+}

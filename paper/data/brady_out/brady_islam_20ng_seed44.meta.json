@@ -1,0 +1,17 @@
+{
+  "seed": 44,
+  "model": "meta-llama/llama-3.2-3b-instruct",
+  "n_items_input": 490,
+  "n_items_kept_after_dedup": 490,
+  "n_clusters": 5,
+  "n_noise": 347,
+  "n_topics_discovered": 5,
+  "topics": [
+    "Sports Politics",
+    "Computing Hardware",
+    "Encryption and Privacy",
+    "Faith vs. Reason",
+    "Genocide"
+  ],
+  "wall_time_s": 23.200440645217896
+}

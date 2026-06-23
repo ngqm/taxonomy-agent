@@ -47,6 +47,10 @@ embed\_cluster\_llm
   & 0.434$_{\pm.005}$ & 0.488$_{\pm.013}$ & 0.243$_{\pm.010}$
   & 0.077$_{\pm.004}$ & 0.381$_{\pm.015}$ & \textbf{0.038}$_{\pm.027}$
   & 16.0$_{\pm0.0}$ & 0.021$_{\pm.003}$ & 168$_{\pm53}$ \\
+brady\_islam~\citep{brady2025iterativetax}
+  & 0.134$_{\pm.045}$ & 0.164$_{\pm.092}$ & 0.022$_{\pm.002}$
+  & 0.173$_{\pm.068}$ & 0.657$_{\pm.263}$ & 0.000$_{\pm.000}$
+  & 3.0$_{\pm1.7}$ & ${<}0.01$ & 19$_{\pm4}$ \\
 lda
   & 0.155$_{\pm.011}$ & 0.147$_{\pm.008}$ & 0.012$_{\pm.004}$
   & 0.097$_{\pm.013}$ & 0.383$_{\pm.020}$ & 0.164$_{\pm.005}$
@@ -57,7 +61,7 @@ bertopic
   & 2.0$_{\pm0.0}$ & 0.00 & 15$_{\pm5}$ \\
 \bottomrule
 \end{tabular}
-\caption{20~Newsgroups results, $n=487$; install-default row averaged over four seeds, Sonnet row and baselines over three.
+\caption{20~Newsgroups results, $n=487$; install-default row averaged over four seeds, Sonnet row and baselines over three. \texttt{brady\_islam} runs their pipeline (embed with all-MiniLM-L6-v2, HDBSCAN at default \texttt{min\_cluster\_size=5}, iterative per-cluster topic synthesis) with Llama-3.2-3B via OpenRouter (their vLLM v0.11 engine failed to initialise on our box; the model is the same).
 Best per column in bold. $|\mathcal{T}|$ is the number of discovered
 categories. \texttt{embed\_cluster\_llm} embeds with
 all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each cluster with one
@@ -81,17 +85,21 @@ single\_shot is $2.1\times$ on NMI and $4.7\times$ on ARI; the
 \textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
 every supervised metric, which appears to come from refinement drift
 on a cheap proposer.%
-\footnote{Cross-seed standard deviations on the cheap pair are
-larger than on the Sonnet pair (NMI std $0.055$ vs $0.012$); the
-cheap run varies between 8 and 16 categories across seeds, while the
-Sonnet run lumps consistently to 7--8. One of six cheap runs we
-attempted (seed 46) returned an incomplete artefact after hitting
-the iteration cap and is excluded from the means; we count this as
-a real-world failure mode and report it.}
+\footnote{Cross-seed stddev on the cheap pair (NMI $0.055$) is
+larger than the Sonnet pair ($0.012$); the cheap run varies between
+$8$ and $16$ categories, the Sonnet run lumps to $7$--$8$. One of
+six cheap attempts (seed 46) returned incomplete and is excluded
+from the means; we discuss this failure mode in
+\S\ref{sec:limitations}.}
 The Sonnet orchestrator row is included for cost comparison and
 sits inside the cheap pair's NMI interval ($0.656 \pm 0.012$ vs
 $0.727 \pm 0.055$) at roughly eleven times the cost. We therefore
-make the cheap pair the install and publication default.
+make the cheap pair the install and publication default. The
+concurrent \citet{brady2025iterativetax} pipeline at default
+produces a degenerate $3$-cluster solution
+(NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN noise), shape-matched to
+BERTopic at defaults; a \texttt{min\_cluster\_size} sweep does not
+lift the mean.
 
 \paragraph{Intrinsic coherence and tuned BERTopic.}
 Coherence is not uniformly in taxonomy\_agent's favour:

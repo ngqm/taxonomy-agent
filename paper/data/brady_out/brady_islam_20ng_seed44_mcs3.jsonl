@@ -1,0 +1,490 @@
+{"id": "20ng-10-12425", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-7232", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-11543", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-16067", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-13954", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-4928", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-1898", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-7565", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-8415", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-3127", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-15181", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 1, "predicted_topic": "Government Services"}
+{"id": "20ng-10-12849", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-1684", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-17820", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-7603", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-2360", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-3165", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-18530", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-12424", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-10131", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-6437", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-308", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-10-18794", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-7619", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-10-7811", "gold_label": 10, "gold_label_name": "rec.sport.hockey", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-11163", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-18540", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-5519", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-17985", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-6235", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-8247", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-4233", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-13213", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-2770", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-4198", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-15117", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-14032", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-3912", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-3743", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-12679", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-8467", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-5759", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-14205", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-3-17856", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-5735", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-12275", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-15348", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-7842", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-3-6808", "gold_label": 3, "gold_label_name": "comp.sys.ibm.pc.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-9628", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-12822", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-5996", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-18822", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-5063", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-13039", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-11090", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-15963", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-8305", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-1860", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-6720", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-6396", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-18836", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-5026", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-7324", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-17942", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-4070", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-2603", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-18666", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-13335", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-18814", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-4359", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-14992", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-17-15758", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-17-12608", "gold_label": 17, "gold_label_name": "talk.politics.mideast", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-4918", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-11310", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-4200", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-4433", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-3004", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-12838", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-15444", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-17635", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-18005", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-12760", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-1566", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-6", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-15785", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-4048", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-6364", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-3623", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-2896", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-11452", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-753", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-934", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-13209", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-4-872", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-8585", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-4-10201", "gold_label": 4, "gold_label_name": "comp.sys.mac.hardware", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-8030", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-5643", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-8495", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-2532", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-2153", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-4821", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-6513", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-11141", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-18234", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-2115", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-16900", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-5660", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-12718", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-1831", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-13458", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-13229", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-1798", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-14064", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-12734", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-18745", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-11862", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-4437", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-12-2119", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-3136", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-12-15235", "gold_label": 12, "gold_label_name": "sci.electronics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-14916", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-17194", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-3429", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-3795", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-5398", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-8277", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-16520", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-617", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-1184", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-10592", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-13507", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-2214", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-12497", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-11914", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-1314", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-10009", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-13929", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-3166", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-189", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-5912", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-895", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-19-16848", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-18751", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-6736", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-19-15311", "gold_label": 19, "gold_label_name": "talk.religion.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-16802", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-11-10260", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-9052", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-8080", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-2298", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-6499", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-11-13417", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-15557", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-14351", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-11-11503", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-4066", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-7446", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-1905", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-7102", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-799", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-11186", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-11590", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-12573", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-14143", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-2940", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-17556", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-13329", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-8919", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-7291", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-11-482", "gold_label": 11, "gold_label_name": "sci.crypt", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-18126", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-15806", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14136", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-15189", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14427", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-4232", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-3134", "gold_label": 13, "gold_label_name": "sci.med", "cluster": 1, "predicted_topic": "Government Services"}
+{"id": "20ng-13-3306", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-13123", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-7871", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-14183", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-10295", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-10415", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-4202", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-11047", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-3635", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-442", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-4569", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-13967", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-10926", "gold_label": 13, "gold_label_name": "sci.med", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-13-5604", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-12558", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-15316", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-13-18513", "gold_label": 13, "gold_label_name": "sci.med", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-6015", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-16634", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-15498", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-7148", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-5011", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-9118", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-5522", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-18776", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-11238", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-17533", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-17024", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-1392", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-10559", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-672", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-10883", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-9214", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-16688", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-4602", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-6465", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-17319", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-2152", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-0-3532", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-17977", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-15262", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-0-12303", "gold_label": 0, "gold_label_name": "alt.atheism", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-17100", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-14320", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-3460", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-15650", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-4897", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-1524", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-6304", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-10501", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-12423", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-13414", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-7358", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-12480", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-16862", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-12967", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-6217", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-1838", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-2277", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-8851", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-4094", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-14619", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-14048", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-8-7978", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-11995", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-8-4668", "gold_label": 8, "gold_label_name": "rec.motorcycles", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-2846", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-2047", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-3655", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-8716", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-2177", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-509", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-4651", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-8394", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-1683", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-8994", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-4706", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-16303", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-8872", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-2711", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-11027", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-142", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-2624", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-9524", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-372", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-16099", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-16768", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-13836", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-7214", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-7-15470", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-7-6531", "gold_label": 7, "gold_label_name": "rec.autos", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-16093", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-14711", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-6598", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-18618", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-3464", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-12335", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-1613", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-5919", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-6369", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-2005", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-16203", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-12492", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-4716", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-5844", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-15222", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-9738", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-6701", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-7639", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-4722", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-9728", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-628", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-18679", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-5-14720", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-536", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-5-239", "gold_label": 5, "gold_label_name": "comp.windows.x", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-16297", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-11058", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-14203", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-5732", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-8624", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-16658", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-2562", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-14887", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-5884", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-1221", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-15983", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-2619", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-16121", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-472", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-914", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-10378", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-1948", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-12751", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-1-9589", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-13413", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-14396", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-1-10700", "gold_label": 1, "gold_label_name": "comp.graphics", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-4963", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-3522", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-3714", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-7096", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-18598", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-9992", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-7036", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-9962", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-14039", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-908", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-5385", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-5629", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-1655", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-9069", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-15899", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-8881", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-1050", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-7914", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-17708", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-15253", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-15929", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-4159", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-16243", "gold_label": 14, "gold_label_name": "sci.space", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-14-18103", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-14-8629", "gold_label": 14, "gold_label_name": "sci.space", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-9226", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-17910", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-16851", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-8689", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-4450", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-8922", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-726", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-16854", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-17625", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-4089", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-7031", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-4935", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-4524", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-12869", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-9129", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-12924", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-18481", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-7589", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-18433", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-16-5218", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-13022", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-18152", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-11910", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-18045", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-16-4775", "gold_label": 16, "gold_label_name": "talk.politics.guns", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-1579", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-8925", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 1, "predicted_topic": "Government Services"}
+{"id": "20ng-6-13321", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-9852", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-5924", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-7297", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-16726", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-4000", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-14323", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-7418", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-10611", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-18385", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-2539", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-14988", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-15140", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-13654", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-12938", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-8863", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-13520", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-8439", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-149", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-15345", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-6-15514", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-6-7604", "gold_label": 6, "gold_label_name": "misc.forsale", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-3549", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-2758", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-13280", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-6081", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-8071", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-11255", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-9-10557", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-3363", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-12167", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-17470", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-6182", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-3297", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-18352", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-8529", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-2341", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-16805", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-486", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-17135", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-10067", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-4358", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-7413", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-15130", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-6979", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-9-7868", "gold_label": 9, "gold_label_name": "rec.sport.baseball", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-9500", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-17182", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-2839", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-13032", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-17571", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-7958", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-16035", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-6132", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-12891", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-1497", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-2860", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-8314", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-7724", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-13765", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-17165", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-8216", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-3242", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-1036", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-12061", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-6866", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-5118", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-8193", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-7530", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-18-1315", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-18-10428", "gold_label": 18, "gold_label_name": "talk.politics.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-14096", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-17099", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-4865", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-15672", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-927", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-8790", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-6377", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-2665", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-501", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-8447", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-9037", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-16761", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-6456", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-11483", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-14201", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-8054", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-15886", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-741", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-912", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-2831", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-10560", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-2612", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-2-16425", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-2-12922", "gold_label": 2, "gold_label_name": "comp.os.ms-windows.misc", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-7252", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-1601", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-11539", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-1090", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-3199", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-3268", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-4142", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-9376", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
+{"id": "20ng-15-15186", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-3378", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-15761", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-12670", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-9078", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-3555", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-16550", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-6017", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-14871", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-830", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-1530", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-5182", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-2475", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-6222", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-15002", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 1, "predicted_topic": "Government Services"}
+{"id": "20ng-15-3827", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": 0, "predicted_topic": "Computer Hardware"}
+{"id": "20ng-15-4877", "gold_label": 15, "gold_label_name": "soc.religion.christian", "cluster": -1, "predicted_topic": "other"}
