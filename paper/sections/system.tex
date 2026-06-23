@@ -28,13 +28,14 @@ is a stateless function that labels one item at a time against the
 taxonomy the orchestrator hands it; it never sees the taxonomy history
 or the orchestrator's reasoning. The split has three architectural
 consequences: a weak orchestrator cannot bluff a label past the judge
-because the judge re-derives it from the item text, the orchestrator's
-context does not bloat with per-item labels across long corpora, and
-the judge is trivially parallelisable via a thread pool.
+because the judge derives it from the item text against the current
+taxonomy, the orchestrator's context length does not grow with the
+number of items (only with the number of taxonomy edits), and the
+judge is trivially parallelisable via a thread pool.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
-can fill either role and mixed-vendor runs are routine in our
-evaluation (\S\ref{sec:evaluation}). Internally, the orchestrator
+supported there can fill either role (\S\ref{sec:evaluation} reports
+DeepSeek/DeepSeek and Sonnet/Sonnet pairs). Internally, the orchestrator
 runs as a LangGraph state machine whose closure holds the working
 taxonomy, the set of sampled item ids, a snapshot of the last
 finalised taxonomy, and a classify-call budget counter; because the
@@ -50,9 +51,10 @@ The orchestrator's action space is six tools:
 \texttt{revise\_taxonomy}, \texttt{classify\_with\_judge},
 \texttt{propose\_novelties\_with\_judge}, and
 \texttt{finalize\_classify}. Classification and novelty proposal are
-separate verbs because the two judge prompt shapes differ (single
-category with an escape vs.\ open-ended generation), and conflating
-them hurt judge reliability in early prototypes.
+separate verbs because the two judge prompt shapes differ (a single
+category with an \texttt{"other"} escape hatch vs.\ open-ended
+generation), and conflating them hurt judge reliability in early
+prototypes.
 
 \paragraph{Revise DSL.}
 Every taxonomy mutation flows through \texttt{revise\_taxonomy}, which
@@ -61,27 +63,31 @@ accepts an ordered list of typed operations
 dispatched to pure handlers of signature
 \texttt{(tax, op)$\to$(new\_tax, log)}. Two invariants matter for
 correctness. \emph{Validate before mutate}: each handler checks every
-precondition before constructing the new taxonomy, so a malformed
+precondition (source category exists, target name unused, child set
+non-empty for \textsc{split}, parents disjoint for \textsc{merge})
+before constructing the new taxonomy, so a malformed
 \textsc{merge} or \textsc{split} returns the input unchanged with a
 log entry the orchestrator can read on the next step (two early bugs
-in which preconditions were checked too late destroyed data, which
-motivated this invariant). \emph{Per-op failure isolation}: the
-dispatcher records failures per op and continues with the rest of the
-batch, so a bad \textsc{merge} in a three-op call does not roll back a
-good \textsc{add}. The verb set itself is standard taxonomy-edit
+mutated the working taxonomy before all preconditions had been
+checked, which motivated this invariant). \emph{Per-op failure
+isolation}: the dispatcher applies ops left-to-right, recording
+failures per op and continuing with the rest of the batch, so a
+bad \textsc{merge} in a three-op call does not roll back a good
+\textsc{add} and subsequent ops see the post-prefix state. The verb set itself is standard taxonomy-edit
 vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution
 here is the typed dispatcher with these two invariants.
 
 \paragraph{Convergence.}
 After each \texttt{classify\_with\_judge} call the system computes the
-don't-fit rate, the fraction of items the judge labelled
-\texttt{"other"}, and the orchestrator is allowed to call
+don't-fit rate (the fraction of items the judge labelled
+\texttt{"other"}). The orchestrator is allowed to call
 \texttt{finalize\_classify} once that rate falls below a threshold
 (default $0.10$) and the run has cleared a \texttt{min\_iterations}
 floor (default $3$). Classify prompts carry a fixed suffix
 instructing the judge to reply \texttt{"other"} whenever no listed
-category fits, and any out-of-taxonomy reply is coerced to
-\texttt{"other"}, so a high don't-fit rate reflects coverage gaps and
+category fits, and the \texttt{classify\_with\_judge} wrapper coerces
+any out-of-taxonomy reply to \texttt{"other"} before returning to the
+orchestrator, so a high don't-fit rate reflects coverage gaps and
 not hallucinated labels. The $0.10$ default is a usability choice
 that we report alongside external metrics in \S\ref{sec:evaluation}
 without claiming it is a calibrated leading indicator
@@ -92,7 +98,7 @@ are detailed in Appendix~A.
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}
 
-Three engineering choices make the system usable as a walk-up demo.
+Three engineering choices make the system usable as a single-command demo.
 A \texttt{CostTracker} receives usage from every orchestrator and
 judge call and writes \texttt{cost.json} after each agent super-step,
 preferring OpenRouter's native \texttt{usage.cost} over a static price

@@ -13,14 +13,13 @@ non-LLM baseline. Three concurrent 2025 systems sit closest to ours:
 \citet{brady2025iterativetax} iteratively prompt an LLM to reuse or
 generate a label per embedding cluster;
 LOGOS~\citep{pi2025logos} runs a grounded-theory pipeline with
-LLM coding, semantic clustering, and iterative codebook refinement,
-reporting 88.2\% expert-schema match; and
+LLM coding, semantic clustering, and iterative codebook refinement; and
 \citet{zhu2025contextawaretax} build LLM-guided hierarchical
 taxonomies of scientific papers. \textsc{taxonomy\_agent} differs on
 three operating axes: a typed edit DSL with per-operation failure
 isolation, an online ReAct loop in place of offline batched refine,
-and first-class cost and partial-progress accounting through a
-walk-up Streamlit surface.
+and live cost and partial-progress tracking exposed through a
+Streamlit UI usable without configuration.
 \citet{yang2025llmitl} put an LLM inside a neural topic-model
 training loop, and \citet{huang2025clustasclass} reframe clustering
 as direct classification through an LLM (close to our `single\_shot'
@@ -45,13 +44,13 @@ scratch over an unlabelled corpus with a single goal instruction, no
 seed sketch and no human in the loop, then hand off the trace,
 working taxonomy, and per-item classifications for downstream review
 or Co-DETECT-style refinement. The orchestrator-and-judge separation
-reduces the multi-agent coordination surface to a single ReAct loop.
+reduces multi-agent coordination to a single ReAct loop.
 
 \paragraph{Chain-of-thought analysis.}
 The CoT-Pattern corpus borrows its five failure modes
 from~\citep{lanham2023faithfulness, turpin2023biased}; the hint
 taxonomy in \citet{chen2025reasoningmodels} maps almost one-to-one
-onto our labels. FaithCoT-Bench~\citep{xu2025faithcotbench} and
+onto our labels. FaithCoT-Bench~\citep{shen2026faithcot} and
 PRMBench~\citep{song2025prmbench} ship instance- and step-level
 CoT-failure benchmarks; \citet{lee2025stepwiseeval} survey the
 literature. We use CoT-Pattern as a second-domain stress test,
@@ -62,7 +61,9 @@ Iteration, proposer-and-labeller separation, and the
 add/rename/merge/split/drop verbs are all standard. The
 contribution is two structural commitments: a typed dispatcher with
 validate-before-mutate and per-operation failure isolation, and a
-stateless judge that re-derives each item's category from the item
-text alone. The first ensures malformed edits never corrupt state;
-the second makes cost linear in the corpus on the cheap model and
-prevents the orchestrator from forcing a label past the judge.
+stateless judge that labels each item against the current taxonomy
+from item text alone, with no access to the orchestrator's
+tool-call history or prior label assignments. The first ensures
+malformed edits never corrupt state; the second makes cost linear
+in the corpus on the cheap model and prevents the orchestrator from
+forcing a label past the judge.

@@ -28,10 +28,12 @@ interact. The orchestrator proposes typed edits to a working taxonomy
 through a validated dispatcher; a stateless judge re-derives each
 item's category from the item text alone, never sees the
 orchestrator's reasoning, and runs on the cheaper model. Two
-properties follow. The per-item cost is linear in the corpus and
-runs on the cheap model, so the publication and install configuration
-is the same. The orchestrator cannot force a label past the judge,
-because the judge re-derives it from item text.
+properties follow. The judge runs on the cheap model and is called
+once per item, so per-item cost stays low at corpus scale and the
+publication configuration doubles as the install default. The
+orchestrator cannot force a label past the judge because the judge
+derives every label from item text against the current taxonomy
+without access to prior assignments.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
 orchestrator and judge), the system reaches NMI $0.740 \pm 0.055$
@@ -40,8 +42,8 @@ beating a one-shot LLM baseline by $2.1\times$ on NMI and
 $4.8\times$ on ARI and a model-matched embed-cluster-LLM
 reimplementation of TnT-LLM by $1.5\times$ on NMI and $2.0\times$
 on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
-pair at eleven times the cost lands at NMI $0.656 \pm 0.012$,
-inside the cheap pair's interval, so we make the cheap pair the
+pair at eleven times the cost reaches NMI $0.656 \pm 0.012$ and
+does not improve over the cheap pair, so we make the cheap pair the
 publication and install default. On the synthetic CoT-Pattern
 corpus the system reaches NMI $0.944 \pm 0.081$ across three seeds
 at $\$0.08$ per run, labelling on average $142$ of $149$ items at
@@ -61,12 +63,12 @@ $100\%$ accuracy (\S\ref{sec:eval-results-cot}).
         successful sibling ops. A malformed edit returns the
         unchanged taxonomy with a log entry the orchestrator can
         read on the next step.
-  \item \textbf{An empirical demonstration that cheap-model both-roles
-        dominates.} On 20NG and CoT-Pattern, DeepSeek-v4-Flash for
-        both orchestrator and judge beats every comparator and
-        matches a Claude Sonnet 4.6 orchestrator pair at eleven
-        times the cost, contradicting the assumption that
-        orchestrator quality is the bottleneck.
+  \item \textbf{An empirical demonstration that the cheap model
+        in both roles dominates.} On 20NG and CoT-Pattern,
+        DeepSeek-v4-Flash for both orchestrator and judge beats
+        every comparator, including a Claude Sonnet 4.6 orchestrator
+        pair at eleven times the cost on 20NG, so orchestrator
+        quality is not the bottleneck at this scale.
   \item \textbf{An open-source artefact at} \repourl{} with a
         \texttt{pip install} path, the install-default configuration
         used in the paper, and a Streamlit Inspect tab that replays

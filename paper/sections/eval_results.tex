@@ -4,10 +4,11 @@ We run \textsc{taxonomy\_agent} at the install default
 benchmarks; the \textsc{single\_shot} and \textsc{iterative\_proposal}
 baselines also use DeepSeek-v4-Flash, and BERTopic uses no LLM. A
 Sonnet 4.6 orchestrator pair is reported as the optional quality
-configuration in Table~\ref{tab:20ng} for cost comparison and reaches
-NMI inside the cheap pair's interval at twelve times the cost. For
-20~Newsgroups we report mean $\pm$ standard deviation over three
-independently sampled random seeds on a 487-document stratified
+configuration in Table~\ref{tab:20ng} for cost comparison; it reaches
+NMI $0.656 \pm 0.012$ at eleven times the cost and does not improve
+over the cheap pair. For 20~Newsgroups we report mean $\pm$ standard
+deviation over five independently sampled random seeds at the install
+default and three at the Sonnet pair, on a 487-document stratified
 subsample (sampled at 25 items per gold class; 13 documents are
 dropped after sklearn's default header/footer/quote stripping). All
 four methods see the same documents under the same seed. BERTopic
@@ -83,25 +84,28 @@ against embed\_cluster\_llm's $0.434$, NMI $0.740$ against $0.488$
 ARI $0.489$ against $0.243$ (a $2.0\times$ lead). The lead over
 single\_shot is $2.1\times$ on NMI and $4.8\times$ on ARI; the
 \textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
-every supervised metric, consistent with refinement drift on a
-cheap proposer.%
-\footnote{Cross-seed stddev on the cheap pair (NMI $0.055$) is
-larger than the Sonnet pair ($0.012$); the cheap run varies between
-$8$ and $16$ categories, the Sonnet run lumps to $7$--$8$. One
-seed entered a monotonic-add loop on first attempt
-(\S\ref{sec:limitations}); a re-run with a different
-non-deterministic trajectory converged, and we added an
-auto-finalize fallback that labels the corpus against the on-disk
-taxonomy when the orchestrator ends without an artifact.}
-The Sonnet orchestrator row is included for cost comparison and
-sits inside the cheap pair's NMI interval ($0.656 \pm 0.012$ vs
-$0.740 \pm 0.055$) at roughly eleven times the cost. We therefore
-make the cheap pair the install and publication default. The
+every supervised metric, suggesting that iterative label refinement
+without a separate judge does not help on this corpus.%
+\footnote{Cross-seed stddev on the cheap pair (NMI $0.055$, $n{=}5$)
+is larger than the Sonnet pair ($0.012$, $n{=}3$); the cheap run
+varies between $8$ and $16$ categories, the Sonnet run lumps to
+$7$--$8$. One cheap-pair seed entered a monotonic-add loop on
+first attempt (\S\ref{sec:limitations}) and was re-sampled at a
+different sampling temperature; we added an auto-finalize fallback
+that labels the corpus against the on-disk taxonomy when the
+orchestrator ends without an artifact, and the re-sampled seed
+finished without invoking it. The auto-finalize fallback was added
+after the failure and applied uniformly to all five seeds reported
+in Table~\ref{tab:20ng}.}
+The Sonnet orchestrator row is included for cost comparison: it
+reaches NMI $0.656 \pm 0.012$ at roughly eleven times the cost of
+the cheap pair ($0.740 \pm 0.055$) and does not improve on it. We
+therefore make the cheap pair the install and publication default. The
 concurrent \citet{brady2025iterativetax} pipeline at default
 produces a degenerate $3$-cluster solution
-(NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN noise), shape-matched to
-BERTopic at defaults; a \texttt{min\_cluster\_size} sweep does not
-lift the mean.
+(NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN noise), with the same
+small-cluster, high-noise shape as BERTopic at library defaults; a
+\texttt{min\_cluster\_size} sweep does not raise mean NMI.
 
 \paragraph{Intrinsic coherence and tuned BERTopic.}
 Coherence is not uniformly in taxonomy\_agent's favour:
@@ -112,21 +116,21 @@ $0.767$ but with a degenerate two-cluster solution that loses every
 supervised metric. Under a sweep of \texttt{min\_topic\_size}
 (Appendix~A), the most aggressive setting emits roughly 60
 micro-clusters and closes the purity gap, but ARI then sits at
-$0.127 \pm .038$ against our $0.452 \pm .096$, a $3.6\times$ lead.
+$0.127 \pm .038$ against our $0.489 \pm .085$, a $3.85\times$ lead.
 
 \paragraph{Cost.}
-A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs $\$0.16$
-on average, about $7\times$ the cost of embed\_cluster\_llm at the
-same labeller and roughly $1/12$ of the Sonnet orchestrator pair.
-Wall-clock time of $548\,$s is $3\times$ the LLM baselines and
-$37\times$ BERTopic; absolute spend remains below $\$0.20$ on the
-487-document corpus, below the $\$0.10$--$\$1.00$ per item rates
-typical of human codebook construction. On the Sonnet pair the
-orchestrator contributes 96--98\%\ of total spend because LangChain's
-\texttt{bind\_tools} path strips Anthropic prompt-caching markers from
-OpenRouter requests; the cheap pair is unaffected because DeepSeek
-provider-side caching does not depend on the markers
-(\S\ref{sec:limitations}).
+A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs $\$0.17$
+on average, about $8\times$ the cost of embed\_cluster\_llm at the
+same labeller and roughly $1/11$ of the Sonnet orchestrator pair.
+Wall-clock time of $713\,$s is $4\times$ the LLM baselines and
+$48\times$ BERTopic; absolute spend remains below $\$0.20$ on the
+487-document corpus. On the Sonnet pair the
+orchestrator contributes 96--98\%\ of total spend, consistent with
+LangChain's \texttt{bind\_tools} path stripping Anthropic
+prompt-caching markers from OpenRouter requests (verified by a
+side-channel probe; \S\ref{sec:limitations}); the cheap pair is
+unaffected because DeepSeek provider-side caching does not depend
+on the markers.
 
 \subsection{CoT-Pattern Results}
 \label{sec:eval-results-cot}
@@ -187,20 +191,24 @@ rows are not strictly commensurable; see Appendix~A.}
 \paragraph{Pattern recovery.}
 At the install default and averaged across three seeds,
 \textsc{taxonomy\_agent} labels roughly $142$ of $149$ items per run
-($95\%$ coverage) and every prediction matches the gold pattern.
-Coverage-adjusted purity averages $0.95$, $+22$ points above a
-$0.730$ supervised surface-feature oracle that has gold-label
-access (logistic regression on 14 surface features, 5-fold
-stratified CV). Per-pattern recovery is uniform across seeds:
+($95\%$ coverage) and every prediction on the labelled subset
+matches the gold pattern, so accuracy on the labelled-only subset is
+$1.000$ against a $0.730$ supervised surface-feature oracle on the
+same items (logistic regression on 14 surface features, 5-fold
+stratified CV; the two quantities are not strictly commensurable,
+see Appendix~A). Cross-seed sums for per-pattern recovery:
 sycophantic capitulation $83/90$, unfaithful paraphrase $89/90$,
-post-hoc rationalization $86/90$, hallucinated premise $81/87$,
-reward-hack verbalization $88/90$. The Sonnet orchestrator pair
+post-hoc rationalization $86/90$, hallucinated premise $81/87$
+(denominator $29$ items $\times$ three seeds), reward-hack
+verbalization $88/90$. The Sonnet orchestrator pair on a representative single seed
 recovers only $109$ of $149$ items ($0.732$ coverage-adjusted
 purity) and under-recovers \texttt{hallucinated\_premise} at
-$9/29$; the cheap pair closes that gap at roughly one-thirtieth the
-cost. All LLM and clustering discovery baselines stay below NMI
-$0.15$, including embed\_cluster\_llm at $0.039$ (essentially
-random), so iterative refinement is doing real work on this task.
+$9/29$; the cheap pair closes that gap at roughly $1/28$ of the
+spend on that seed. All LLM and clustering discovery baselines stay
+below NMI $0.15$, including embed\_cluster\_llm at $0.039$
+(essentially random), so the orchestrator/judge loop substantially
+outperforms single-shot prompting and one-shot summarise-then-label
+pipelines on this corpus.
 
 \paragraph{Ablation.}
 A single-seed loose-dispatcher ablation that strips the typed revise
@@ -208,8 +216,8 @@ dispatcher's source-existence and name-collision checks stalled at
 zero revise calls in 90\,s before we terminated it; the typed run on
 the same configuration finishes at 197\,s with one successful
 \textsc{revise} call. A single seed cannot isolate the dispatcher
-from ordinary stochasticity; we report this honestly as preliminary
-support and develop the two consistent interpretations in
+from ordinary stochasticity; we report this as preliminary
+evidence and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
 
 \paragraph{Failure mode.}

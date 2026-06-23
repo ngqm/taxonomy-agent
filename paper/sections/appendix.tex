@@ -66,7 +66,7 @@ number theory  &  5 & 1.00 & 1.000 & 1.000 & 1.000 \\
 overall        & 149 & 0.89 & 1.000 & 0.926 & 0.851 \\
 \bottomrule
 \end{tabular}
-\caption{Per-sub-domain CoT-Pattern results at the install default (DeepSeek-v4-Flash both roles), single seed.
+\caption{Per-sub-domain CoT-Pattern results at the install default (DeepSeek-v4-Flash both roles), single seed; this seed labels $133$ of $149$ items (coverage $0.89$), slightly more conservative than the three-seed-averaged $142/149$ reported in \S\ref{sec:eval-results-cot}.
 Precision-at-coverage is $100\%$ across all four mathematical
 sub-domains plus the ``other'' slice.}
 \label{tab:cot_per_domain}
@@ -132,3 +132,53 @@ proposals, \textsc{revise} operations, and \textsc{classify} probes
 with don't-fit rates as bars.}
 \label{fig:ui-trace}
 \end{figure}
+
+\section*{F\quad Configuration and Reproducibility}
+\label{app:repro}
+
+All numbers in the body and the preceding appendix sections were
+produced from a single commit (\texttt{0910dc7}); the repository at
+\repourl{} pins prompts, hyperparameters, and seeds. The OpenRouter
+slugs in the publication runs are
+\texttt{deepseek/deepseek-v4-flash},
+\texttt{anthropic/claude-sonnet-4.6},
+\texttt{anthropic/claude-opus-4.8} (CoT-Pattern verifier only),
+\texttt{google/gemini-3.1-flash-lite} (CoT-Pattern generation only),
+and \texttt{meta-llama/llama-3.2-3b-instruct} (Brady-Islam
+reimplementation); all calls were routed during 2026-04 through
+2026-06. Temperature is the OpenRouter default for each model and
+top-$p$ is unconstrained. The orchestrator is capped at
+$\texttt{max\_iterations}{=}80$ ReAct steps and a
+$\texttt{pool\_limit}$ of $50$ for the judge.
+
+Baselines: \texttt{embed\_cluster\_llm} embeds with
+\texttt{sentence-transformers/all-MiniLM-L6-v2}~\citep{reimers2019sbert} (v3.2.1), runs
+sklearn~\citep{pedregosa2011sklearn} k-means at $K{=}16$ with \texttt{random\_state=42},
+and names each cluster with one DeepSeek-v4-Flash call sampled from
+five items. \texttt{lda}~\citep{blei2003lda} uses sklearn
+\texttt{LatentDirichletAllocation} at
+$K{=}16$, \texttt{learning\_method='batch'}, \texttt{max\_iter=50},
+\texttt{random\_state=42}, on a $1$-$2$-gram \texttt{CountVectorizer}.
+BERTopic v0.16 with library-default UMAP~\citep{mcinnes2018umap}
+($n\_neighbors{=}15$, $n\_components{=}5$, $min\_dist{=}0.0$,
+\texttt{random\_state=42}) and HDBSCAN~\citep{mcinnes2017hdbscan}
+($min\_cluster\_size{=}10$, $min\_samples=$None,
+\texttt{euclidean}, \texttt{eom}). Brady-Islam reuses the authors'
+embedding (\texttt{all-MiniLM-L6-v2}) and HDBSCAN configuration at
+\texttt{min\_cluster\_size=5}; a sweep over $\{5,10,15,25,50\}$ did
+not raise mean NMI above $0.20$. The 14 surface features for
+LR@surface (\S\ref{sec:eval-results-cot}) and the CoT-Pattern
+generation and verifier prompts are at
+\texttt{paper/data/cot\_features.py} and \texttt{paper/data/cot\_gen/}
+in the same commit.
+
+Metric definitions: NMI is sklearn's
+\texttt{normalized\_mutual\_info\_score} with arithmetic averaging;
+ARI is \texttt{adjusted\_rand\_score}; purity is computed by the
+Hungarian-optimal one-to-one mapping between discovered and gold
+clusters with non-mapped items contributing zero; NPMI uses a
+sliding window of $10$ tokens via gensim's \texttt{CoherenceModel};
+$C_v$ uses the same window; label redundancy is the fraction of
+pairs of discovered categories with cosine similarity above $0.85$
+on \texttt{all-MiniLM-L6-v2} embeddings of the label name and
+description concatenated.

@@ -3,10 +3,11 @@ discovers and refines a labelled taxonomy over an unlabelled text
 corpus through a structural commitment: an orchestrator LLM proposes
 edits through a typed dispatcher with validate-before-mutate and
 per-operation failure isolation, while a stateless judge LLM
-re-derives each item's category from the item text alone, never
-seeing the orchestrator's reasoning. Per-item cost is linear in the
-corpus and runs on the cheap model, and the orchestrator cannot
-force a label past the judge.
+labels each item against the current taxonomy from item text alone,
+with no access to the orchestrator's tool-call history or prior
+label assignments. The judge runs on the cheap model and is called
+once per item, so per-item cost stays low at corpus scale and the
+orchestrator cannot force a label past the judge.
 On a 487-document 20~Newsgroups subsample with five seeds at the
 install default (DeepSeek-v4-Flash for both orchestrator and judge),
 \textsc{taxonomy\_agent} reaches NMI $0.740 \pm 0.055$ and ARI
@@ -18,8 +19,8 @@ baseline by $2.1\times$ on NMI. On a
 reasoning, the system reaches NMI $0.944 \pm 0.081$ across three
 seeds at $\$0.08$ per run, labelling on average $142$ of $149$
 items at $100\%$ accuracy. A Claude Sonnet 4.6 orchestrator pair at
-eleven times the cost lands inside the cheap pair's NMI interval on
-20NG, contradicting the assumption that orchestrator quality is the
-bottleneck. We caution that supervised metrics alone cannot separate
+eleven times the cost reaches NMI $0.656 \pm 0.012$ on 20NG and
+does not improve over the cheap pair, so orchestrator quality is
+not the bottleneck at this scale. We caution that supervised metrics alone cannot separate
 semantic discovery from sharper surface extraction. Code,
 reproduction scripts, and corpora are at \repourl.
