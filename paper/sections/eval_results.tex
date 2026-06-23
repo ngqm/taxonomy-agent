@@ -203,15 +203,17 @@ support and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
 
 \paragraph{Failure mode.}
-The Sonnet orchestrator pair lumps both corpora: on 20NG it produces
-coherent 7--8-category macro-clusters that fuse semantically related
-fine-grained gold classes (e.g., the three \texttt{talk.politics.*}
-gold classes collapse to one ``politics and society'' category), and
-on CoT it under-recovers \texttt{hallucinated\_premise} at 9 of 29.
-The install default cheap pair keeps finer distinctions on both
-corpora (8 to 16 categories on 20NG across seeds, all five CoT
-patterns recovered above $77\%$), at the cost of higher cross-seed
-variance on the supervised metrics (Table~\ref{tab:20ng}). The
-on-disk \texttt{trace.jsonl} surfaces every tool call, op, and
-classify probe so an analyst can audit either configuration; a
-worked example and the Streamlit Inspect timeline are in Appendix~A.
+The Sonnet pair lumps: on 20NG it fuses semantically related gold
+classes into 7--8 macro-clusters (e.g., the three
+\texttt{talk.politics.*} classes collapse to ``politics and
+society''), and on CoT it under-recovers
+\texttt{hallucinated\_premise} at $9/29$. The cheap pair keeps
+finer distinctions across configurations, at the cost of higher
+cross-seed variance. The single cheap-pair failure (seed 46) is
+visible in the trace as a monotonic-add loop: $15$ classify events
+with don't-fit oscillating between $0.0$ and $1.0$ and $8$ revise
+calls of which every operation is \textsc{add}, so the taxonomy
+grew from $10$ to $21$ categories without converging. An operator
+inspecting \texttt{trace.jsonl} can name the failure (the
+orchestrator never proposed \textsc{merge}, \textsc{drop}, or
+\textsc{edit}) within seconds.

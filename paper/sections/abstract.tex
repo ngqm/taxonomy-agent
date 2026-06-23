@@ -1,18 +1,12 @@
 We present \textsc{taxonomy\_agent}, an open-source demo that
 discovers and refines a labelled taxonomy over an unlabelled text
-corpus and ships with the operational tooling a stranger needs to
-actually use it: live native provider cost accounting split by
-orchestrator and judge, partial-progress streaming to disk so a
-killed run leaves recoverable state, vendor-agnostic routing across
-any chat-completions provider, and a Streamlit Inspect tab that
-replays the trace, partial taxonomies, and cost split of any run.
-Beneath sits a two-tier agent: an orchestrator LLM proposes edits
-through a typed revise dispatcher over six verbs
-(\textit{add, rename, edit, merge, split, drop}), each validated
-before mutation with per-operation failure isolation, while a
-parallel stateless judge re-derives labels from each item and
-reports a don't-fit rate the orchestrator reads as a termination
-signal.
+corpus through a structural commitment: an orchestrator LLM proposes
+edits through a typed dispatcher with validate-before-mutate and
+per-operation failure isolation, while a stateless judge LLM
+re-derives each item's category from the item text alone, never
+seeing the orchestrator's reasoning. Per-item cost is linear in the
+corpus and runs on the cheap model, and the orchestrator cannot
+force a label past the judge.
 On a 487-document 20~Newsgroups subsample with four seeds at the
 install default (DeepSeek-v4-Flash for both orchestrator and judge),
 \textsc{taxonomy\_agent} reaches NMI $0.727 \pm 0.055$ and ARI
@@ -23,11 +17,9 @@ on ARI and a single-shot LLM baseline by $2.1\times$ on NMI. On a
 149-item synthetic corpus of failure patterns in chain-of-thought
 reasoning, the system reaches NMI $0.944 \pm 0.081$ across three
 seeds at USD $0.08$ per run, labelling on average $142$ of $149$
-items at $100\%$ accuracy and beating every LLM and clustering
-discovery baseline by more than $0.7$ NMI. The publication and
-install configurations are the same; a Claude Sonnet 4.6
-orchestrator pair costs roughly eleven times more without a
-statistically distinguishable NMI gain on 20NG. We caution
-that supervised metrics alone cannot separate semantic discovery
-from sharper surface extraction. Code, reproduction scripts, and
-the corpora are at \repourl.
+items at $100\%$ accuracy. A Claude Sonnet 4.6 orchestrator pair at
+eleven times the cost lands inside the cheap pair's NMI interval on
+20NG, contradicting the assumption that orchestrator quality is the
+bottleneck. We caution that supervised metrics alone cannot separate
+semantic discovery from sharper surface extraction. Code,
+reproduction scripts, and corpora are at \repourl.

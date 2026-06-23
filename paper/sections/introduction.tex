@@ -22,12 +22,16 @@ EMNLP System Demonstration on collaborative codebook construction with
 LLMs and the closest peer to our submission; we sit at an orthogonal
 operating point (taxonomy discovery from scratch over an unlabelled
 corpus, without a seed sketch and without a human in the loop) and
-discuss the relationship in \S\ref{sec:related}. Against this backdrop,
-our contribution is a careful engineering recomposition: we narrow the
-orchestrator's edit surface to a typed validated DSL with per-operation
-failure isolation, decouple labelling into a parallel judge, and ship
-the result with operational tooling for live cost accounting,
-partial-progress saving, and a web UI.
+discuss the relationship in \S\ref{sec:related}. Our contribution
+is a structural commitment about how the proposer and the labeller
+interact. The orchestrator proposes typed edits to a working taxonomy
+through a validated dispatcher; a stateless judge re-derives each
+item's category from the item text alone, never sees the
+orchestrator's reasoning, and runs on the cheaper model. Two
+properties follow. The per-item cost is linear in the corpus and
+runs on the cheap model, so the publication and install configuration
+is the same. The orchestrator cannot force a label past the judge,
+because the judge re-derives it from item text.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
 orchestrator and judge), the system reaches NMI $0.727 \pm 0.055$
@@ -45,23 +49,26 @@ $100\%$ accuracy (\S\ref{sec:eval-results-cot}).
 
 \noindent Our contributions are:
 \begin{itemize}
-  \item \textbf{Operational tooling for a tool a stranger can use}
-        (Appendix~A): live native provider cost accounting
-        broken down by orchestrator and judge, partial-progress
-        streaming so a killed run leaves recoverable state,
-        vendor-agnostic routing, and a web UI surfacing all of the
-        above. We claim this layer as the strongest demonstration
-        contribution.
-  \item \textbf{A typed dispatcher that validates before mutating} over
-        six standard verbs (\textit{add, rename, edit, merge, split,
-        drop}) with per-operation failure isolation, providing an
-        auditable \texttt{trace.jsonl} of every edit.
-  \item \textbf{A parallel stateless judge architecture}, building on
-        the generator and labeller split of
-        TnT-LLM~\citep{wan2024tntllm}, with a don't-fit rate that the
-        orchestrator treats as a termination signal.
+  \item \textbf{A stateless re-deriving judge.} The labelling LLM
+        sees only the current taxonomy and the item text and never
+        the orchestrator's reasoning or prior labels, so the
+        orchestrator cannot force a label past it. Cost is linear in
+        the corpus on the cheap model.
+  \item \textbf{A typed dispatcher with validate-before-mutate and
+        per-operation failure isolation.} Each taxonomy edit is
+        checked against every precondition before any state changes,
+        and per-op failures within a batch do not roll back
+        successful sibling ops. A malformed edit returns the
+        unchanged taxonomy with a log entry the orchestrator can
+        read on the next step.
+  \item \textbf{An empirical demonstration that cheap-model both-roles
+        dominates.} On 20NG and CoT-Pattern, DeepSeek-v4-Flash for
+        both orchestrator and judge beats every comparator and
+        matches a Claude Sonnet 4.6 orchestrator pair at eleven
+        times the cost, contradicting the assumption that
+        orchestrator quality is the bottleneck.
   \item \textbf{An open-source artefact at} \repourl{} with a
-        \texttt{pip install} path, reproducible 20NG and CoT benchmark
-        configurations, and a Streamlit Inspect tab that replays the
-        trace, partial taxonomies, and cost split of any run.
+        \texttt{pip install} path, the install-default configuration
+        used in the paper, and a Streamlit Inspect tab that replays
+        the trace, partial taxonomies, and cost split of any run.
 \end{itemize}
