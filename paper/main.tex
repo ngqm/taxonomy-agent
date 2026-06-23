@@ -14,7 +14,7 @@
 
 \documentclass[11pt]{article}
 
-\usepackage[review]{acl}
+\usepackage[preprint]{acl}
 
 % Standard ACL preamble.
 \usepackage{times}
@@ -41,21 +41,17 @@
 % Body sections reference \repourl to point at the open-source artefact.
 % In review mode we hide the URL because it contains identifying author
 % information; in preprint/final modes we expose it.
-\newif\ifreviewmode
-\reviewmodetrue   % set to \reviewmodefalse for preprint or final
-\ifreviewmode
-  \newcommand{\repourl}{\textsc{(URL redacted for review)}}
-\else
-  \newcommand{\repourl}{\url{https://github.com/ngqm/taxonomy-agent}}
-\fi
+% Single-blind: authors named in submission. We use the preprint
+% acl.sty option above and show the repo URL freely.
+\newcommand{\repourl}{\url{https://github.com/ngqm/taxonomy-agent}}
 
 \title{taxonomy\_agent: An Orchestrator--Judge Agent for Iterative Taxonomy Discovery}
 
 % Author block: ACL [review] mode auto-anonymises the author info, but
 % we still must leave the fields present.
-\author{Anonymous Submission \\
-  Anonymous Institution \\
-  \texttt{anon@anon.edu}}
+\author{Quang Minh Nguyen \\
+  KAIST \\
+  \texttt{nguyenquangminhptnk@gmail.com}}
 
 \begin{document}
 \maketitle
@@ -66,7 +62,6 @@
 
 \input{sections/introduction}
 \input{sections/system}
-\input{sections/implementation}
 \input{sections/evaluation}
 \input{sections/related}
 \input{sections/conclusion}
@@ -76,6 +71,6 @@
 % Custom bibliography only (no anthology.bib included).
 \bibliography{references}
 
-\appendix
+\input{sections/appendix}
 
 \end{document}

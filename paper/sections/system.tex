@@ -2,328 +2,97 @@
 \label{sec:system}
 
 \textsc{taxonomy\_agent} treats taxonomy discovery as a tool-use
-problem: an orchestrator LLM plans and edits, a separate judge LLM
-labels, and a typed revise DSL guarantees that every taxonomy mutation
-is auditable and atomic. The loop terminates when the judge's
-\emph{don't-fit rate} drops below a configurable threshold, gated by a
-minimum-iteration floor. This section describes the architecture
-(\S\ref{sec:system:arch}), the six tools that form the orchestrator's
-action space (\S\ref{sec:system:tools}), the revise DSL
-(\S\ref{sec:system:revise}), the convergence criterion
-(\S\ref{sec:system:convergence}), and the operational safeguards that
-make the system usable as a walk-up demo
-(\S\ref{sec:system:safeguards}).
+problem. An orchestrator LLM proposes typed edits to a working
+taxonomy, a parallel judge LLM scores items against that taxonomy and
+reports a don't-fit rate, and the loop terminates once that rate falls
+below a configurable threshold, gated by a minimum-iteration floor.
 
 \subsection{Architecture}
 \label{sec:system:arch}
 
-Figure~\ref{fig:architecture} sketches the run-time topology.
-\begin{figure}[t]
-\centering
-\begin{tikzpicture}[
-  font=\footnotesize,
-  node distance=4mm and 6mm,
-  box/.style={draw, rounded corners=2pt, align=center, inner sep=3pt,
-              minimum height=7mm},
-  orch/.style={box, fill=blue!8},
-  judge/.style={box, fill=red!8},
-  store/.style={box, fill=gray!12},
-  ui/.style={box, fill=green!8},
-  flow/.style={-{Stealth[length=3pt]}, thick},
-  back/.style={-{Stealth[length=3pt]}, dashed, thick},
-]
-% Corpus on the left
-\node[store] (corpus) {Corpus\\(unlabelled)};
-% Orchestrator
-\node[orch, right=of corpus] (orch) {Orchestrator\\Sonnet 4.6};
-% Revise DSL
-\node[box, above=of orch, yshift=-2mm] (revise)
-  {Typed revise DSL\\\textsc{add} \textsc{rename} \textsc{edit}\\\textsc{merge} \textsc{split} \textsc{drop}};
-% Working taxonomy
-\node[store, right=of revise] (tax) {Working\\taxonomy};
-% Judge pool
-\node[judge, below=of orch, yshift=2mm] (judge)
-  {Judge pool (parallel)\\DeepSeek-v4-Flash};
-% Per-item labels
-\node[store, right=of judge] (labels) {Per-item\\labels};
-% Cost tracker
-\node[store, below=of corpus, yshift=2mm] (cost) {Cost tracker\\\texttt{usage.cost}};
-% Partial-progress sink
-\node[store, below=of judge, yshift=2mm] (sink)
-  {Partial-progress\\sink (disk)};
-% Streamlit
-\node[ui, right=of sink] (ui) {Streamlit UI};
-
-% Flows
-\draw[flow] (corpus) -- (orch);
-\draw[flow] (orch) -- node[midway, right, font=\scriptsize]{edit} (revise);
-\draw[back] (revise) -- node[midway, left, font=\scriptsize]{validate} (orch);
-\draw[flow] (revise) -- (tax);
-\draw[flow] (orch.south east) -- node[midway, above, font=\scriptsize]{classify} (judge.north east);
-\draw[back] (judge.north west) -- node[midway, below, font=\scriptsize]{don't-fit} (orch.south west);
-\draw[flow] (tax.south) |- (judge.east);
-\draw[flow] (judge) -- (labels);
-\draw[flow] (orch.west) |- (cost.east);
-\draw[flow] (judge) -- (sink);
-\draw[flow] (sink) -- (ui);
-\draw[flow] (cost.south) |- ($(sink.west)+(0,-2mm)$);
-\end{tikzpicture}
-\caption{Run-time topology. The orchestrator (Sonnet 4.6) holds the
-working taxonomy as closure state and edits it through a typed
-revise DSL of six verbs; each edit is validated before mutation.
-The judge pool (DeepSeek-v4-Flash, run in parallel) labels items
-against the current taxonomy and returns a don't-fit rate that
-drives termination. A cost tracker and a partial-progress sink
-stream to disk; the Streamlit UI reads both for live inspection
-during a run and post-hoc browsing afterwards.}
-\label{fig:architecture}
-\end{figure}
 Two roles are kept strictly separate. The \textbf{orchestrator} is a
-ReAct-style~\citep{yao2022react}
-agent built on LangGraph's
-\texttt{create\_react\_agent} \citep{langgraph}; it owns the working
-taxonomy as closure state and
-emits tool calls to inspect the corpus, edit the taxonomy, or dispatch
-work to the judge. The \textbf{judge} is a stateless function that
-labels one item at a time against the taxonomy the orchestrator hands
-it; it never sees the taxonomy history or the orchestrator's
-reasoning. Keeping the two roles separate is intended to have three
-effects: (i) a weak orchestrator cannot bluff a label past the judge,
-because the judge re-derives it from the item text; (ii) the
-orchestrator's context never bloats with per-item labels, so its
-prompt stays small across long corpora; and (iii) the judge is
-trivially parallelisable via a thread pool. All three effects are
-architectural commitments we did not separately ablate; the wall-clock
-and cost numbers in \S\ref{sec:eval-results-20ng} are end-to-end and
-reflect both the parallel-judge dispatcher and the orchestrator-loop
-overhead together.
+ReAct-style~\citep{yao2022react} agent built on LangGraph's
+\texttt{create\_react\_agent}~\citep{langgraph}; it holds the working
+taxonomy as closure state and emits tool calls to inspect the corpus,
+edit the taxonomy, or dispatch work to the judge. The \textbf{judge}
+is a stateless function that labels one item at a time against the
+taxonomy the orchestrator hands it; it never sees the taxonomy history
+or the orchestrator's reasoning. The split has three architectural
+consequences: a weak orchestrator cannot bluff a label past the judge
+because the judge re-derives it from the item text, the orchestrator's
+context does not bloat with per-item labels across long corpora, and
+the judge is trivially parallelisable via a thread pool.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
-can fill either role. The orchestrator defaults to
-\texttt{anthropic/claude-sonnet-4.6} (chosen for reliable tool-call
-formatting); the judge defaults to
-\texttt{meta-llama/llama-3.3-70b-instruct} (chosen for cost). Both can
-be swapped at the command line or in the UI without touching code, and
-mixed-vendor runs (for instance, a Claude orchestrator paired with a
-Llama judge) are the common case in our evaluation
-(\S\ref{sec:evaluation}).
+can fill either role and mixed-vendor runs are routine in our
+evaluation (\S\ref{sec:evaluation}). Internally, the orchestrator
+runs as a LangGraph state machine whose closure holds the working
+taxonomy, the set of sampled item ids, a snapshot of the last
+finalised taxonomy, and a classify-call budget counter; because the
+taxonomy lives only in this closure, the orchestrator never passes it
+as a tool argument, which shrinks payloads and rules out edits to
+stale copies.
 
-Internally, the orchestrator runs as a LangGraph state machine: the
-ReAct loop alternates between an \emph{LLM} node that emits the next
-tool call and a \emph{tools} node that executes it and appends the
-result to the message list. State persists in two places. The
-\emph{LangGraph message history} is the orchestrator's working memory
-(reset each run). The \emph{closure state} held by the tool factory
-(\texttt{\_TaxonomyState} in \texttt{tools.py}) holds the working
-taxonomy, the set of item ids already sampled, a snapshot of the
-last-finalised taxonomy, and a budget counter for classify calls. The
-taxonomy lives only in this closure, so the orchestrator never has to
-pass it as an argument, which both shrinks tool-call payloads and
-removes a class of bugs where the agent edits a stale copy.
-
-\subsection{The Six Tools}
+\subsection{Tools, Revise DSL, and Convergence}
 \label{sec:system:tools}
 
-The orchestrator's entire action space is six tools, summarised in
-Table~\ref{tab:tools}. We deliberately kept the surface small: any
-additional verb (e.g.\ ``inspect a single category'', ``compare two
-items'') can be expressed as a composition of \texttt{sample\_items},
-\texttt{get\_taxonomy}, and a freshly-worded
-\texttt{classify\_with\_judge} prompt, which the orchestrator
-discovers without us having to specify it.
-
-\begin{table*}[t]
-\centering
-\begin{tabular}{@{}p{0.27\textwidth}p{0.69\textwidth}@{}}
-\toprule
-\textbf{Tool} & \textbf{Behaviour} \\
-\midrule
-\texttt{sample\_items(k)} &
-Returns $k$ unseen items from the corpus pool. Tracks already-sampled
-ids so probes do not repeat until the pool is exhausted, then resets
-with a warning to the orchestrator. \\
-\texttt{get\_taxonomy()} &
-Returns the current working taxonomy as JSON. Read-only. \\
-\texttt{revise\_taxonomy(ops)} &
-Applies an ordered list of typed operations
-(\textsc{add}/\textsc{rename}/\textsc{edit}/\textsc{merge}/\textsc{split}/\textsc{drop})
-through the validating dispatcher of \S\ref{sec:system:revise}.
-Returns a per-op log and the resulting taxonomy. \\
-\texttt{classify\_with\_judge(ids, prompt)} &
-Dispatches the named items to the judge in parallel, coerces each
-reply to a valid label (or the literal \texttt{"other"}), and returns
-per-item labels plus the don't-fit rate. Capped by a per-run budget. \\
-\texttt{propose\_novelties\_with\_judge(ids, prompt)} &
-Asks the judge to read items that did not fit and suggest new
-categories. The judge sees the current taxonomy so its proposals do
-not duplicate existing names. Returns a merged, de-duplicated list. \\
-\texttt{finalize\_classify(prompt)} &
-Labels the entire corpus against the current taxonomy and writes the
-final \texttt{taxonomy.json} artifact. Gated by the
-\texttt{min\_iterations} floor and refuses to re-run on an unchanged
-taxonomy. \\
-\bottomrule
-\end{tabular}
-\caption{The orchestrator's six-tool action space. All taxonomy
-mutations flow through \texttt{revise\_taxonomy}; all per-item
-labelling flows through the judge. \texttt{finalize\_classify} is the
-only tool that writes the user-facing artifact.}
-\label{tab:tools}
-\end{table*}
-
-Two design choices in this table are load-bearing. First,
-\texttt{classify\_with\_judge} and \texttt{finalize\_classify} both
-take a \emph{prompt string} written by the orchestrator at call time,
-instead of a fixed system prompt. This lets the orchestrator
-specialise the labelling instructions to the taxonomy it has built;
-for instance, it can tell the judge to attend to rhetorical cues for a
-discourse-style corpus, or to named entities for a topic-style
-corpus, without us having to anticipate every domain. Second,
-\texttt{propose\_novelties\_with\_judge} is a separate tool; novelty proposal is not a
-flag on \texttt{classify\_with\_judge}, because the two prompt
-shapes are different: classification assigns a single category with a free-form
-escape, while novelty proposal is open-ended generation. Conflating
+The orchestrator's action space is six tools:
+\texttt{sample\_items}, \texttt{get\_taxonomy},
+\texttt{revise\_taxonomy}, \texttt{classify\_with\_judge},
+\texttt{propose\_novelties\_with\_judge}, and
+\texttt{finalize\_classify}. Classification and novelty proposal are
+separate verbs because the two judge prompt shapes differ (single
+category with an escape vs.\ open-ended generation), and conflating
 them hurt judge reliability in early prototypes.
 
-\subsection{The Revise DSL}
-\label{sec:system:revise}
+\paragraph{Revise DSL.}
+Every taxonomy mutation flows through \texttt{revise\_taxonomy}, which
+accepts an ordered list of typed operations
+(\textsc{add}/\textsc{rename}/\textsc{edit}/\textsc{merge}/\textsc{split}/\textsc{drop})
+dispatched to pure handlers of signature
+\texttt{(tax, op)$\to$(new\_tax, log)}. Two invariants matter for
+correctness. \emph{Validate before mutate}: each handler checks every
+precondition before constructing the new taxonomy, so a malformed
+\textsc{merge} or \textsc{split} returns the input unchanged with a
+log entry the orchestrator can read on the next step (two early bugs
+in which preconditions were checked too late destroyed data, which
+motivated this invariant). \emph{Per-op failure isolation}: the
+dispatcher records failures per op and continues with the rest of the
+batch, so a bad \textsc{merge} in a three-op call does not roll back a
+good \textsc{add}. The verb set itself is standard taxonomy-edit
+vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution
+here is the typed dispatcher with these two invariants.
 
-Every taxonomy mutation flows through \texttt{revise\_taxonomy},
-which accepts an ordered list of typed operations. The six
-op shapes are:
-
-\begin{itemize}
-\setlength{\itemsep}{1pt}
-\item \texttt{\{op: add, name, description\}}
-\item \texttt{\{op: rename, old\_name, new\_name\}}
-\item \texttt{\{op: edit, name, description\}}
-\item \texttt{\{op: merge, into, from: [...], description?\}}
-\item \texttt{\{op: split, from, into: [\{name, description\}, ...]\}}
-\item \texttt{\{op: drop, name\}}
-\end{itemize}
-
-Each op is dispatched to a pure handler of signature
-\texttt{(tax, op) $\to$ (new\_tax, log\_entry)}. The handlers are
-registered in a single \texttt{\_OPS} table, which keeps ``add a new
-op kind'' to ``write a function and register it''; the test suite
-exercises each handler in isolation. Two invariants matter for
-correctness:
-
-\paragraph{Validate before mutate.} Each handler checks every
-precondition before constructing a new taxonomy list. Two early bugs
-motivated this: a \texttt{merge} that removed source categories before
-discovering the target name was missing, and a \texttt{split} that
-removed the source before discovering the \texttt{into} list was
-malformed. Both lost data. The fix is invariant: if any precondition
-fails, the handler returns the input taxonomy unchanged with a
-descriptive log entry, and the orchestrator gets to read what went
-wrong on the next step.
-
-\paragraph{Per-op failure isolation.} The dispatcher records failures
-per op and continues with the rest of the batch. A revise call of
-``add A, rename B, merge X'' where the merge target is missing applies
-the add and the rename and skips only the merge; the orchestrator
-sees the log, decides whether the partial application is acceptable,
-and either retries or moves on. This is much easier for the agent to
-recover from than an all-or-nothing rejection, and the log makes the
-trace human-auditable after the fact.
-
-The DSL is small on purpose. Free-form taxonomy edits expressed in
-prose would put parsing burden on us, hide intent from the trace, and
-make it impossible to enforce the invariants above. The six verbs
-themselves are the standard taxonomy-edit vocabulary
-(cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution here is the
-typed dispatcher that validates each operation before applying it, with isolation between operations on failure,
-not the verb set itself. Across the corpora in
-\S\ref{sec:evaluation} we did not observe an orchestrator wanting an
-op outside this set, but we have not run a controlled ablation
-against edits expressed in free-form prose, and do not claim the six ops are
-provably complete.
-
-\subsection{Convergence}
-\label{sec:system:convergence}
-
-Convergence is decided by the judge.
-After each
-\texttt{classify\_with\_judge} call, the system computes the
-\emph{don't-fit rate}, the fraction of items the judge labelled
+\paragraph{Convergence.}
+After each \texttt{classify\_with\_judge} call the system computes the
+don't-fit rate, the fraction of items the judge labelled
 \texttt{"other"}, and the orchestrator is allowed to call
 \texttt{finalize\_classify} once that rate falls below a threshold
-(default $0.10$). The $0.10$ default is a usability choice; it is not a
-calibrated value; we report terminal don't-fit rates alongside
-external purity and NMI in \S\ref{sec:evaluation} as a sanity check,
-but do not claim the rate is a quantitatively validated leading
-indicator. The threshold is also intentionally orchestrator-readable:
-because the orchestrator authors the classify prompt, a permissive
-prompt could in principle drive the rate down without genuine
-convergence (we flag this as a limitation in
-\S\ref{sec:limitations}). Three details make the signal usable in
-practice.
-
-\paragraph{Escape-hatch labels only.} Every classify
-prompt is hardened with a fixed suffix instructing the judge to reply
-\texttt{"other"} whenever no listed category fits, and to never invent
-a new name. Judge replies are then mapped against the taxonomy
-case-insensitively; any out-of-taxonomy label is coerced to
-\texttt{"other"} and the rationale is annotated to flag the coercion.
-This is what makes the don't-fit rate a meaningful convergence signal:
-a high rate genuinely reflects items the taxonomy does not cover,
-and does not reflect a judge that hallucinated novel labels.
-
-\paragraph{Minimum-iteration floor.} A small probe can produce a
-deceptively low don't-fit rate when the taxonomy is still half-built.
-\texttt{finalize\_classify} therefore refuses to run until the
-orchestrator has completed at least \texttt{min\_iterations}
-classification rounds (default 3 in \texttt{run()}). This is a soft
-constraint, since the orchestrator gets an error message and keeps
-iterating, and it can be tuned per corpus.
-
-\paragraph{Judge-error isolation.} If the judge HTTP call itself fails
-after retries, the item is labelled \texttt{"other"} with the sentinel
-rationale \texttt{[judge call failed]} and \emph{excluded} from the
-denominator of the don't-fit rate. A transient API outage should not trick
-the orchestrator into thinking the taxonomy stopped fitting. The
-error count is reported back so the orchestrator (and the user) can
-see what happened.
+(default $0.10$) and the run has cleared a \texttt{min\_iterations}
+floor (default $3$). Classify prompts carry a fixed suffix
+instructing the judge to reply \texttt{"other"} whenever no listed
+category fits, and any out-of-taxonomy reply is coerced to
+\texttt{"other"}, so a high don't-fit rate reflects coverage gaps and
+not hallucinated labels. The $0.10$ default is a usability choice
+that we report alongside external metrics in \S\ref{sec:evaluation}
+without claiming it is a calibrated leading indicator
+(\S\ref{sec:limitations}). Escape-hatch coercion, the floor's
+soft-error semantics, and judge-error isolation from the denominator
+are detailed in Appendix~A.
 
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}
 
-Three engineering choices keep the system usable as a walk-up demo,
-and remains usable as a tool beyond the research prototype phase.
-
-\paragraph{Live cost tracking.} A \texttt{CostTracker} object receives
-usage from every LLM call, including both the streamed orchestrator
-\texttt{AIMessage}s and each judge HTTP reply, and writes
-\texttt{cost.json} after every agent super-step. We pass OpenRouter's
-\texttt{usage: \{include: true\}} flag so each reply carries the
-\emph{actual} charge under \texttt{usage.cost}, and prefer that native
-value over a static price table denominated per million tokens. The fallback table
-covers the common defaults (Sonnet, Llama 3.3 70B, Gemini Flash, etc.)
-for models that do not honour the flag.
-
-\paragraph{Partial-progress saving.} The orchestrator can fail
-mid-run for several reasons (recursion limit, API outage,
-out-of-budget classify call), so the system writes everything it can
-as it goes. \texttt{taxonomy\_state.json} is rewritten after every
-\texttt{revise\_taxonomy} call with the current working taxonomy and
-the classify-call counter. \texttt{classifications.jsonl} is streamed
-row-by-row as judge replies arrive during \texttt{finalize\_classify},
-under a write lock so concurrent appends from the thread pool stay
-consistent. The consolidated \texttt{taxonomy.json} is written only
-after \texttt{finalize\_classify} returns; if the process dies before
-that, the user still keeps the latest taxonomy and whatever labels
-arrived. The \texttt{trace.jsonl} log records every tool call, op
-log, and judge batch in order, for after-the-fact inspection.
-
-\paragraph{Streamlit UI.} A single-file Streamlit app
-(\texttt{app.py}) wraps \texttt{run()} for non-CLI users. It exposes
-the parameters that matter (orchestrator model, judge model,
-\texttt{min\_iterations}, don't-fit threshold, probe size, target
-taxonomy size hint), shows live cost and wall-time estimates above
-the Start button, streams the working taxonomy as
-\texttt{revise\_taxonomy} mutates it, and lists past runs from
-\texttt{meta.json} for inspection. Importantly, the UI reads the same
-on-disk artifacts the CLI writes, with no privileged
-in-memory state, so a run started from the command line can be
-inspected in the UI without re-running anything.
+Three engineering choices make the system usable as a walk-up demo.
+A \texttt{CostTracker} receives usage from every orchestrator and
+judge call and writes \texttt{cost.json} after each agent super-step,
+preferring OpenRouter's native \texttt{usage.cost} over a static price
+table. Partial progress is streamed to disk
+(\texttt{taxonomy\_state.json} after every revise,
+\texttt{classifications.jsonl} row-by-row under a write lock during
+finalisation, and \texttt{trace.jsonl} for after-the-fact inspection),
+so a process death does not lose the latest taxonomy or labels. A
+single-file Streamlit app (\texttt{app.py}) wraps \texttt{run()} for
+non-CLI users, exposes the parameters that matter, streams the
+working taxonomy live, and reads the same on-disk artifacts the CLI
+writes so runs are inspectable without re-execution.
