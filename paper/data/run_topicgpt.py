@@ -34,6 +34,25 @@ from topicgpt_python import (  # noqa: E402
     assign_topics,
     correct_topics,
 )
+from topicgpt_python.utils import APIClient  # noqa: E402
+
+# DeepSeek-v4-Flash is a reasoning model — the default max_tokens=1000 gets
+# fully consumed by reasoning tokens before any content emission, leaving
+# message.content as None. Patch the iterative_prompt to (a) bump max_tokens
+# to 4000 for headroom and (b) return an empty string instead of None so
+# downstream `.split(...)` doesn't crash.
+_orig_iter = APIClient.iterative_prompt
+
+def _patched_iter(self, prompt, max_tokens, temperature, top_p=1.0,
+                  system_message="You are a helpful assistant.",
+                  num_try=3, verbose=False):
+    effective_max = max(max_tokens, 4000)
+    out = _orig_iter(self, prompt, effective_max, temperature, top_p=top_p,
+                     system_message=system_message, num_try=num_try,
+                     verbose=verbose)
+    return out if out is not None else ""
+
+APIClient.iterative_prompt = _patched_iter
 
 from eval.corpora import load_20newsgroups, load_synth_reasoning  # noqa: E402
 from eval import metrics as M  # noqa: E402

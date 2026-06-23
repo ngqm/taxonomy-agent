@@ -1,0 +1,19 @@
+{
+  "n_categories": 1,
+  "purity": 0.20134228187919462,
+  "nmi": 0.0,
+  "ari": 0.0,
+  "npmi": -0.0004993157050806584,
+  "c_v": 0.22931928450648822,
+  "redundancy": 0.0,
+  "corpus": "cot",
+  "seed": 43,
+  "model": "deepseek/deepseek-v4-flash",
+  "wall_s": 770.848390340805,
+  "phase_s": {
+    "generate": 229.84631490707397,
+    "refine": 3.065427780151367,
+    "assign": 537.9365510940552
+  },
+  "n_items": 149
+}
