@@ -1,53 +1,61 @@
 % =====================================================================
 % taxonomy_agent: EMNLP 2026 System Demonstration
 %
-% This skeleton uses the ACL/EMNLP shared style files. Download
-% `acl.sty` and `acl_natbib.bst` from
-%   https://github.com/acl-org/acl-style-files
-% and place them alongside main.tex before building. If the style file
-% is unavailable, the fallback \documentclass below renders a generic
-% article so that drafting can proceed.
+% Uses the ACL conference style files (acl.sty, acl_natbib.bst) shipped
+% alongside this main.tex. Build with:
 %
-% Build:
-%   latexmk -pdf main.tex
-% or
 %   pdflatex main && bibtex main && pdflatex main && pdflatex main
+%
+% or `latexmk -pdf main.tex`.
+%
+% Toggle the [review] option below to [final] for camera-ready, or to
+% [preprint] for a non-anonymous arXiv-style PDF.
 % =====================================================================
 
 \documentclass[11pt]{article}
 
-% --- ACL style ---------------------------------------------------------
-% Uncomment the next line once acl.sty is in place. The [demo] option
-% triggers the System Demonstration track formatting.
-% \usepackage[demo]{acl}
+\usepackage[review]{acl}
 
-% --- Fallback packages (used when acl.sty is absent) -------------------
+% Standard ACL preamble.
+\usepackage{times}
+\usepackage{latexsym}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{microtype}
-\usepackage{times}
-\usepackage{latexsym}
-\usepackage{url}
+\usepackage{inconsolata}
 \usepackage{graphicx}
+
+% Project-specific packages.
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{xcolor}
-\usepackage{hyperref}
+\usepackage{url}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric}
 
-% Visible TODOs during drafting. Remove or set \usepackage[disable]{todonotes}
-% for the camera-ready build.
+% Visible TODOs during drafting. For the camera-ready, switch to
+% \usepackage[disable]{todonotes}.
 \usepackage{todonotes}
+
+% --- Anonymization switch ------------------------------------------------
+% Body sections reference \repourl to point at the open-source artefact.
+% In review mode we hide the URL because it contains identifying author
+% information; in preprint/final modes we expose it.
+\newif\ifreviewmode
+\reviewmodetrue   % set to \reviewmodefalse for preprint or final
+\ifreviewmode
+  \newcommand{\repourl}{\textsc{(URL redacted for review)}}
+\else
+  \newcommand{\repourl}{\url{https://github.com/ngqm/taxonomy-agent}}
+\fi
 
 \title{taxonomy\_agent: An Orchestrator--Judge Agent for Iterative Taxonomy Discovery}
 
-\author{Quang Minh Nguyen \\
-  KAIST \\
-  \texttt{qm.nguyen@kaist.ac.kr} \\
-}
-
-\date{}
+% Author block: ACL [review] mode auto-anonymises the author info, but
+% we still must leave the fields present.
+\author{Anonymous Submission \\
+  Anonymous Institution \\
+  \texttt{anon@anon.edu}}
 
 \begin{document}
 \maketitle
@@ -61,10 +69,13 @@
 \input{sections/implementation}
 \input{sections/evaluation}
 \input{sections/related}
-\input{sections/limitations}
 \input{sections/conclusion}
 
-\bibliographystyle{acl_natbib}
+\input{sections/limitations}
+
+% Custom bibliography only (no anthology.bib included).
 \bibliography{references}
+
+\appendix
 
 \end{document}

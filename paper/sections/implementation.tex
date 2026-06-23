@@ -27,8 +27,11 @@ usage accounting that we prefer over static price tables.
   \item \textbf{Partial progress.} Taxonomy state is checkpointed to
         \texttt{taxonomy\_state.json} after every iteration and
         classifications are streamed line-by-line to
-        \texttt{classifications.jsonl}, so a killed run resumes
-        cleanly.
+        \texttt{classifications.jsonl}, so the work done before a
+        crash or kill is recoverable on disk; the UI surfaces the
+        partial state for inspection. We do not currently support
+        re-launching a killed run from the saved state, flagged in
+        \S\ref{sec:limitations}.
   \item \textbf{Streamlit UI.} Live view of cost, taxonomy state,
         per-iteration revise ops, and per-item classifications, with
         configurable model dropdowns.
