@@ -60,7 +60,7 @@ def run(
     output_dir: Union[str, Path],
     *,
     orchestrator_model: str = "anthropic/claude-sonnet-4.6",
-    judge_model: str = "meta-llama/llama-3.3-70b-instruct",
+    judge_model: str = "deepseek/deepseek-v4-flash",
     max_iterations: int = 10,
     min_iterations: int = 3,
     converge_below: float = 0.10,

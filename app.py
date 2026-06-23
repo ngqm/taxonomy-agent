@@ -146,14 +146,18 @@ def _count_items(path: str | None) -> int | None:
         return None
 
 
-def _estimate_cost(n_items: int, max_iters: int, probe_size: int) -> dict:
-    """Upper-bound cost + wall-time estimate, calibrated against the README's
-    baseline of ~$1.05 / ~12 min for 200 items at max_iters=10, K=20, with the
-    default Sonnet 4.6 orchestrator + Llama 3.3 70B judge. Real costs run
-    lower if the orchestrator converges before max_iters."""
-    judge_per_call = 0.0003       # USD per judge call (input + output averaged)
-    orch_per_iter  = 0.10         # USD per orchestrator iteration
-    n_judge_calls  = max_iters * probe_size + n_items   # probes + finalize
+def _estimate_cost(n_items: int, max_iters: int, probe_size: int,
+                   orchestrator: str = "") -> dict:
+    """Upper-bound cost and wall-time estimate, calibrated against measured runs:
+    cheap config (DeepSeek both roles) runs ~$0.18 / ~10 min for 487 items at
+    max_iters=10, K=20; quality config (Sonnet orchestrator + DeepSeek judge)
+    runs ~$1.86 / ~4 min on the same corpus. Real costs run lower if the
+    orchestrator converges before max_iters."""
+    judge_per_call = 0.0003       # USD per cheap judge call
+    is_quality = "sonnet" in orchestrator.lower() or "opus" in orchestrator.lower() \
+                 or "gpt-5" in orchestrator.lower() or "gemini-2.5-pro" in orchestrator.lower()
+    orch_per_iter  = 0.15 if is_quality else 0.015
+    n_judge_calls  = max_iters * probe_size + n_items
     judge_cost     = n_judge_calls * judge_per_call
     orch_cost      = max_iters * orch_per_iter
     minutes        = max(2, max_iters * 1.0 + n_items * 0.005)
@@ -338,6 +342,7 @@ def _render_cost_panel(box, cost_path: "Path") -> None:
 # each list is the default. "Custom…" reveals a text input so the user can
 # plug in any other model OpenRouter exposes.
 ORCHESTRATOR_OPTIONS = [
+    "deepseek/deepseek-v4-flash",
     "anthropic/claude-sonnet-4.6",
     "anthropic/claude-opus-4-7",
     "openai/gpt-5",
@@ -345,6 +350,7 @@ ORCHESTRATOR_OPTIONS = [
     "Custom…",
 ]
 JUDGE_OPTIONS = [
+    "deepseek/deepseek-v4-flash",
     "meta-llama/llama-3.3-70b-instruct",
     "anthropic/claude-haiku-4-5",
     "openai/gpt-5-mini",
@@ -479,12 +485,19 @@ with run_tab:
     # Sets a small pool + low iter budget, picks the bundled example preset,
     # then falls through into the regular Start-run code path via `start=True`.
     quick_demo_clicked = st.button(
-        "🚀 Quick demo (about 60 seconds)",
+        "🚀 Try the cheap-config demo (about 2 minutes)",
         type="primary",
         disabled=ss.running,
         help="Runs the agent on a 20-item slice of the bundled rhetorical-"
-             "strategies example with max_iters=3 and min_iters=2 so you can "
-             "watch the loop converge in under a minute.",
+             "strategies example with DeepSeek-v4-Flash as both orchestrator "
+             "and judge. Total spend under USD 0.05. Watch the loop converge "
+             "in the trace pane below.",
+    )
+    st.caption(
+        "Want to try your own data? Pick **Paste JSONL** below to drop in up "
+        "to 100 items, set a goal instruction, and hit Start. The cheap "
+        "config (DeepSeek both roles, set as the sidebar default) finishes a "
+        "150-item run in about 3 minutes for under USD 0.10."
     )
 
     st.markdown("##### 1. Task")
@@ -579,14 +592,21 @@ with run_tab:
     n_items_known = _count_items(items_path)
     if n_items_known is not None:
         effective_n = min(n_items_known, int(pool_limit)) if pool_limit and pool_limit > 0 else n_items_known
-        est = _estimate_cost(effective_n, int(max_iters), int(probe_size))
+        est = _estimate_cost(effective_n, int(max_iters), int(probe_size),
+                             orchestrator=orchestrator or "")
+        pair_label = (
+            "Sonnet 4.6 orchestrator + DeepSeek-v4-Flash judge"
+            if ("sonnet" in (orchestrator or "").lower()
+                or "opus" in (orchestrator or "").lower())
+            else "DeepSeek-v4-Flash both roles (install default)"
+        )
         st.info(
             f"**Estimated upper bound:** ~**USD {est['total']:.2f}** "
             f"(orchestrator ~USD {est['orchestrator']:.2f} + judge ~USD {est['judge']:.2f}), "
             f"up to ~**{est['minutes']} min** wall time on **{effective_n} items**. "
             f"Both can be much lower if the orchestrator converges before "
             f"`max_iters={int(max_iters)}` iterations. "
-            f"_Calibrated for the default Sonnet 4.6 + Llama 3.3 70B pair._"
+            f"_Calibrated for the {pair_label}._"
         )
     else:
         st.caption(
@@ -661,11 +681,16 @@ with run_tab:
             start = True
             items_path = str(EXAMPLE_DIR / "items.jsonl")
             instruction = _example_instruction() or instruction
-            size_hint = "4–10"
+            size_hint = "4-10"
             category_focus = ""
-            max_iters, min_iters = 3, 2
+            max_iters, min_iters = 6, 3
             probe_size = 20
             pool_limit = 20
+            # Lock the cheap-config model pair so the demo timing and cost
+            # claim survive whatever the sidebar dropdowns happen to show.
+            orchestrator = "deepseek/deepseek-v4-flash"
+            judge = "deepseek/deepseek-v4-flash"
+            custom_model_err = ""
             output_dir_in = str(
                 PROJECT_ROOT / "eval_runs"
                              / time.strftime("quick_demo_%Y%m%d_%H%M%S")
