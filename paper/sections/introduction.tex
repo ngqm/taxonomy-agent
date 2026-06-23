@@ -88,9 +88,13 @@ Our contributions are:
   \item \textbf{A typed dispatcher that validates before mutating} over
         six standard verbs (\textit{add, rename, edit, merge, split,
         drop}) with per-operation failure isolation, providing an
-        auditable trace.jsonl of every edit. We do not claim the verbs
-        are novel; the contribution is the dispatcher's safety
-        properties.
+        auditable trace.jsonl of every edit. A single-seed ablation in
+        \S\ref{sec:eval-results-cot} replaces the typed dispatcher
+        with a loose dispatcher that accepts ops verbatim; the
+        orchestrator fails to make revise progress and spends over
+        $1.6\times$ as much without producing a usable taxonomy,
+        giving the typed-dispatcher contribution preliminary empirical
+        support. We do not claim the verbs themselves are novel.
   \item \textbf{A parallel stateless judge architecture}, building on
         the generator and labeller split of
         TnT-LLM~\citep{wan2024tntllm}, and a don't-fit rate that the

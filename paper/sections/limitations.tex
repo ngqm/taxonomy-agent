@@ -118,22 +118,22 @@ evidence about cross-lingual transfer of the typed revise
 vocabulary, nor about generalisation to long-form scientific text,
 code, multi-turn dialogue, or non-mathematical reasoning domains.
 
-\paragraph{No component-level ablations.}
-The four architectural choices we describe in
-\S\ref{sec:system}, namely the orchestrator/judge model split, the
-typed revise DSL that validates each operation before applying it, the
-don't-fit terminal criterion, and the parallel judge dispatcher,
-are not independently ablated in
-\S\ref{sec:eval-results-20ng}--\S\ref{sec:eval-results-cot}. The
-empirical comparison set is taxonomy\_agent end-to-end against three
-external baselines, plus the indirect comparison between
-\textsc{single\_shot} and \textsc{iterative\_proposal} that contrasts
-a one-shot proposal with an iterative one that shares the
-orchestrator and judge roles. We are therefore unable to isolate which
-architectural choice drives the gains. The most informative single missing experiment is
-taxonomy\_agent with free-form prose revise instead of the typed DSL on
-the CoT corpus; we estimate roughly USD\,0.30 of OpenRouter spend for
-a single-seed run.
+\paragraph{Partial component-level ablations.}
+We report one component ablation in~\S\ref{sec:eval-results-cot}:
+swapping the typed revise dispatcher for a loose dispatcher that
+accepts ops verbatim, single-seed on the CoT corpus. The orchestrator
+failed to make revise progress under the loose dispatcher and was on
+track to substantially exceed the typed run's budget when we
+terminated it. The preliminary reading is that the validation log
+feeds the orchestrator a useful signal, but the result
+is single-seed and partial: the more informative experiment is a
+multi-seed loose-dispatcher run that converges, or visibly fails to,
+without operator termination. The orchestrator/judge model split, the
+don't-fit terminal criterion, and the parallel judge dispatcher remain
+unablated; the comparison set isolates iteration (via
+\textsc{single\_shot} vs.\ \textsc{iterative\_proposal}) and finer
+clustering (via embed-cluster-LLM and tuned BERTopic) but does not
+isolate each of our architectural choices on its own.
 
 \paragraph{Missing direct baseline comparisons.}
 Four systems we discuss in~\S\ref{sec:related} are not run as
