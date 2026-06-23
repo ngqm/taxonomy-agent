@@ -1,15 +1,12 @@
-\subsection{Evaluation Methodology}
-\label{sec:eval-method}
-
-We run \textsc{taxonomy\_agent} with a Claude~Sonnet~4.6 orchestrator
-and a DeepSeek-v4-Flash judge on both benchmarks; the
-\textsc{single\_shot} and \textsc{iterative\_proposal} baselines also
-use DeepSeek-v4-Flash, BERTopic uses no LLM, and the installed system
-default is a Llama-3.3-70B judge that we swap to DeepSeek-v4-Flash for
-the eval runs.\footnote{The installed default judge is
-Llama-3.3-70B-Instruct; we override to DeepSeek-v4-Flash on the
-benchmarks for a comparable-quality but cheaper publication pair.}
-For 20~Newsgroups we report mean $\pm$ standard deviation over three
+\paragraph{Run configuration.}
+We run \textsc{taxonomy\_agent} at the install default
+(DeepSeek-v4-Flash for both orchestrator and judge) on both
+benchmarks; the \textsc{single\_shot} and \textsc{iterative\_proposal}
+baselines also use DeepSeek-v4-Flash, and BERTopic uses no LLM. A
+Sonnet 4.6 orchestrator pair is reported as the optional quality
+configuration in Table~\ref{tab:20ng} for cost comparison and reaches
+NMI inside the cheap pair's interval at twelve times the cost. For
+20~Newsgroups we report mean $\pm$ standard deviation over three
 independently sampled random seeds on a 487-document stratified
 subsample (sampled at 25 items per gold class; 13 documents are
 dropped after sklearn's default header/footer/quote stripping). All
@@ -30,8 +27,12 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
        & NPMI $\uparrow$ & $C_v$ $\uparrow$ & Redund.\ $\downarrow$
        & $|\mathcal{T}|$ & Cost (USD) & Wall (s) \\
 \midrule
-taxonomy\_agent (ours)
-  & \textbf{0.367}$_{\pm.020}$ & \textbf{0.656}$_{\pm.012}$ & \textbf{0.336}$_{\pm.035}$
+taxonomy\_agent (ours, install default)
+  & \textbf{0.515}$_{\pm.126}$ & \textbf{0.713}$_{\pm.058}$ & \textbf{0.452}$_{\pm.096}$
+  & 0.042$_{\pm.009}$ & 0.347$_{\pm.028}$ & 0.098$_{\pm.045}$
+  & 11.7$_{\pm4.0}$ & 0.16$_{\pm.03}$ & 548$_{\pm132}$ \\
+taxonomy\_agent (Sonnet orchestrator)
+  & 0.367$_{\pm.020}$ & 0.656$_{\pm.012}$ & 0.336$_{\pm.035}$
   & 0.065$_{\pm.020}$ & 0.322$_{\pm.021}$ & 0.133$_{\pm.037}$
   & 7.3$_{\pm0.6}$ & 1.86$_{\pm.04}$ & 258$_{\pm57}$ \\
 single\_shot
@@ -71,44 +72,50 @@ deviations reflect deterministic UMAP/HDBSCAN under fixed
 \end{table*}
 
 \paragraph{Supervised metrics.}
-Taxonomy\_agent leads the LLM and clustering baselines on the metrics
-that resist splitting: ARI 0.336 against single\_shot's 0.101,
-iterative\_proposal's 0.043, and embed\_cluster\_llm's 0.243 (a
-$1.4\times$ lead over the strongest LLM-driven comparator), and NMI
-0.656 against 0.345 and 0.488 (a $1.9\times$ and $1.3\times$ lead).
-Cross-seed standard deviations are smaller for taxonomy\_agent than
-for the LLM baselines (NMI std 0.012 against single\_shot's 0.056),
-which is consistent with the agentic loop converging to a similar
-mid-granularity structure on each run (7--8 categories across the
-three seeds). On purity the system leads the LLM baselines at 0.367
-against single\_shot's 0.253 but is beaten by embed\_cluster\_llm
-($K{=}16$) and by a tuned BERTopic that splits the corpus into roughly
-60 micro-clusters; both win purity by emitting much finer-grained
-categories, a granularity confound covered next.
+At the install default, \textsc{taxonomy\_agent} leads every LLM and
+clustering baseline on the three supervised metrics: purity $0.515$
+against embed\_cluster\_llm's $0.434$, NMI $0.713$ against $0.488$ (a
+$1.5\times$ lead over the strongest LLM-driven comparator), and ARI
+$0.452$ against $0.243$ (a $1.9\times$ lead). The lead over
+single\_shot is $2.1\times$ on NMI and $4.5\times$ on ARI; the
+\textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
+every supervised metric, which appears to come from refinement drift
+on a cheap proposer.%
+\footnote{Cross-seed standard deviations on the cheap pair are
+larger than on the Sonnet pair (NMI std $0.058$ vs $0.012$); the
+cheap run varies between 8 and 16 categories across seeds, while the
+Sonnet run lumps consistently to 7--8. Both intervals contain each
+other's mean on NMI; on ARI the cheap pair leads by more than one
+joint standard deviation.}
+The Sonnet orchestrator row is included for cost comparison and
+sits inside the cheap pair's NMI interval ($0.656 \pm 0.012$ vs
+$0.713 \pm 0.058$) at twelve times the cost. We therefore make the
+cheap pair the install and publication default.
 
 \paragraph{Intrinsic coherence and tuned BERTopic.}
 Coherence is not uniformly in taxonomy\_agent's favour:
 iterative\_proposal wins NPMI by emitting 16 lexically focused
 categories, and LDA and embed\_cluster\_llm hold a small $C_v$ lead by
 keeping $K{=}16$ fixed. BERTopic at library defaults wins $C_v$ at
-0.767 but with a degenerate two-cluster solution that loses every
+$0.767$ but with a degenerate two-cluster solution that loses every
 supervised metric. Under a sweep of \texttt{min\_topic\_size}
 (Appendix~A), the most aggressive setting emits roughly 60
 micro-clusters and closes the purity gap, but ARI then sits at
-$0.127\pm.038$ against our $0.336\pm.035$, a $2.6\times$ lead: ARI
-penalises the over-splitting that boosts BERTopic's purity, so the lead
-is robust on the metric that balances lumping against splitting.
+$0.127 \pm .038$ against our $0.452 \pm .096$, a $3.6\times$ lead.
 
 \paragraph{Cost.}
-A taxonomy\_agent run on 20NG costs USD\,1.86 on average; the
+A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs USD\,$0.16$
+on average, about $7\times$ the cost of embed\_cluster\_llm at the
+same labeller and roughly $1/12$ of the Sonnet orchestrator pair.
+Wall-clock time of $548\,$s is $3\times$ the LLM baselines and
+$37\times$ BERTopic; absolute spend remains below USD\,$0.20$ on the
+487-document corpus, well below the USD\,$0.10$--USD\,$1.00$ per item
+rates typical of human codebook construction. On the Sonnet pair the
 orchestrator contributes 96--98\%\ of total spend because LangChain's
-\texttt{bind\_tools} path strips the Anthropic prompt-caching markers
-from OpenRouter requests, an implementation bug discussed in
-\S\ref{sec:limitations}. Wall-clock time of 258\,s is roughly
-$1.5\times$ the LLM baselines and $17\times$ BERTopic; absolute spend
-remains under USD\,2 for the 487-document corpus, well below the
-USD\,0.10--USD\,1.00 per item rates typical of human codebook
-construction.
+\texttt{bind\_tools} path strips Anthropic prompt-caching markers from
+OpenRouter requests; the cheap pair is unaffected because DeepSeek
+provider-side caching does not depend on the markers
+(\S\ref{sec:limitations}).
 
 \subsection{CoT-Pattern Results}
 \label{sec:eval-results-cot}
@@ -130,8 +137,12 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
        & NPMI $\uparrow$ & $C_v$ $\uparrow$ & Redund.\ $\downarrow$
        & $|\mathcal{T}|$ & Cost (USD) & Wall (s) \\
 \midrule
-taxonomy\_agent (ours)
-  & \textbf{0.866} & \textbf{0.762} & \textbf{0.660}
+taxonomy\_agent (ours, install default)
+  & \textbf{0.926} & \textbf{0.851} & \textbf{0.835}
+  & 0.028 & 0.352 & 0.164
+  & 5 & 0.07 & 229 \\
+taxonomy\_agent (Sonnet orchestrator)
+  & 0.866 & 0.762 & 0.660
   & 0.033 & 0.369 & 0.150
   & 5 & 2.23 & 196 \\
 single\_shot & 0.336 & 0.143 & 0.036 & 0.025 & 0.348 & 0.203
@@ -164,20 +175,26 @@ interpretable at single seed and are not bolded.}
 \end{table*}
 
 \paragraph{Pattern recovery.}
-Taxonomy\_agent labels 109 of 149 items and every prediction matches
-the gold pattern ($109/109 = 100\%$ accuracy on labelled items); the
-remaining 40 are routed to \texttt{other}. Coverage-adjusted purity
-treating \texttt{other} as a non-match is $109/149 = 0.732$, at
-parity with a 0.730 supervised surface-feature oracle that has
-gold-label access (logistic regression on 14 surface features, 5-fold
-stratified CV) and $+23$ points above an unsupervised k-means baseline
-at $k=5$ on the same features (Appendix~A details the calibration
-baselines and the commensurability caveat). All LLM and clustering
-discovery baselines stay below NMI 0.15, including embed\_cluster\_llm
-at 0.039 (essentially random), so iterative refinement is doing
-real work on this task. Precision-at-coverage holds at $100\%$ across
-the four mathematical sub-domains the corpus spans (Appendix~A,
-Table~A1).
+At the install default, \textsc{taxonomy\_agent} labels 132 of 149
+items and every prediction matches the gold pattern
+($132/132 = 100\%$ accuracy on labelled items); the remaining 17 are
+routed to \texttt{other}. Coverage-adjusted purity treating
+\texttt{other} as a non-match is $132/149 = 0.886$, $+16$ points
+above a 0.730 supervised surface-feature oracle that has gold-label
+access (logistic regression on 14 surface features, 5-fold stratified
+CV) and $+39$ points above an unsupervised k-means baseline at $k=5$
+on the same features (Appendix~A details the calibration baselines
+and the commensurability caveat). Per-pattern recovery is uniform:
+sycophantic capitulation 26/30, unfaithful paraphrase 29/30,
+post-hoc rationalization 26/30, hallucinated premise 23/29,
+reward-hack verbalization 28/30. The Sonnet orchestrator pair under
+the same judge recovers 109 of 149 items at $100\%$ accuracy
+($109/149 = 0.732$ coverage-adjusted purity) and under-recovers
+\texttt{hallucinated\_premise} at 9 of 29; the cheap pair closes
+that gap at one-thirtieth the cost. All LLM and clustering discovery
+baselines stay below NMI 0.15, including embed\_cluster\_llm at 0.039
+(essentially random), so iterative refinement is doing real work on
+this task.
 
 \paragraph{Ablation.}
 A single-seed loose-dispatcher ablation that strips the typed revise
@@ -190,16 +207,15 @@ support and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
 
 \paragraph{Failure mode.}
-Across both corpora, the system's consistent failure mode is
-\emph{lumping}: on 20NG it converges on coherent 7--8-category
-macro-clusters that fuse semantically related fine-grained gold
-classes (e.g., the three \texttt{talk.politics.*} gold classes
-collapse to one ``politics and society'' category), and on CoT the
-\texttt{hallucinated\_premise} pattern, which lacks the strong lexical
-tells the other four exhibit, recovers only 9 of roughly 30 gold
-instances. The differential under-recovery is evidence consistent
-with sharper surface extraction rather than additional semantic
-content, the interpretive caveat carried in \S\ref{sec:limitations}.
-The on-disk \texttt{trace.jsonl} surfaces every tool call, op, and
-classify probe so an analyst can audit the run; a worked example and
-the Streamlit Inspect timeline are in Appendix~A.
+The Sonnet orchestrator pair lumps both corpora: on 20NG it produces
+coherent 7--8-category macro-clusters that fuse semantically related
+fine-grained gold classes (e.g., the three \texttt{talk.politics.*}
+gold classes collapse to one ``politics and society'' category), and
+on CoT it under-recovers \texttt{hallucinated\_premise} at 9 of 29.
+The install default cheap pair keeps finer distinctions on both
+corpora (8 to 16 categories on 20NG across seeds, all five CoT
+patterns recovered above $77\%$), at the cost of higher cross-seed
+variance on the supervised metrics (Table~\ref{tab:20ng}). The
+on-disk \texttt{trace.jsonl} surfaces every tool call, op, and
+classify probe so an analyst can audit either configuration; a
+worked example and the Streamlit Inspect timeline are in Appendix~A.

@@ -6,6 +6,15 @@ problem. An orchestrator LLM proposes typed edits to a working
 taxonomy, a parallel judge LLM scores items against that taxonomy and
 reports a don't-fit rate, and the loop terminates once that rate falls
 below a configurable threshold, gated by a minimum-iteration floor.
+The user supplies two inputs: a corpus of texts and a one-sentence
+\emph{goal instruction} naming the axis of variation the taxonomy
+should discover. For 20~Newsgroups the goal instruction is
+``Identify the topic of each text''; for CoT-Pattern it is ``Group
+these chain-of-thought reasoning traces into categories based on the
+dominant style, approach, or behavior visible in the reasoning.''
+The goal instruction is interpolated into the orchestrator's system
+prompt verbatim and into every judge classify call; an empty goal
+falls back to topic discovery.
 
 \subsection{Architecture}
 \label{sec:system:arch}

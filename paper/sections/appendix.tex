@@ -33,10 +33,10 @@ the same 149 items the discovery systems see; it is a supervised
 oracle ceiling for what surface shape alone can do. Taxonomy\_agent's
 purity is the optimal-mapping purity of an unsupervised discovered
 partition; the two quantities are not strictly commensurable, which is
-why the body reports the CoT result two ways: accuracy on the 109
-non-\texttt{other} items, directly comparable to 0.730, and
-coverage-adjusted purity over all 149 items treating \texttt{other}
-as a sixth class.
+why the body reports the CoT result two ways: accuracy on the 132
+non-\texttt{other} items at the install default, directly comparable
+to $0.730$, and coverage-adjusted purity over all 149 items treating
+\texttt{other} as a sixth class.
 
 \section*{B\quad Per-Sub-Domain Stability on the CoT Corpus}
 \label{app:per-domain}
@@ -45,11 +45,11 @@ We tagged each item with a problem-domain heuristic from the problem
 text and recomputed precision-at-coverage, coverage, purity, and NMI
 per sub-domain (Table~\ref{tab:cot_per_domain}). Precision on
 labelled items is $100\%$ across every sub-domain with at least five
-items; coverage varies between 0.65 and 0.80; NMI stays in the
-0.70--1.00 band. The number-theory slice ($n{=}5$) is too thin to
-support a stability claim alone; the cross-sub-domain reading rests
-on algebra (50), geometry (40), the residual catch-all (39), and
-combinatorics (15).
+items; coverage varies between 0.80 and 1.00; NMI stays in the
+$0.82$--$1.00$ band. The number-theory slice ($n{=}5$) is too thin
+to support a stability claim alone; the cross-sub-domain reading
+rests on algebra (50), geometry (40), the residual catch-all (39),
+and combinatorics (15).
 
 \begin{table}[h]
 \centering
@@ -57,16 +57,16 @@ combinatorics (15).
 \toprule
 Sub-domain & $n$ & Cov. & Prec.@cov. & Purity & NMI \\
 \midrule
-algebra        & 50 & 0.78 & 1.000 & 0.880 & 0.793 \\
-geometry       & 40 & 0.65 & 1.000 & 0.800 & 0.709 \\
-other          & 39 & 0.72 & 1.000 & 0.872 & 0.830 \\
-combinatorics  & 15 & 0.80 & 1.000 & 0.933 & 0.886 \\
-number theory  &  5 & 0.80 & 1.000 & 1.000 & 1.000 \\
+algebra        & 50 & 0.90 & 1.000 & 0.940 & 0.873 \\
+geometry       & 40 & 0.90 & 1.000 & 0.975 & 0.922 \\
+other          & 39 & 0.87 & 1.000 & 0.897 & 0.826 \\
+combinatorics  & 15 & 0.80 & 1.000 & 0.867 & 0.822 \\
+number theory  &  5 & 1.00 & 1.000 & 1.000 & 1.000 \\
 \midrule
-overall        & 149 & 0.73 & 1.000 & 0.866 & 0.762 \\
+overall        & 149 & 0.89 & 1.000 & 0.926 & 0.851 \\
 \bottomrule
 \end{tabular}
-\caption{Per-sub-domain CoT-Pattern results, single seed.
+\caption{Per-sub-domain CoT-Pattern results at the install default (DeepSeek-v4-Flash both roles), single seed.
 Precision-at-coverage is $100\%$ across all four mathematical
 sub-domains plus the ``other'' slice.}
 \label{tab:cot_per_domain}
@@ -86,8 +86,9 @@ $0.00 \to 0.05$ bounce at the end of the third seed. Across the
 three terminal $(\text{don't-fit}, \text{purity})$ pairs the Spearman
 correlation is $\rho = -0.87$ ($p = 0.33$ at $n = 3$), with the same
 sign for NMI and opposite sign for NPMI. The signal saturates at the
-floor too quickly to function as a quantitative leading indicator;
-the introduction's ``cross-checked'' phrasing reflects this.
+floor too quickly to function as a quantitative leading indicator,
+so we use it as an operational stopping default in \S\ref{sec:system}
+and report external metrics separately rather than as the same signal.
 
 \section*{D\quad Typed-Dispatcher Ablation Detail}
 \label{app:ablation}

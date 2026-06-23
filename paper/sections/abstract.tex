@@ -1,27 +1,32 @@
-We present \textsc{taxonomy\_agent}, an open-source system that
+We present \textsc{taxonomy\_agent}, an open-source demo that
 discovers and refines a labelled taxonomy over an unlabelled text
 corpus and ships with the operational tooling a stranger needs to
 actually use it: live native provider cost accounting split by
-orchestrator and judge, partial-progress streaming to disk so a killed
-run leaves recoverable state, vendor-agnostic routing across any
-chat-completions provider, and an interactive web UI for live
-inspection. Beneath sits a two-tier agent: an orchestrator LLM
-proposes edits through a typed revise dispatcher over six verbs
+orchestrator and judge, partial-progress streaming to disk so a
+killed run leaves recoverable state, vendor-agnostic routing across
+any chat-completions provider, and a Streamlit Inspect tab that
+replays the trace, partial taxonomies, and cost split of any run.
+Beneath sits a two-tier agent: an orchestrator LLM proposes edits
+through a typed revise dispatcher over six verbs
 (\textit{add, rename, edit, merge, split, drop}), each validated
-before mutation with per-operation failure isolation, while a cheap
-parallel judge scores items and produces a don't-fit rate the
-orchestrator uses as a termination self-report.
-On a 487-document 20~Newsgroups subsample with three independently
-sampled random seeds, \textsc{taxonomy\_agent} outperforms a one-shot
-LLM baseline by $1.9\times$ on NMI and $3.3\times$ on ARI and retains
-a $1.3\times$ NMI lead and $1.4\times$ ARI lead over an
-embed-then-LLM-label baseline that is the strongest LLM-driven
-comparator we run. On a 149-item synthetic corpus of failure
-patterns in chain-of-thought reasoning, the system labels 109 of 149
-items at $100\%$ accuracy and reaches $0.732$ coverage-adjusted purity
-at parity with a $0.730$ ceiling from a 14-feature surface oracle and
-$+23$ points above an unsupervised k-means baseline on the same
-features.
-We caution that the metrics alone cannot separate semantic discovery
-from sharper surface extraction. Code, reproduction scripts, and the
-corpora are at \repourl.
+before mutation with per-operation failure isolation, while a
+parallel stateless judge re-derives labels from each item and
+reports a don't-fit rate the orchestrator reads as a termination
+signal.
+On a 487-document 20~Newsgroups subsample with three seeds at the
+install default (DeepSeek-v4-Flash for both orchestrator and judge),
+\textsc{taxonomy\_agent} reaches NMI $0.713 \pm 0.058$ and ARI
+$0.452 \pm 0.096$ at USD $0.16 \pm 0.03$ per run, beating a
+model-matched embed-cluster-LLM reimplementation of
+TnT-LLM~\citep{wan2024tntllm} by $1.5\times$ on NMI and $1.9\times$
+on ARI and a single-shot LLM baseline by $2.1\times$ on NMI. On a
+149-item synthetic corpus of failure patterns in chain-of-thought
+reasoning, the system labels 138 of 149 items and reaches
+$0.926$ purity and $0.851$ NMI at USD $0.07$, beating every LLM and
+clustering discovery baseline by more than $0.7$ NMI. The
+publication and install configurations are the same; a Claude
+Sonnet 4.6 orchestrator pair costs roughly twelve times more
+without a statistically distinguishable NMI gain on 20NG. We caution
+that supervised metrics alone cannot separate semantic discovery
+from sharper surface extraction. Code, reproduction scripts, and
+the corpora are at \repourl.

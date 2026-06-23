@@ -29,16 +29,19 @@ failure isolation, decouple labelling into a parallel judge, and ship
 the result with operational tooling for live cost accounting,
 partial-progress saving, and a web UI.
 
-Empirically, the system outperforms a one-shot LLM baseline on
-20~Newsgroups by $1.9\times$ on NMI and $3.3\times$ on ARI, and retains
-a $1.3\times$ NMI and $1.4\times$ ARI lead over the strongest LLM-driven
-comparator we run (\S\ref{sec:eval-results-20ng}); the ARI lead over the
-best-tuned BERTopic is $2.6\times$. On the synthetic CoT-Pattern corpus
-the system labels 109 of 149 items at $100\%$ accuracy and reaches
-$0.732$ purity over the full corpus, at parity with a surface-feature
-classifier ceiling of $0.730$ that has gold-label access, and $+23$
-points above an unsupervised k-means baseline on the same surface
-features (\S\ref{sec:eval-results-cot}).
+Empirically, at the install default (DeepSeek-v4-Flash for both
+orchestrator and judge), the system reaches NMI $0.713 \pm 0.058$
+and ARI $0.452 \pm 0.096$ on 20~Newsgroups at USD $0.16$ per run,
+beating a one-shot LLM baseline by $2.1\times$ on NMI and
+$4.5\times$ on ARI and a model-matched embed-cluster-LLM
+reimplementation of TnT-LLM by $1.5\times$ on NMI and $1.9\times$
+on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
+pair at twelve times the cost lands at NMI $0.656 \pm 0.012$,
+inside the cheap pair's interval, so we make the cheap pair the
+publication and install default. On the synthetic CoT-Pattern
+corpus the system labels 138 of 149 items and reaches purity
+$0.926$ at USD $0.07$, beating every LLM and clustering discovery
+baseline by more than $0.7$ NMI (\S\ref{sec:eval-results-cot}).
 
 \noindent Our contributions are:
 \begin{itemize}
@@ -56,9 +59,9 @@ features (\S\ref{sec:eval-results-cot}).
   \item \textbf{A parallel stateless judge architecture}, building on
         the generator and labeller split of
         TnT-LLM~\citep{wan2024tntllm}, with a don't-fit rate that the
-        orchestrator treats as a termination signal and that we
-        cross-check against external clustering metrics.
+        orchestrator treats as a termination signal.
   \item \textbf{An open-source artefact at} \repourl{} with a
-        \texttt{pip install} path, a 60-second \emph{Quick demo} button,
-        and reproducible 20NG and CoT benchmark configurations.
+        \texttt{pip install} path, reproducible 20NG and CoT benchmark
+        configurations, and a Streamlit Inspect tab that replays the
+        trace, partial taxonomies, and cost split of any run.
 \end{itemize}
