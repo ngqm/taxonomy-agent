@@ -120,3 +120,20 @@ eval_data/cot_patterns_hybrid.jsonl
 eval_data/*_with_advice.jsonl.bak
 eval_data/*_pre_repair.jsonl.bak
 eval_data/*_pre_anon.jsonl.bak
+
+# Unauthorized advice-prompt corpus from a prior session.
+eval_data/advice_prompts.jsonl
+
+# Vendor zip dropped on the project root; the unpacked acl.sty and
+# acl_natbib.bst live under paper/ and are tracked.
+Association_for_Computational_Linguistics__ACL__conference.zip
+
+# LaTeX intermediates from local Overleaf-mirror compiles.
+paper/*.aux
+paper/*.bbl
+paper/*.blg
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
+paper/main.pdf
