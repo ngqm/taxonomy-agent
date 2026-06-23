@@ -67,7 +67,7 @@ Best per column in bold. $|\mathcal{T}|$ is the number of discovered
 categories. \texttt{embed\_cluster\_llm} embeds with
 all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each cluster with one
 DeepSeek-v4-Flash call from 5 sampled items, then assigns every item
-with the cheap judge (TnT-LLM family, our minimal reimplementation).
+with the cheap judge (embed-cluster-LLM family, the design popularised by TnT-LLM; we omit TnT-LLM's distilled-classifier phase).
 LDA uses sklearn at $K{=}16$. BERTopic is at library defaults
 (\texttt{min\_topic\_size=10}, $|\mathcal{T}|{=}2$); the sweep over
 $\{2,5,10,15,25\}$ is in Appendix~A. BERTopic's $\pm.000$ standard
@@ -83,7 +83,7 @@ against embed\_cluster\_llm's $0.434$, NMI $0.740$ against $0.488$
 (a $1.5\times$ lead over the strongest LLM-driven comparator), and
 ARI $0.489$ against $0.243$ (a $2.0\times$ lead). The lead over
 single\_shot is $2.1\times$ on NMI and $4.8\times$ on ARI; the
-\textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
+\textsc{iterative\_proposal} (the TopicGPT-style iterative refiner) loses to single\_shot on
 every supervised metric, suggesting that iterative label refinement
 without a separate judge does not help on this corpus.%
 \footnote{Cross-seed stddev on the cheap pair (NMI $0.055$, $n{=}5$)

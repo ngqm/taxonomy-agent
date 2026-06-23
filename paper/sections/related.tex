@@ -7,7 +7,8 @@ topic labels from sampled documents with a refinement pass.
 TnT-LLM~\citep{wan2024tntllm} stages a summarise-then-distil
 pipeline that anticipates our generator-and-labeller split, though
 its refine step is a single batched summarisation; our
-\texttt{embed\_cluster\_llm} baseline reimplements this shape.
+\texttt{embed\_cluster\_llm} baseline occupies the same
+embed-cluster-LLM family without the distillation phase.
 BERTopic~\citep{grootendorst2022bertopic} remains the strongest
 non-LLM baseline. Three concurrent 2025 systems sit closest to ours:
 \citet{brady2025iterativetax} iteratively prompt an LLM to reuse or

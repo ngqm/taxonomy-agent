@@ -38,9 +38,9 @@ Empirically, at the install default (DeepSeek-v4-Flash for both
 orchestrator and judge), the system reaches NMI $0.740 \pm 0.055$
 and ARI $0.489 \pm 0.085$ on 20~Newsgroups at $\$0.17$ per run,
 beating a one-shot LLM baseline by $2.1\times$ on NMI and
-$4.8\times$ on ARI and a model-matched embed-cluster-LLM
-reimplementation of TnT-LLM by $1.5\times$ on NMI and $2.0\times$
-on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
+$4.8\times$ on ARI and a model-matched embed-cluster-LLM baseline
+(the family popularised by TnT-LLM) by $1.5\times$ on NMI and
+$2.0\times$ on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
 pair at eleven times the cost reaches NMI $0.656 \pm 0.012$ and
 does not improve over the cheap pair, so we make the cheap pair the
 publication and install default. On the synthetic CoT-Pattern
