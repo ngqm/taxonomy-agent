@@ -115,13 +115,13 @@ micro-clusters and closes the purity gap, but ARI then sits at
 $0.127 \pm .038$ against our $0.452 \pm .096$, a $3.6\times$ lead.
 
 \paragraph{Cost.}
-A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs USD\,$0.16$
+A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs $\$0.16$
 on average, about $7\times$ the cost of embed\_cluster\_llm at the
 same labeller and roughly $1/12$ of the Sonnet orchestrator pair.
 Wall-clock time of $548\,$s is $3\times$ the LLM baselines and
-$37\times$ BERTopic; absolute spend remains below USD\,$0.20$ on the
-487-document corpus, below the USD\,$0.10$--USD\,$1.00$ per item
-rates typical of human codebook construction. On the Sonnet pair the
+$37\times$ BERTopic; absolute spend remains below $\$0.20$ on the
+487-document corpus, below the $\$0.10$--$\$1.00$ per item rates
+typical of human codebook construction. On the Sonnet pair the
 orchestrator contributes 96--98\%\ of total spend because LangChain's
 \texttt{bind\_tools} path strips Anthropic prompt-caching markers from
 OpenRouter requests; the cheap pair is unaffected because DeepSeek
