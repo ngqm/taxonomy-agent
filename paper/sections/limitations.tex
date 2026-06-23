@@ -127,13 +127,15 @@ code, multi-turn dialogue, or non-mathematical reasoning domains.
 We report one component ablation in~\S\ref{sec:eval-results-cot}:
 swapping the typed revise dispatcher for a loose dispatcher that
 accepts ops verbatim, single-seed on the CoT corpus. The orchestrator
-failed to make revise progress under the loose dispatcher and was on
-track to substantially exceed the typed run's budget when we
-terminated it. The preliminary reading is that the validation log
-feeds the orchestrator a useful signal, but the result
-is single-seed and partial: the more informative experiment is a
-multi-seed loose-dispatcher run that converges, or visibly fails to,
-without operator termination. The orchestrator/judge model split, the
+issued zero revise calls in 90\,s before we terminated the run; the
+typed run on the same configuration finishes at 197\,s with one
+revise. We list the two interpretations consistent with the
+observation in~\S\ref{sec:eval-results-cot}: a missing-feedback story
+(the orchestrator uses the typed validation log and stalls without
+it), and a stochasticity story (the judge happened to return empty
+novelty candidates in both rounds of the loose run). A single seed
+cannot distinguish them; a multi-seed loose-dispatcher run that
+converges, or visibly fails to, without operator termination would. The orchestrator/judge model split, the
 don't-fit terminal criterion, and the parallel judge dispatcher remain
 unablated; the comparison set isolates iteration (via
 \textsc{single\_shot} vs.\ \textsc{iterative\_proposal}) and finer

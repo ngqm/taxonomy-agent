@@ -50,7 +50,7 @@ claiming the don't-fit rate is a quantitatively validated leading
 indicator. Empirically, the system outperforms a one-shot LLM baseline on
 20~Newsgroups by $1.9\times$ on NMI and $3.3\times$ on ARI, with
 wider margins over a minimal iterative LLM baseline, and retains a
-$1.4\times$ NMI and $1.4\times$ ARI lead over the strongest
+$1.3\times$ NMI and $1.4\times$ ARI lead over the strongest
 LLM-driven comparator we run, an embed-then-LLM-label pipeline
 (\S\ref{sec:eval-results-20ng}). The lead over BERTopic at library
 defaults is wide but narrows under a sweep of BERTopic's minimum
@@ -97,9 +97,11 @@ Our contributions are:
         (\S\ref{sec:eval-results-cot}) replaces the typed dispatcher
         with a loose dispatcher that accepts ops verbatim; the
         orchestrator stopped issuing revise calls and we terminated
-        the run with an empty taxonomy, giving the typed dispatcher
-        preliminary empirical support. We do not claim the verbs
-        themselves are novel.
+        the run with an empty taxonomy. The contrast is suggestive
+        but a single seed cannot isolate the dispatcher from ordinary
+        stochasticity; we report this as a preliminary observation,
+        not validated support. We do not claim the verbs themselves
+        are novel.
   \item \textbf{A parallel stateless judge architecture}, building on
         the generator and labeller split of
         TnT-LLM~\citep{wan2024tntllm}, and a don't-fit rate that the

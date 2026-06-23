@@ -396,14 +396,18 @@ in 197\,s, and costs \$2.23 total. The loose run we terminated at
 \textsc{novelties} calls (each returning zero candidates), two
 \textsc{classify} probes (don't-fit rates $0.11, 0.13$), and zero
 \textsc{revise} calls; the working taxonomy was empty at termination.
-The preliminary read is that the typed validation log gives the
-orchestrator a signal it actively uses (``the revise I just attempted
-hit \textit{missing source}, try the alternative''); when every
-attempted edit silently succeeds, the orchestrator loses that
-feedback channel and stops issuing revise calls altogether. We report
-this as a single-seed, operator-terminated preliminary result; a
-multi-seed ablation that converges or visibly fails to is the
-natural follow-up.
+Two interpretations are consistent with this single observation. One
+is that the typed validation log gives the orchestrator a feedback
+signal it actively uses; without it, the orchestrator stops issuing
+revise calls. The other is ordinary LLM stochasticity: the judge's
+two novelties calls happened to return empty candidate sets in the
+loose run, leaving the orchestrator with nothing to revise toward. We
+cannot distinguish these on a single seed; the typed run we compare
+against did not stochastically produce empty novelties at this point
+in its loop, so the contrast is suggestive but not isolating. We
+report this as an operator-terminated single-seed result, and a
+multi-seed loose-dispatcher ablation that converges or visibly fails
+to is the natural follow-up.
 
 \subsection{Qualitative Analysis}
 \label{sec:eval-results-qual}
@@ -470,8 +474,10 @@ sibling category or pushed into \texttt{other}.
 \label{sec:eval-demo}
 
 EMNLP System Demonstrations weights the demonstrability of the
-artifact. We report three operational properties beyond the
-algorithmic metrics above.
+artifact. We report four operational properties beyond the
+algorithmic metrics above: cost-tracker fidelity, partial-progress
+streaming, vendor-agnostic routing, and the trace as auditable
+evidence.
 
 \paragraph{Cost-tracker fidelity.}
 Every run streams a \texttt{cost.json} that aggregates the
