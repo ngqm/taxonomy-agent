@@ -83,8 +83,8 @@ against embed\_cluster\_llm's $0.434$, NMI $0.740$ against $0.488$
 ARI $0.489$ against $0.243$ (a $2.0\times$ lead). The lead over
 single\_shot is $2.1\times$ on NMI and $4.8\times$ on ARI; the
 \textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
-every supervised metric, which appears to come from refinement drift
-on a cheap proposer.%
+every supervised metric, consistent with refinement drift on a
+cheap proposer.%
 \footnote{Cross-seed stddev on the cheap pair (NMI $0.055$) is
 larger than the Sonnet pair ($0.012$); the cheap run varies between
 $8$ and $16$ categories, the Sonnet run lumps to $7$--$8$. One
@@ -120,7 +120,7 @@ on average, about $7\times$ the cost of embed\_cluster\_llm at the
 same labeller and roughly $1/12$ of the Sonnet orchestrator pair.
 Wall-clock time of $548\,$s is $3\times$ the LLM baselines and
 $37\times$ BERTopic; absolute spend remains below USD\,$0.20$ on the
-487-document corpus, well below the USD\,$0.10$--USD\,$1.00$ per item
+487-document corpus, below the USD\,$0.10$--USD\,$1.00$ per item
 rates typical of human codebook construction. On the Sonnet pair the
 orchestrator contributes 96--98\%\ of total spend because LangChain's
 \texttt{bind\_tools} path strips Anthropic prompt-caching markers from
@@ -217,9 +217,9 @@ The Sonnet pair lumps semantically related gold classes
 (\texttt{talk.politics.*} collapses to one macro-cluster, and CoT
 \texttt{hallucinated\_premise} recovers at $9/29$). The cheap pair
 keeps finer distinctions but is occasionally tripped by a
-monotonic-add loop: seed 46 emitted $8$ revise calls all
-\textsc{add}, growing the taxonomy from $10$ to $21$ categories
-without converging. \texttt{trace.jsonl} surfaces the failure
+monotonic-add loop: in the affected run the orchestrator emitted
+$8$ revise calls all \textsc{add}, growing the taxonomy from $10$
+to $21$ categories without converging. \texttt{trace.jsonl} surfaces the failure
 (no \textsc{merge}/\textsc{drop}/\textsc{edit}) within seconds; we
 added an auto-finalize fallback that labels the corpus against the
 on-disk taxonomy and a re-run converged.

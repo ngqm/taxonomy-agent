@@ -9,8 +9,8 @@ supports clean pattern-discovery evaluation across our five patterns.
 The Sharma et al.\ sycophancy
 stimuli~\citep{sharma2023sycophancy} are user-side prompts and do not
 contain annotated CoT pivots. The Perez et al.\ model-written
-evaluations~\citep{perez2022discovering} provide statistical proxies
-rather than per-trace structural labels.
+evaluations~\citep{perez2022discovering} provide only statistical
+proxies with no per-trace structural labels.
 FaithCoT-Bench~\citep{shen2026faithcot} conflates arithmetic errors
 with hallucinations and does not separate post-hoc rationalisation
 from unfaithful paraphrase. The Denison
@@ -90,7 +90,7 @@ correlation is $\rho = -0.87$ ($p = 0.33$ at $n = 3$), with the same
 sign for NMI and opposite sign for NPMI. The signal saturates at the
 floor too quickly to function as a quantitative leading indicator,
 so we use it as an operational stopping default in \S\ref{sec:system}
-and report external metrics separately rather than as the same signal.
+and report external metrics separately.
 
 \section*{D\quad Typed-Dispatcher Ablation Detail}
 \label{app:ablation}
@@ -105,11 +105,12 @@ in 197\,s, and costs USD\,2.23 total. The loose run we terminated at
 USD\,1.35 of spend (six orchestrator calls in 90\,s) contained two
 \textsc{novelties} calls (each returning zero candidates), two
 \textsc{classify} probes (don't-fit rates 0.11 and 0.13), and zero
-\textsc{revise} calls; the working taxonomy was empty at termination.
-Two interpretations are consistent with this single observation: the
-typed validation log gives the orchestrator a feedback signal it
-actively uses, or ordinary stochasticity (the judge's two novelties
-calls happened to return empty candidate sets in the loose run). A
+\textsc{revise} calls, leaving the working taxonomy empty at
+termination. Two interpretations are consistent with this single
+observation: the typed validation log gives the orchestrator a
+feedback signal it uses, or ordinary stochasticity produced the
+outcome (the judge's two novelties calls happened to return empty
+candidate sets in the loose run). A
 single seed cannot distinguish these.
 
 \section*{E\quad Streamlit Inspect Tab on the CoT Run}
