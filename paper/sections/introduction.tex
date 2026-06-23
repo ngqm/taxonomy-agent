@@ -47,7 +47,9 @@ self-reported via the judge's don't-fit rate with a minimum iteration
 floor and an explicit escape hatch; we cross-check this self-report
 against external purity and NMI on 20~Newsgroups, but stop short of
 claiming the don't-fit rate is a quantitatively validated leading
-indicator. Empirically, the system outperforms a one-shot LLM baseline on
+indicator.
+
+Empirically, the system outperforms a one-shot LLM baseline on
 20~Newsgroups by $1.9\times$ on NMI and $3.3\times$ on ARI, with
 wider margins over a minimal iterative LLM baseline, and retains a
 $1.3\times$ NMI and $1.4\times$ ARI lead over the strongest
@@ -70,6 +72,7 @@ it is $+23$ points at full coverage. As we discuss
 in \S\ref{sec:eval-results-cot}, the metrics alone cannot cleanly
 attribute the margin to semantic discovery and rule out sharper surface
 extraction.
+
 The output primitive is a partitioning taxonomy with single labels
 plus an explicit \texttt{other} escape, distinguishing it from
 concept-induction systems such as LLooM~\citep{lam2024lloom} that
