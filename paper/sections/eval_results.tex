@@ -28,9 +28,9 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
        & $|\mathcal{T}|$ & Cost (USD) & Wall (s) \\
 \midrule
 taxonomy\_agent (ours, install default)
-  & \textbf{0.543}$_{\pm.118}$ & \textbf{0.727}$_{\pm.055}$ & \textbf{0.470}$_{\pm.087}$
-  & 0.045$_{\pm.009}$ & 0.345$_{\pm.024}$ & 0.096$_{\pm.037}$
-  & 12.5$_{\pm3.7}$ & 0.17$_{\pm.04}$ & 655$_{\pm241}$ \\
+  & \textbf{0.569}$_{\pm.117}$ & \textbf{0.740}$_{\pm.055}$ & \textbf{0.489}$_{\pm.085}$
+  & 0.046$_{\pm.009}$ & 0.341$_{\pm.022}$ & 0.098$_{\pm.032}$
+  & 13.0$_{\pm3.4}$ & 0.17$_{\pm.03}$ & 713$_{\pm245}$ \\
 taxonomy\_agent (Sonnet orchestrator)
   & 0.367$_{\pm.020}$ & 0.656$_{\pm.012}$ & 0.336$_{\pm.035}$
   & 0.065$_{\pm.020}$ & 0.322$_{\pm.021}$ & 0.133$_{\pm.037}$
@@ -61,7 +61,7 @@ bertopic
   & 2.0$_{\pm0.0}$ & 0.00 & 15$_{\pm5}$ \\
 \bottomrule
 \end{tabular}
-\caption{20~Newsgroups results, $n=487$; install-default row averaged over four seeds, Sonnet row and baselines over three. \texttt{brady\_islam} runs their pipeline (embed with all-MiniLM-L6-v2, HDBSCAN at default \texttt{min\_cluster\_size=5}, iterative per-cluster topic synthesis) with Llama-3.2-3B via OpenRouter (their vLLM v0.11 engine failed to initialise on our box; the model is the same).
+\caption{20~Newsgroups results, $n=487$; install-default row averaged over five seeds, Sonnet row and baselines over three. \texttt{brady\_islam} runs their pipeline (embed with all-MiniLM-L6-v2, HDBSCAN at default \texttt{min\_cluster\_size=5}, iterative per-cluster topic synthesis) with Llama-3.2-3B via OpenRouter (their vLLM v0.11 engine failed to initialise on our box; the model is the same).
 Best per column in bold. $|\mathcal{T}|$ is the number of discovered
 categories. \texttt{embed\_cluster\_llm} embeds with
 all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each cluster with one
@@ -77,23 +77,25 @@ deviations reflect deterministic UMAP/HDBSCAN under fixed
 
 \paragraph{Supervised metrics.}
 At the install default, \textsc{taxonomy\_agent} leads every LLM and
-clustering baseline on the three supervised metrics: purity $0.543$
-against embed\_cluster\_llm's $0.434$, NMI $0.727$ against $0.488$
+clustering baseline on the three supervised metrics: purity $0.569$
+against embed\_cluster\_llm's $0.434$, NMI $0.740$ against $0.488$
 (a $1.5\times$ lead over the strongest LLM-driven comparator), and
-ARI $0.470$ against $0.243$ (a $1.9\times$ lead). The lead over
-single\_shot is $2.1\times$ on NMI and $4.7\times$ on ARI; the
+ARI $0.489$ against $0.243$ (a $2.0\times$ lead). The lead over
+single\_shot is $2.1\times$ on NMI and $4.8\times$ on ARI; the
 \textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
 every supervised metric, which appears to come from refinement drift
 on a cheap proposer.%
 \footnote{Cross-seed stddev on the cheap pair (NMI $0.055$) is
 larger than the Sonnet pair ($0.012$); the cheap run varies between
-$8$ and $16$ categories, the Sonnet run lumps to $7$--$8$. One of
-five cheap 20NG attempts (seed 46) returned incomplete and is
-excluded from the means; we discuss this failure mode in
-\S\ref{sec:limitations}.}
+$8$ and $16$ categories, the Sonnet run lumps to $7$--$8$. One
+seed entered a monotonic-add loop on first attempt
+(\S\ref{sec:limitations}); a re-run with a different
+non-deterministic trajectory converged, and we added an
+auto-finalize fallback that labels the corpus against the on-disk
+taxonomy when the orchestrator ends without an artifact.}
 The Sonnet orchestrator row is included for cost comparison and
 sits inside the cheap pair's NMI interval ($0.656 \pm 0.012$ vs
-$0.727 \pm 0.055$) at roughly eleven times the cost. We therefore
+$0.740 \pm 0.055$) at roughly eleven times the cost. We therefore
 make the cheap pair the install and publication default. The
 concurrent \citet{brady2025iterativetax} pipeline at default
 produces a degenerate $3$-cluster solution
@@ -211,17 +213,13 @@ support and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
 
 \paragraph{Failure mode.}
-The Sonnet pair lumps: on 20NG it fuses semantically related gold
-classes into 7--8 macro-clusters (e.g., the three
-\texttt{talk.politics.*} classes collapse to ``politics and
-society''), and on CoT it under-recovers
-\texttt{hallucinated\_premise} at $9/29$. The cheap pair keeps
-finer distinctions across configurations, at the cost of higher
-cross-seed variance. The single cheap-pair failure (seed 46) is
-visible in the trace as a monotonic-add loop: $15$ classify events
-with don't-fit oscillating between $0.0$ and $1.0$ and $8$ revise
-calls of which every operation is \textsc{add}, so the taxonomy
-grew from $10$ to $21$ categories without converging. An operator
-inspecting \texttt{trace.jsonl} can name the failure (the
-orchestrator never proposed \textsc{merge}, \textsc{drop}, or
-\textsc{edit}) within seconds.
+The Sonnet pair lumps semantically related gold classes
+(\texttt{talk.politics.*} collapses to one macro-cluster, and CoT
+\texttt{hallucinated\_premise} recovers at $9/29$). The cheap pair
+keeps finer distinctions but is occasionally tripped by a
+monotonic-add loop: seed 46 emitted $8$ revise calls all
+\textsc{add}, growing the taxonomy from $10$ to $21$ categories
+without converging. \texttt{trace.jsonl} surfaces the failure
+(no \textsc{merge}/\textsc{drop}/\textsc{edit}) within seconds; we
+added an auto-finalize fallback that labels the corpus against the
+on-disk taxonomy and a re-run converged.

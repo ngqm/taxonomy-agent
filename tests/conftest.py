@@ -46,10 +46,10 @@ def make_tool_set(tmp_path):
     every time. Pass items + judge stubs + any kwargs accepted by make_tools."""
     def _make(items, judge_call, judge_parallel, **kw):
         names = ["sample", "get", "revise", "classify", "propose", "finalize"]
-        return dict(zip(
-            names,
-            make_tools(items, "run-test", str(tmp_path),
-                       judge_call, judge_parallel, **kw),
-        ))
+        tool_list, _force_finalize = make_tools(
+            items, "run-test", str(tmp_path),
+            judge_call, judge_parallel, **kw,
+        )
+        return dict(zip(names, tool_list))
 
     return _make
