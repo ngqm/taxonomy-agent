@@ -27,13 +27,12 @@ is a structural commitment about how the proposer and the labeller
 interact. The orchestrator proposes typed edits to a working taxonomy
 through a validated dispatcher; a stateless judge re-derives each
 item's category from the item text alone, never sees the
-orchestrator's reasoning, and runs on the cheaper model. Two
-properties follow. The judge runs on the cheap model and is called
-once per item, so per-item cost stays low at corpus scale and the
-publication configuration doubles as the install default. The
-orchestrator cannot force a label past the judge because the judge
-derives every label from item text against the current taxonomy
-without access to prior assignments.
+orchestrator's reasoning, and runs on the cheaper model. The judge runs on the cheap
+model and is called once per item, so per-item cost stays low at
+corpus scale and the publication configuration doubles as the
+install default. The orchestrator cannot force a label past the
+judge because the judge derives every label from item text against
+the current taxonomy without access to prior assignments.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
 orchestrator and judge), the system reaches NMI $0.740 \pm 0.055$

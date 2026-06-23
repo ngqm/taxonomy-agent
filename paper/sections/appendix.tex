@@ -20,8 +20,8 @@ PRM800K~\citep{lightman2023prm800k} labels per-step correctness
 without naming the pattern. No public dataset provides annotated CoT
 pivots for more than one of our five patterns, and combining datasets
 to cover all five makes source detection a near-perfect proxy for
-pattern detection (the hybrid corpus reaches 95\%\ surface-feature
-accuracy versus 73\%\ on the single-source corpus, making the hybrid
+pattern detection (the hybrid corpus reaches 95\% surface-feature
+accuracy versus 73\% on the single-source corpus, making the hybrid
 unevaluable as a benchmark). Construct-validity arguments for
 synthetic single-source CoT evaluation in this regime follow the
 precedents established by~\citet{lanham2023faithfulness}
@@ -33,10 +33,10 @@ the same 149 items the discovery systems see; it is a supervised
 oracle ceiling for what surface shape alone can do. Taxonomy\_agent's
 purity is the optimal-mapping purity of an unsupervised discovered
 partition; the two quantities are not strictly commensurable, which is
-why the body reports the CoT result two ways: accuracy on the 132
-non-\texttt{other} items at the install default, directly comparable
-to $0.730$, and coverage-adjusted purity over all 149 items treating
-\texttt{other} as a sixth class.
+why the body reports the CoT result two ways at the install default:
+accuracy on the labelled subset (on average $142$ of $149$ items,
+$1.000$ across three seeds), directly comparable to the $0.730$
+supervised oracle on the same items, and overall coverage at $95\%$.
 
 \section*{B\quad Per-Sub-Domain Stability on the CoT Corpus}
 \label{app:per-domain}

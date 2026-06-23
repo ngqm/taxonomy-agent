@@ -26,12 +26,12 @@ taxonomy as closure state and emits tool calls to inspect the corpus,
 edit the taxonomy, or dispatch work to the judge. The \textbf{judge}
 is a stateless function that labels one item at a time against the
 taxonomy the orchestrator hands it; it never sees the taxonomy history
-or the orchestrator's reasoning. The split has three architectural
-consequences: a weak orchestrator cannot bluff a label past the judge
-because the judge derives it from the item text against the current
-taxonomy, the orchestrator's context length does not grow with the
-number of items (only with the number of taxonomy edits), and the
-judge is trivially parallelisable via a thread pool.
+or the orchestrator's reasoning. A weak orchestrator cannot bluff a
+label past the judge because the judge derives it from item text
+against the current taxonomy. The orchestrator's context length
+does not grow with the number of items, only with the number of
+taxonomy edits. The judge is trivially parallelisable via a thread
+pool.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
 supported there can fill either role (\S\ref{sec:evaluation} reports
@@ -61,8 +61,8 @@ Every taxonomy mutation flows through \texttt{revise\_taxonomy}, which
 accepts an ordered list of typed operations
 (\textsc{add}/\textsc{rename}/\textsc{edit}/\textsc{merge}/\textsc{split}/\textsc{drop})
 dispatched to pure handlers of signature
-\texttt{(tax, op)$\to$(new\_tax, log)}. Two invariants matter for
-correctness. \emph{Validate before mutate}: each handler checks every
+\texttt{(tax, op)$\to$(new\_tax, log)}.
+\emph{Validate before mutate}: each handler checks every
 precondition (source category exists, target name unused, child set
 non-empty for \textsc{split}, parents disjoint for \textsc{merge})
 before constructing the new taxonomy, so a malformed

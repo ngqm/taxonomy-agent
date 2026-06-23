@@ -110,8 +110,8 @@ small-cluster, high-noise shape as BERTopic at library defaults; a
 \paragraph{Intrinsic coherence and tuned BERTopic.}
 Coherence is not uniformly in taxonomy\_agent's favour:
 iterative\_proposal wins NPMI by emitting 16 lexically focused
-categories, and LDA and embed\_cluster\_llm hold a small $C_v$ lead by
-keeping $K{=}16$ fixed. BERTopic at library defaults wins $C_v$ at
+categories, and LDA and embed\_cluster\_llm lead $C_v$ by about
+$0.04$ by keeping $K{=}16$ fixed. BERTopic at library defaults wins $C_v$ at
 $0.767$ but with a degenerate two-cluster solution that loses every
 supervised metric. Under a sweep of \texttt{min\_topic\_size}
 (Appendix~A), the most aggressive setting emits roughly 60
@@ -125,7 +125,7 @@ same labeller and roughly $1/11$ of the Sonnet orchestrator pair.
 Wall-clock time of $713\,$s is $4\times$ the LLM baselines and
 $48\times$ BERTopic; absolute spend remains below $\$0.20$ on the
 487-document corpus. On the Sonnet pair the
-orchestrator contributes 96--98\%\ of total spend, consistent with
+orchestrator contributes 96--98\% of total spend, consistent with
 LangChain's \texttt{bind\_tools} path stripping Anthropic
 prompt-caching markers from OpenRouter requests (verified by a
 side-channel probe; \S\ref{sec:limitations}); the cheap pair is
@@ -177,7 +177,7 @@ LR@TF-IDF (supervised, 5-fold CV) & 0.260 & n/a & n/a & n/a & n/a & n/a & 5 & 0.
 random floor                       & 0.200 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & n/a \\
 \bottomrule
 \end{tabular}
-\caption{CoT-pattern corpus, $n=149$. Top block: discovery systems
+\caption{CoT-Pattern corpus, $n=149$. Top block: discovery systems
 with all six taxonomy-quality metrics; install-default row averaged
 over three seeds (mean $\pm$ stddev), Sonnet row single seed,
 non-agentic baselines single seed. Bottom block: calibration
@@ -206,16 +206,16 @@ purity) and under-recovers \texttt{hallucinated\_premise} at
 $9/29$; the cheap pair closes that gap at roughly $1/28$ of the
 spend on that seed. All LLM and clustering discovery baselines stay
 below NMI $0.15$, including embed\_cluster\_llm at $0.039$
-(essentially random), so the orchestrator/judge loop substantially
-outperforms single-shot prompting and one-shot summarise-then-label
-pipelines on this corpus.
+(essentially random), so the orchestrator/judge loop outperforms
+single-shot prompting and one-shot summarise-then-label pipelines
+on this corpus.
 
 \paragraph{Ablation.}
-A single-seed loose-dispatcher ablation that strips the typed revise
-dispatcher's source-existence and name-collision checks stalled at
-zero revise calls in 90\,s before we terminated it; the typed run on
-the same configuration finishes at 197\,s with one successful
-\textsc{revise} call. A single seed cannot isolate the dispatcher
+In a single-seed ablation that replaced the typed revise dispatcher
+with a loose one (stripping source-existence and name-collision
+checks), the run stalled at zero revise calls in 90\,s before we
+terminated it; the typed run on the same configuration finishes at
+197\,s with one successful \textsc{revise} call. A single seed cannot isolate the dispatcher
 from ordinary stochasticity; we report this as preliminary
 evidence and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
