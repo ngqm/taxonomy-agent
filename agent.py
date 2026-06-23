@@ -173,10 +173,11 @@ def run(
     judge_call, judge_parallel = make_judge_caller(
         api_key, judge_model, base_url=base_url, usage_sink=cost.add_judge_usage,
     )
-    tools = make_tools(items_list, run_id, output_dir, judge_call, judge_parallel,
-                       concurrency=concurrency, max_iters=max_iterations,
-                       min_iterations=min_iterations,
-                       prose_revise=prose_revise)
+    tools, force_finalize = make_tools(
+        items_list, run_id, output_dir, judge_call, judge_parallel,
+        concurrency=concurrency, max_iters=max_iterations,
+        min_iterations=min_iterations, prose_revise=prose_revise,
+    )
 
     llm = ChatOpenAI(
         model=orchestrator_model,
@@ -259,15 +260,36 @@ def run(
         out["status"] = "ok"
         print(f"[taxonomy_agent] done → {artifact_path}")
     else:
-        out["status"] = "incomplete" if stream_error is None else "error"
-        if stream_error is not None:
-            out["error"] = repr(stream_error)
-        print(f"[taxonomy_agent] WARNING: no artifact at {artifact_path}. "
-              f"Status={out['status']}. The orchestrator may have hit the "
-              f"recursion limit, the classify budget, or an LLM error mid-run. "
-              f"Partial state (latest taxonomy + streamed classifications) is "
-              f"in {output_dir}/taxonomy_state.json and "
-              f"{output_dir}/classifications.jsonl.")
+        # The orchestrator may have walked off without calling finalize_classify
+        # (e.g. monotonic-add loops that never trip the don't-fit threshold).
+        # If we have a non-empty taxonomy on disk, label the corpus against it
+        # ourselves so the run produces a usable artifact instead of returning
+        # incomplete. The classify-budget floor is bypassed because we are
+        # recovering an aborted run, not optimising a healthy one.
+        auto_finalized = False
+        try:
+            recovered = force_finalize()
+            if recovered is not None:
+                out["artifact"] = recovered
+                out["status"] = "ok"
+                out["auto_finalized"] = True
+                auto_finalized = True
+                print(f"[taxonomy_agent] orchestrator did not call "
+                      f"finalize_classify; auto-finalized against the current "
+                      f"on-disk taxonomy → {artifact_path}")
+        except Exception as ff_err:
+            print(f"[taxonomy_agent] auto-finalize fallback raised: {ff_err!r}")
+        if not auto_finalized:
+            out["status"] = "incomplete" if stream_error is None else "error"
+            if stream_error is not None:
+                out["error"] = repr(stream_error)
+            print(f"[taxonomy_agent] WARNING: no artifact at {artifact_path}. "
+                  f"Status={out['status']}. The orchestrator may have hit the "
+                  f"recursion limit, the classify budget, or an LLM error "
+                  f"mid-run, and the auto-finalize fallback could not produce "
+                  f"a taxonomy either (likely an empty taxonomy state). "
+                  f"Partial state is in {output_dir}/taxonomy_state.json and "
+                  f"{output_dir}/classifications.jsonl.")
 
     cost.write()
     cost_snapshot = cost.snapshot()

@@ -611,5 +611,34 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             f"category_counts={json.dumps(category_counts, indent=2)}"
         )
 
-    return [sample_items, get_taxonomy, revise_taxonomy,
-            classify_with_judge, propose_novelties_with_judge, finalize_classify]
+    def force_finalize_with_default_prompt() -> dict | None:
+        """Fallback path for when the orchestrator stream ends without ever
+        calling `finalize_classify`. Bypasses the `min_iterations` check
+        because we are recovering an aborted run, not optimising a healthy
+        one. Returns the artifact dict on success, or None if the taxonomy
+        is empty (nothing to label against). The caller is expected to
+        check whether `taxonomy.json` already exists before calling this."""
+        if not state.taxonomy:
+            return None
+        default_prompt = (
+            "Pick the single category from the list that best describes the "
+            "item. Reply only with a JSON object: "
+            "{\"category\": <name or \"other\">, "
+            "\"rationale\": <one or two sentences>}."
+        )
+        original_floor = state.classify_calls
+        try:
+            # Force the floor check to pass by temporarily reporting we have
+            # already met it. (state is a closure; finalize_classify reads it.)
+            state.classify_calls = max(state.classify_calls, min_iterations)
+            finalize_classify.invoke(default_prompt)
+        finally:
+            state.classify_calls = original_floor
+        if not os.path.exists(artifact_path):
+            return None
+        with open(artifact_path) as f:
+            return json.load(f)
+
+    return ([sample_items, get_taxonomy, revise_taxonomy,
+            classify_with_judge, propose_novelties_with_judge, finalize_classify],
+            force_finalize_with_default_prompt)
