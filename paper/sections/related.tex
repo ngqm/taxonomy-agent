@@ -20,7 +20,12 @@ setting, since it already separates a label-generator role from a
 labeller role, anticipating our orchestrator--judge split; its
 ``refine'' step, however, is a single batched summarisation; it is not a
 per-item dispatch loop driven by items that do not fit, and it is
-structured as an offline production pipeline.
+structured as an offline production pipeline. Our
+\texttt{embed\_cluster\_llm} baseline in Table~\ref{tab:20ng} is a
+minimal reimplementation of the TnT-LLM generator-then-labeller
+shape (sentence-transformer embeddings, $K{=}16$ k-means, one LLM
+naming call per cluster, then LLM per-document assignment) for
+direct comparison.
 
 \paragraph{Classical topic modelling.}
 BERTopic~\citep{grootendorst2022bertopic} represents the strongest

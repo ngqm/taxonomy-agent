@@ -47,17 +47,22 @@ self-reported via the judge's don't-fit rate with a minimum iteration
 floor and an explicit escape hatch; we cross-check this self-report
 against external purity and NMI on 20~Newsgroups, but stop short of
 claiming the don't-fit rate is a quantitatively validated leading
-indicator. Empirically, the system outperforms a one-shot LLM baseline
-and a minimal iterative LLM baseline on 20~Newsgroups by $1.9\times$ on
-NMI and $3.3\times$ on ARI, and leads BERTopic at library defaults; under
-a sweep of BERTopic's minimum cluster size the purity and NMI gaps narrow
-substantially, while the ARI lead is robust ($2.6\times$ over the
-best-tuned BERTopic on 20NG, see \S\ref{sec:eval-results-20ng}). The
+indicator. Empirically, the system outperforms a one-shot LLM baseline on
+20~Newsgroups by $1.9\times$ on NMI and $3.3\times$ on ARI, with
+wider margins over a minimal iterative LLM baseline, and retains a
+$1.4\times$ NMI and $1.4\times$ ARI lead over the strongest
+LLM-driven comparator we run, an embed-then-LLM-label pipeline
+(\S\ref{sec:eval-results-20ng}). The lead over BERTopic at library
+defaults is wide but narrows under a sweep of BERTopic's minimum
+cluster size; the ARI lead is robust at $2.6\times$ over the
+best-tuned BERTopic on 20NG. The
 iterative baseline is our own minimal port of TopicGPT's idea; we did
 not run the released TopicGPT package and make no claim about ordering
 against TopicGPT as published. On the synthetic CoT-Pattern corpus the system
 labels 109 of the 149 items with 100\%\ accuracy and reaches 0.732
-purity over the full corpus. Against a supervised ceiling of 0.730 from
+purity over the full corpus, with precision on labelled items at
+$100\%$ across each of the four mathematical sub-domains
+(Table~\ref{tab:cot_per_domain}). Against a supervised ceiling of 0.730 from
 a surface-feature classifier with gold-label access, this is $+27$
 points on the items the system labels and at parity at full coverage;
 against an unsupervised k-means baseline on the same surface features
@@ -88,13 +93,13 @@ Our contributions are:
   \item \textbf{A typed dispatcher that validates before mutating} over
         six standard verbs (\textit{add, rename, edit, merge, split,
         drop}) with per-operation failure isolation, providing an
-        auditable trace.jsonl of every edit. A single-seed ablation in
-        \S\ref{sec:eval-results-cot} replaces the typed dispatcher
+        auditable trace.jsonl of every edit. A single-seed ablation
+        (\S\ref{sec:eval-results-cot}) replaces the typed dispatcher
         with a loose dispatcher that accepts ops verbatim; the
-        orchestrator fails to make revise progress and spends over
-        $1.6\times$ as much without producing a usable taxonomy,
-        giving the typed-dispatcher contribution preliminary empirical
-        support. We do not claim the verbs themselves are novel.
+        orchestrator stopped issuing revise calls and we terminated
+        the run with an empty taxonomy, giving the typed dispatcher
+        preliminary empirical support. We do not claim the verbs
+        themselves are novel.
   \item \textbf{A parallel stateless judge architecture}, building on
         the generator and labeller split of
         TnT-LLM~\citep{wan2024tntllm}, and a don't-fit rate that the

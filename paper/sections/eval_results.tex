@@ -57,11 +57,11 @@ single\_shot
   & 10.0$_{\pm0.0}$ & 0.024$_{\pm.000}$ & 169$_{\pm25}$ \\
 iterative\_proposal
   & 0.185$_{\pm.094}$ & 0.222$_{\pm.128}$ & 0.043$_{\pm.043}$
-  & \textbf{0.106}$_{\pm.041}$ & 0.322$_{\pm.035}$ & \textbf{0.053}$_{\pm.010}$
+  & \textbf{0.106}$_{\pm.041}$ & 0.322$_{\pm.035}$ & 0.053$_{\pm.010}$
   & 16.0$_{\pm5.2}$ & 0.030$_{\pm.012}$ & 162$_{\pm60}$ \\
 embed\_cluster\_llm
   & 0.434$_{\pm.005}$ & 0.488$_{\pm.013}$ & 0.243$_{\pm.010}$
-  & 0.077$_{\pm.004}$ & 0.381$_{\pm.015}$ & 0.038$_{\pm.027}$
+  & 0.077$_{\pm.004}$ & 0.381$_{\pm.015}$ & \textbf{0.038}$_{\pm.027}$
   & 16.0$_{\pm0.0}$ & 0.021$_{\pm.003}$ & 168$_{\pm53}$ \\
 lda
   & 0.155$_{\pm.011}$ & 0.147$_{\pm.008}$ & 0.012$_{\pm.004}$
@@ -115,8 +115,12 @@ three seeds.
 \paragraph{Intrinsic coherence and the BERTopic sweep.}
 Coherence metrics are not uniformly in taxonomy\_agent's favour.
 iterative\_proposal wins NPMI (0.106 vs.\ our 0.065) by emitting
-finer-grained, more lexically-focused categories (16 vs.\ 7);
-this also yields the lowest label redundancy. BERTopic at library
+finer-grained, more lexically-focused categories (16 vs.\ 7).
+LDA and embed\_cluster\_llm both edge taxonomy\_agent on $C_v$
+(0.383 and 0.381 vs.\ 0.322) by holding $K{=}16$ partitions fixed,
+and embed\_cluster\_llm attains the lowest label redundancy in the
+table (0.038); iterative\_proposal still has the second-lowest
+redundancy. BERTopic at library
 defaults wins $C_v$ by a wide margin (0.767 vs.\ our 0.322), but
 that $C_v$ is the coherence of a degenerate two-cluster solution:
 HDBSCAN's \texttt{min\_topic\_size=10} on 487 documents collapses
@@ -309,7 +313,11 @@ precision-at-coverage, coverage, and NMI per sub-domain
 $100\%$ across every sub-domain with at least five items; coverage
 varies between 65--80\%, lowest on geometry (the visual sub-domain
 where the reasoning patterns also have the weakest lexical tells);
-NMI stays in the 0.71--1.00 band. The single-domain ``competition
+NMI stays in the 0.70--1.00 band. The number-theory slice ($n{=}5$)
+is too thin to support a stability claim on its own; the
+cross-sub-domain reading rests on algebra (50), geometry (40), the
+residual catch-all (39), and combinatorics (15). The single-domain
+``competition
 math'' framing in our limitations therefore understates what the data
 actually supports: the system holds precision on items it labels
 across four mathematical sub-domains.
@@ -368,7 +376,7 @@ ARI, and iterative\_proposal is worse (NMI 0.075). embed-cluster-LLM
 reaches NMI 0.039 (essentially random), confirming that sentence
 embeddings followed by k-means cannot recover the pattern
 distinction. Classical LDA at $K{=}5$ is at the random floor
-(NMI 0.0004). The CoT-pattern task appears to genuinely require
+(NMI $\approx 0$, ARI $\approx 0$). The CoT-pattern task appears to genuinely require
 iterative refinement: discovering ``the model sometimes commits to a
 wrong answer and rationalises backward'' from a single prompt over a
 small sample, or from token co-occurrence statistics, is hard. The
@@ -381,21 +389,21 @@ We ran a single-seed CoT ablation with the typed revise dispatcher
 replaced by a loose dispatcher that accepts ops verbatim (no
 source-existence check on rename/edit/merge/split, no name-collision
 check on add/rename), matching the same orchestrator, judge,
-instruction, and hyperparameters. The orchestrator failed to make
-revise progress: after \$1.35 of spend the trace contained two
+instruction, and hyperparameters. The typed CoT run produces eight
+trace events including one successful \textsc{revise} call, finishes
+in 197\,s, and costs \$2.23 total. The loose run we terminated at
+\$1.35 of spend (six orchestrator calls in 90\,s) contained two
 \textsc{novelties} calls (each returning zero candidates), two
 \textsc{classify} probes (don't-fit rates $0.11, 0.13$), and zero
-\textsc{revise} calls. We terminated the run as the orchestrator
-was on track to substantially exceed the typed run's \$2.23 budget
-without producing a usable taxonomy. The
-preliminary read is that the typed validation log gives the
+\textsc{revise} calls; the working taxonomy was empty at termination.
+The preliminary read is that the typed validation log gives the
 orchestrator a signal it actively uses (``the revise I just attempted
 hit \textit{missing source}, try the alternative''); when every
 attempted edit silently succeeds, the orchestrator loses that
-feedback channel. A multi-seed ablation is the natural follow-up; we
-flag the spend implication as a separate negative result
-(the dispatcher-off variant is over $1.6\times$ more expensive at the
-point we stopped it).
+feedback channel and stops issuing revise calls altogether. We report
+this as a single-seed, operator-terminated preliminary result; a
+multi-seed ablation that converges or visibly fails to is the
+natural follow-up.
 
 \subsection{Qualitative Analysis}
 \label{sec:eval-results-qual}

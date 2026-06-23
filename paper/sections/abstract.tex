@@ -16,18 +16,23 @@ short of claiming it is a quantitatively validated leading indicator;
 in practice it saturates at the floor.
 On a 487-document 20~Newsgroups subsample with three independently
 sampled random seeds, \textsc{taxonomy\_agent} outperforms a one-shot
-LLM baseline and a minimal iterative-proposal LLM baseline by
-$1.9\times$ on NMI and $3.3\times$ on ARI, and retains a $2.6\times$
-ARI lead over BERTopic under an aggressive sweep of the minimum
-cluster size that closes most of the purity gap by splitting BERTopic
-into 60 micro-clusters. On a 149-item synthetic corpus of failure
+LLM baseline by $1.9\times$ on NMI and $3.3\times$ on ARI, leads a
+minimal iterative-proposal LLM baseline by larger margins, and
+retains a $1.4\times$ NMI lead and $1.4\times$ ARI lead over an
+embed-then-LLM-label baseline (16 sentence-transformer clusters, one
+LLM naming call per cluster) that is the strongest LLM-driven
+comparator we run. The lead over BERTopic at library defaults is wide
+but narrows under a sweep of BERTopic's minimum cluster size that
+closes most of the purity gap by splitting BERTopic into 60
+micro-clusters, while the ARI lead holds at $2.6\times$. On a 149-item synthetic corpus of failure
 patterns in chain-of-thought reasoning drawn from the 2024--2026
 alignment literature, the system labels 109 of 149 items at 100\%\
 accuracy and reaches 0.732 purity over the full corpus, sitting
 $+27$ points on the labelled items and at parity at full coverage
 against a 0.730 ceiling from a 14-feature surface classifier, and
 $+23$ points above an unsupervised k-means baseline on the same
-features.
+features; precision on labelled items stays at $100\%$ across all
+four mathematical sub-domains.
 We caution that the metrics alone cannot separate semantic discovery
 from sharper surface extraction. Code, reproduction scripts, and the
 corpora are at \url{https://github.com/ngqm/taxonomy-agent}.
