@@ -63,12 +63,10 @@ loop, motivated by the position paper of
 
 \paragraph{Positioning.}
 We do not claim a wholly new mechanism: TopicGPT iterates, TnT-LLM
-and LOGOS separate proposal from labelling, ReAct-style
-agents~\citep{yao2022react} structure tool-using LLMs, and the
+and LOGOS separate proposal from labelling, and the
 add/rename/merge/split/drop verbs are standard taxonomy edit
 vocabulary~\citep{taxoadapt2025}. The contribution is an operational
-recomposition that 2025 LLM topic discovery and codebook systems
-treat as out of scope: first-class cost and partial-progress
-accounting, a typed dispatcher with per-operation failure isolation,
-and a parallel stateless judge with an \texttt{other} escape and a
-don't-fit termination signal, wrapped in a walk-up Streamlit surface.
+recomposition: cost and partial-progress accounting, a typed
+dispatcher with per-operation failure isolation, and a parallel
+stateless judge with an \texttt{other} escape, wrapped in a walk-up
+Streamlit surface.

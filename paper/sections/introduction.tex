@@ -30,18 +30,18 @@ the result with operational tooling for live cost accounting,
 partial-progress saving, and a web UI.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
-orchestrator and judge), the system reaches NMI $0.713 \pm 0.058$
-and ARI $0.452 \pm 0.096$ on 20~Newsgroups at USD $0.16$ per run,
+orchestrator and judge), the system reaches NMI $0.727 \pm 0.055$
+and ARI $0.470 \pm 0.087$ on 20~Newsgroups at USD $0.17$ per run,
 beating a one-shot LLM baseline by $2.1\times$ on NMI and
-$4.5\times$ on ARI and a model-matched embed-cluster-LLM
+$4.7\times$ on ARI and a model-matched embed-cluster-LLM
 reimplementation of TnT-LLM by $1.5\times$ on NMI and $1.9\times$
 on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
-pair at twelve times the cost lands at NMI $0.656 \pm 0.012$,
+pair at eleven times the cost lands at NMI $0.656 \pm 0.012$,
 inside the cheap pair's interval, so we make the cheap pair the
 publication and install default. On the synthetic CoT-Pattern
-corpus the system labels 138 of 149 items and reaches purity
-$0.926$ at USD $0.07$, beating every LLM and clustering discovery
-baseline by more than $0.7$ NMI (\S\ref{sec:eval-results-cot}).
+corpus the system reaches NMI $0.944 \pm 0.081$ across three seeds
+at USD $0.08$ per run, labelling on average $142$ of $149$ items at
+$100\%$ accuracy (\S\ref{sec:eval-results-cot}).
 
 \noindent Our contributions are:
 \begin{itemize}

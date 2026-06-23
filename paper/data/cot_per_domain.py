@@ -55,23 +55,31 @@ def domain_of(item: dict) -> str:
     return "other"
 
 
+DEFAULT_RUN = "cot_clean_20260622_060836/taxonomy_agent_seed42"
+
+
 def main():
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--run", default=DEFAULT_RUN,
+                   help="Relative path under eval_runs/ to a single-seed run "
+                        "directory containing taxonomy.json (default: "
+                        f"{DEFAULT_RUN}).")
+    args = p.parse_args()
+
     corpus_path = Path("/mnt/hdd/qmnguyen/taxonomy_agent/eval_data/cot_patterns.jsonl")
     items = [json.loads(line) for line in corpus_path.read_text().splitlines()
              if line.strip()]
     id_to_dom = {it["id"]: domain_of(it) for it in items}
     id_to_gold = {it["id"]: it["gold_label_name"] for it in items}
 
-    # Write the annotated corpus so callers can reuse the partition.
     annotated_path = corpus_path.with_name("cot_patterns_with_domain.jsonl")
     with open(annotated_path, "w") as f:
         for it in items:
             f.write(json.dumps({**it, "domain": id_to_dom[it["id"]]}) + "\n")
 
-    art_path = Path(
-        "/mnt/hdd/qmnguyen/taxonomy_agent/eval_runs/"
-        "cot_clean_20260622_060836/taxonomy_agent_seed42/taxonomy.json"
-    )
+    art_path = (Path("/mnt/hdd/qmnguyen/taxonomy_agent/eval_runs")
+                / args.run / "taxonomy.json")
     art = json.loads(art_path.read_text())
     id_to_pred = {c["id"]: c.get("category") for c in art.get("classifications", [])}
 

@@ -28,9 +28,9 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
        & $|\mathcal{T}|$ & Cost (USD) & Wall (s) \\
 \midrule
 taxonomy\_agent (ours, install default)
-  & \textbf{0.515}$_{\pm.126}$ & \textbf{0.713}$_{\pm.058}$ & \textbf{0.452}$_{\pm.096}$
-  & 0.042$_{\pm.009}$ & 0.347$_{\pm.028}$ & 0.098$_{\pm.045}$
-  & 11.7$_{\pm4.0}$ & 0.16$_{\pm.03}$ & 548$_{\pm132}$ \\
+  & \textbf{0.543}$_{\pm.118}$ & \textbf{0.727}$_{\pm.055}$ & \textbf{0.470}$_{\pm.087}$
+  & 0.045$_{\pm.009}$ & 0.345$_{\pm.024}$ & 0.096$_{\pm.037}$
+  & 12.5$_{\pm3.7}$ & 0.17$_{\pm.04}$ & 655$_{\pm241}$ \\
 taxonomy\_agent (Sonnet orchestrator)
   & 0.367$_{\pm.020}$ & 0.656$_{\pm.012}$ & 0.336$_{\pm.035}$
   & 0.065$_{\pm.020}$ & 0.322$_{\pm.021}$ & 0.133$_{\pm.037}$
@@ -57,7 +57,7 @@ bertopic
   & 2.0$_{\pm0.0}$ & 0.00 & 15$_{\pm5}$ \\
 \bottomrule
 \end{tabular}
-\caption{20~Newsgroups results (mean $\pm$ stddev over three seeds, $n=487$).
+\caption{20~Newsgroups results, $n=487$; install-default row averaged over four seeds, Sonnet row and baselines over three.
 Best per column in bold. $|\mathcal{T}|$ is the number of discovered
 categories. \texttt{embed\_cluster\_llm} embeds with
 all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each cluster with one
@@ -73,24 +73,25 @@ deviations reflect deterministic UMAP/HDBSCAN under fixed
 
 \paragraph{Supervised metrics.}
 At the install default, \textsc{taxonomy\_agent} leads every LLM and
-clustering baseline on the three supervised metrics: purity $0.515$
-against embed\_cluster\_llm's $0.434$, NMI $0.713$ against $0.488$ (a
-$1.5\times$ lead over the strongest LLM-driven comparator), and ARI
-$0.452$ against $0.243$ (a $1.9\times$ lead). The lead over
-single\_shot is $2.1\times$ on NMI and $4.5\times$ on ARI; the
+clustering baseline on the three supervised metrics: purity $0.543$
+against embed\_cluster\_llm's $0.434$, NMI $0.727$ against $0.488$
+(a $1.5\times$ lead over the strongest LLM-driven comparator), and
+ARI $0.470$ against $0.243$ (a $1.9\times$ lead). The lead over
+single\_shot is $2.1\times$ on NMI and $4.7\times$ on ARI; the
 \textsc{iterative\_proposal} TopicGPT port loses to single\_shot on
 every supervised metric, which appears to come from refinement drift
 on a cheap proposer.%
 \footnote{Cross-seed standard deviations on the cheap pair are
-larger than on the Sonnet pair (NMI std $0.058$ vs $0.012$); the
+larger than on the Sonnet pair (NMI std $0.055$ vs $0.012$); the
 cheap run varies between 8 and 16 categories across seeds, while the
-Sonnet run lumps consistently to 7--8. Both intervals contain each
-other's mean on NMI; on ARI the cheap pair leads by more than one
-joint standard deviation.}
+Sonnet run lumps consistently to 7--8. One of six cheap runs we
+attempted (seed 46) returned an incomplete artefact after hitting
+the iteration cap and is excluded from the means; we count this as
+a real-world failure mode and report it.}
 The Sonnet orchestrator row is included for cost comparison and
 sits inside the cheap pair's NMI interval ($0.656 \pm 0.012$ vs
-$0.713 \pm 0.058$) at twelve times the cost. We therefore make the
-cheap pair the install and publication default.
+$0.727 \pm 0.055$) at roughly eleven times the cost. We therefore
+make the cheap pair the install and publication default.
 
 \paragraph{Intrinsic coherence and tuned BERTopic.}
 Coherence is not uniformly in taxonomy\_agent's favour:
@@ -120,13 +121,12 @@ provider-side caching does not depend on the markers
 \subsection{CoT-Pattern Results}
 \label{sec:eval-results-cot}
 
-The CoT-Pattern corpus is a single-seed evaluation on 149
-Gemini-3.1-Flash-Lite reasoning traces across five injected
-patterns (sycophantic capitulation, unfaithful paraphrase, post-hoc
-rationalization, hallucinated premise, reward-hack verbalization);
-Table~\ref{tab:cot} summarises. We run a single seed because the
-corpus is small and the gold labels are deterministic, and we caution
-that the variance estimates from Table~\ref{tab:20ng} do not transfer.
+The CoT-Pattern corpus contains 149 Gemini-3.1-Flash-Lite reasoning
+traces across five injected patterns (sycophantic capitulation,
+unfaithful paraphrase, post-hoc rationalization, hallucinated
+premise, reward-hack verbalization); Table~\ref{tab:cot} summarises
+mean $\pm$ stddev over three seeds at the install default and one
+seed at the Sonnet pair.
 
 \begin{table*}[t]
 \centering
@@ -138,9 +138,9 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
        & $|\mathcal{T}|$ & Cost (USD) & Wall (s) \\
 \midrule
 taxonomy\_agent (ours, install default)
-  & \textbf{0.926} & \textbf{0.851} & \textbf{0.835}
-  & 0.028 & 0.352 & 0.164
-  & 5 & 0.07 & 229 \\
+  & \textbf{0.975}$_{\pm.043}$ & \textbf{0.944}$_{\pm.081}$ & \textbf{0.937}$_{\pm.089}$
+  & 0.019$_{\pm.007}$ & 0.368$_{\pm.016}$ & 0.160$_{\pm.007}$
+  & 5.0$_{\pm0.0}$ & 0.08$_{\pm.01}$ & 318$_{\pm77}$ \\
 taxonomy\_agent (Sonnet orchestrator)
   & 0.866 & 0.762 & 0.660
   & 0.033 & 0.369 & 0.150
@@ -163,38 +163,34 @@ LR@TF-IDF (supervised, 5-fold CV) & 0.260 & n/a & n/a & n/a & n/a & n/a & 5 & 0.
 random floor                       & 0.200 & n/a & n/a & n/a & n/a & n/a & 5 & 0.00 & n/a \\
 \bottomrule
 \end{tabular}
-\caption{CoT-pattern corpus, single seed, $n=149$. Top block:
-discovery systems with all six taxonomy-quality metrics. Bottom block:
-calibration baselines reported on purity only (k-means is unsupervised
-with $k$ chosen at the gold cardinality; LR@surface is a supervised
-oracle with gold-label access; LR@TF-IDF and random are sanity floors).
-Discovery and baseline rows are not strictly commensurable; see
-Appendix~A. Intrinsic-coherence differences within $\pm 0.02$ are not
-interpretable at single seed and are not bolded.}
+\caption{CoT-pattern corpus, $n=149$. Top block: discovery systems
+with all six taxonomy-quality metrics; install-default row averaged
+over three seeds (mean $\pm$ stddev), Sonnet row single seed,
+non-agentic baselines single seed. Bottom block: calibration
+baselines reported on purity only (k-means is unsupervised at
+$k=5$; LR@surface is a supervised oracle with gold-label access;
+LR@TF-IDF and random are sanity floors). Discovery and baseline
+rows are not strictly commensurable; see Appendix~A.}
 \label{tab:cot}
 \end{table*}
 
 \paragraph{Pattern recovery.}
-At the install default, \textsc{taxonomy\_agent} labels 132 of 149
-items and every prediction matches the gold pattern
-($132/132 = 100\%$ accuracy on labelled items); the remaining 17 are
-routed to \texttt{other}. Coverage-adjusted purity treating
-\texttt{other} as a non-match is $132/149 = 0.886$, $+16$ points
-above a 0.730 supervised surface-feature oracle that has gold-label
-access (logistic regression on 14 surface features, 5-fold stratified
-CV) and $+39$ points above an unsupervised k-means baseline at $k=5$
-on the same features (Appendix~A details the calibration baselines
-and the commensurability caveat). Per-pattern recovery is uniform:
-sycophantic capitulation 26/30, unfaithful paraphrase 29/30,
-post-hoc rationalization 26/30, hallucinated premise 23/29,
-reward-hack verbalization 28/30. The Sonnet orchestrator pair under
-the same judge recovers 109 of 149 items at $100\%$ accuracy
-($109/149 = 0.732$ coverage-adjusted purity) and under-recovers
-\texttt{hallucinated\_premise} at 9 of 29; the cheap pair closes
-that gap at one-thirtieth the cost. All LLM and clustering discovery
-baselines stay below NMI 0.15, including embed\_cluster\_llm at 0.039
-(essentially random), so iterative refinement is doing real work on
-this task.
+At the install default and averaged across three seeds,
+\textsc{taxonomy\_agent} labels roughly $142$ of $149$ items per run
+($95\%$ coverage) and every prediction matches the gold pattern.
+Coverage-adjusted purity averages $0.95$, $+22$ points above a
+$0.730$ supervised surface-feature oracle that has gold-label
+access (logistic regression on 14 surface features, 5-fold
+stratified CV). Per-pattern recovery is uniform across seeds:
+sycophantic capitulation $83/90$, unfaithful paraphrase $89/90$,
+post-hoc rationalization $86/90$, hallucinated premise $81/87$,
+reward-hack verbalization $88/90$. The Sonnet orchestrator pair
+recovers only $109$ of $149$ items ($0.732$ coverage-adjusted
+purity) and under-recovers \texttt{hallucinated\_premise} at
+$9/29$; the cheap pair closes that gap at roughly one-thirtieth the
+cost. All LLM and clustering discovery baselines stay below NMI
+$0.15$, including embed\_cluster\_llm at $0.039$ (essentially
+random), so iterative refinement is doing real work on this task.
 
 \paragraph{Ablation.}
 A single-seed loose-dispatcher ablation that strips the typed revise

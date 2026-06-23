@@ -13,20 +13,21 @@ before mutation with per-operation failure isolation, while a
 parallel stateless judge re-derives labels from each item and
 reports a don't-fit rate the orchestrator reads as a termination
 signal.
-On a 487-document 20~Newsgroups subsample with three seeds at the
+On a 487-document 20~Newsgroups subsample with four seeds at the
 install default (DeepSeek-v4-Flash for both orchestrator and judge),
-\textsc{taxonomy\_agent} reaches NMI $0.713 \pm 0.058$ and ARI
-$0.452 \pm 0.096$ at USD $0.16 \pm 0.03$ per run, beating a
+\textsc{taxonomy\_agent} reaches NMI $0.727 \pm 0.055$ and ARI
+$0.470 \pm 0.087$ at USD $0.17 \pm 0.04$ per run, beating a
 model-matched embed-cluster-LLM reimplementation of
 TnT-LLM~\citep{wan2024tntllm} by $1.5\times$ on NMI and $1.9\times$
 on ARI and a single-shot LLM baseline by $2.1\times$ on NMI. On a
 149-item synthetic corpus of failure patterns in chain-of-thought
-reasoning, the system labels 138 of 149 items and reaches
-$0.926$ purity and $0.851$ NMI at USD $0.07$, beating every LLM and
-clustering discovery baseline by more than $0.7$ NMI. The
-publication and install configurations are the same; a Claude
-Sonnet 4.6 orchestrator pair costs roughly twelve times more
-without a statistically distinguishable NMI gain on 20NG. We caution
+reasoning, the system reaches NMI $0.944 \pm 0.081$ across three
+seeds at USD $0.08$ per run, labelling on average $142$ of $149$
+items at $100\%$ accuracy and beating every LLM and clustering
+discovery baseline by more than $0.7$ NMI. The publication and
+install configurations are the same; a Claude Sonnet 4.6
+orchestrator pair costs roughly eleven times more without a
+statistically distinguishable NMI gain on 20NG. We caution
 that supervised metrics alone cannot separate semantic discovery
 from sharper surface extraction. Code, reproduction scripts, and
 the corpora are at \repourl.
