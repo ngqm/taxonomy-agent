@@ -14,7 +14,7 @@ generate a label per embedding cluster;
 LOGOS~\citep{pi2025logos} runs a grounded-theory pipeline with
 LLM coding, semantic clustering, and iterative codebook refinement; and
 \citet{zhu2025contextawaretax} build LLM-guided hierarchical
-taxonomies of scientific papers. \textsc{taxonomy\_agent} differs on
+taxonomies of scientific papers. \textsc{TaxonomyAgent} differs on
 three operating axes: a typed edit DSL with per-operation failure
 isolation, an online ReAct loop in place of offline batched refine,
 and live cost and partial-progress tracking exposed through a
@@ -37,7 +37,7 @@ proposer-verifier roles further: Thematic-LM~\citep{qiao2025thematiclm}
 runs coder, aggregator, and reviewer agents in parallel;
 TAMA~\citep{xu2025tama} adds expert oversight on clinical
 interviews; and \citet{liu2025aiannotorch} evaluate LLM verifiers as
-a quality layer on LLM annotators. \textsc{taxonomy\_agent} sits at
+a quality layer on LLM annotators. \textsc{TaxonomyAgent} sits at
 an orthogonal operating point: we discover a candidate taxonomy from
 scratch over an unlabelled corpus with a single goal instruction, no
 seed sketch and no human in the loop, then hand off the trace,

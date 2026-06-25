@@ -24,7 +24,7 @@ either fold the proposer and the labeller into a single agent that can
 hallucinate and force its own labels, or they require a seed codebook or
 a human in the loop.
 
-To address this gap, we present \textsc{taxonomy\_agent}, an open-source
+To address this gap, we present \textsc{TaxonomyAgent}, an open-source
 orchestrator--judge pipeline that discovers a labelled taxonomy from
 scratch over an unlabelled corpus and assigns every item to one
 discovered category. An orchestrator LLM proposes typed edits to a
@@ -38,7 +38,7 @@ inference cost is linear in corpus size and the orchestrator cannot
 force a label past the judge.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
-orchestrator and judge), \textsc{taxonomy\_agent} reaches NMI $0.740
+orchestrator and judge), \textsc{TaxonomyAgent} reaches NMI $0.740
 \pm 0.055$ and ARI $0.489 \pm 0.085$ on 20~Newsgroups, beating a
 one-shot LLM baseline by $2.1\times$ on NMI and $4.8\times$ on ARI
 and the published TopicGPT pipeline by $1.22\times$ on NMI and

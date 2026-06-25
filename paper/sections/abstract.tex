@@ -1,16 +1,16 @@
-We present \textsc{taxonomy\_agent}, an open-source Python package and
+We present \textsc{TaxonomyAgent}, an open-source Python package and
 Streamlit interface that turns an unlabelled text corpus and a
 one-sentence goal into a labelled taxonomy with every item assigned to
 a named category. A single command launches the run; the UI streams
 the agent's trace, the evolving taxonomy, and partial state as items
 are labelled, and lets users inspect completed runs or recover from an
-interrupted session. Internally, \textsc{taxonomy\_agent} separates
+interrupted session. Internally, \textsc{TaxonomyAgent} separates
 two LLM roles through a structured contract: an orchestrator samples
 documents and proposes typed edits to a working taxonomy through a
 dispatcher that validates preconditions before mutating state, while a
 stateless judge labels each item from item text alone, keeping
 per-item inference cost linear in corpus size. On a stratified
-20~Newsgroups subsample, \textsc{taxonomy\_agent} reaches NMI $0.740$,
+20~Newsgroups subsample, \textsc{TaxonomyAgent} reaches NMI $0.740$,
 beating the published TopicGPT pipeline by $1.22\times$ on NMI and
 $1.65\times$ on ARI. On a synthetic corpus of chain-of-thought failure
 patterns, it reaches NMI $0.944$ and labels $95\%$ of items at perfect
