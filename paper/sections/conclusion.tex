@@ -1,4 +1,18 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We present an orchestrator/judge agent built on two structural commitments: a typed dispatcher with validate-before-mutate and per-operation failure isolation, and a stateless judge that labels each item against the current taxonomy from item text alone, with no access to the orchestrator's tool-call history. At the install default (DeepSeek-v4-Flash for both roles), the system reaches NMI $0.740 \pm 0.055$ on 20~Newsgroups at $\$0.17$ per run, $1.22\times$ the published TopicGPT pipeline on NMI, and NMI $0.944 \pm 0.081$ across three seeds on a 149-item synthetic CoT-failure corpus. A Sonnet 4.6 orchestrator at $11\times$ the cost does not improve over the cheap pair on 20NG, so orchestrator quality is not the bottleneck at this scale.
+We have presented \textsc{taxonomy\_agent}, an open-source
+orchestrator--judge framework for taxonomy discovery and item
+classification over an unlabelled corpus. The system separates a
+proposer that drafts validated taxonomy edits from a stateless judge
+that labels each item from item text alone. At the install default
+(DeepSeek-v4-Flash for both roles), \textsc{taxonomy\_agent} reaches
+NMI $0.740 \pm 0.055$ on 20~Newsgroups and NMI $0.944 \pm 0.081$ on
+a 149-item synthetic CoT-failure corpus, beating the published
+TopicGPT pipeline on 20NG by $1.22\times$ on NMI. A Sonnet 4.6
+orchestrator at $11\times$ the cost does not improve over the cheap
+pair on 20NG, so orchestrator quality is not the bottleneck at this
+scale. We release the framework with a one-line \texttt{pip install}
+path and a Streamlit Inspect tab that streams the trace, partial
+taxonomies, and cost split of any run; code and reproduction scripts
+are at \repourl.

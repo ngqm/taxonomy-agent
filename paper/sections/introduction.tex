@@ -19,57 +19,54 @@ refinement pass, while TnT-LLM~\citep{wan2024tntllm} stages a two-phase
 pipeline that summarises a corpus into candidate labels and then distils
 a lightweight classifier. Co-DETECT~\citep{codetect2025} is last year's
 EMNLP System Demonstration on collaborative codebook construction with
-LLMs and the closest peer to our submission; we sit at an orthogonal
-operating point (taxonomy discovery from scratch over an unlabelled
-corpus, without a seed sketch and without a human in the loop) and
-discuss the relationship in \S\ref{sec:related}. Our contribution
-is a structural commitment about how the proposer and the labeller
-interact. The orchestrator proposes typed edits to a working taxonomy
-through a validated dispatcher; a stateless judge re-derives each
-item's category from the item text alone, never sees the
-orchestrator's reasoning, and runs on the cheaper model. The judge runs on the cheap
-model and is called once per item, so per-item cost stays low at
-corpus scale and the publication configuration doubles as the
-install default. The orchestrator cannot force a label past the
-judge because the judge derives every label from item text against
-the current taxonomy without access to prior assignments.
+LLMs and the closest peer to our submission. However, these pipelines
+either fold the proposer and the labeller into a single agent that can
+hallucinate and force its own labels, or they require a seed codebook or
+a human in the loop.
+
+To address this gap, we present \textsc{taxonomy\_agent}, an open-source
+orchestrator--judge pipeline that discovers a labelled taxonomy from
+scratch over an unlabelled corpus and assigns every item to one
+discovered category. An orchestrator LLM proposes typed edits to a
+working taxonomy through a dispatcher that validates every precondition
+before mutating state and that records per-operation failures without
+rolling back successful sibling edits. A stateless judge LLM labels each
+item against the current taxonomy from item text alone, with no access
+to the orchestrator's tool-call history or prior label assignments. The
+judge runs on the cheap model and is called once per item, so per-item
+inference cost is linear in corpus size and the orchestrator cannot
+force a label past the judge.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
-orchestrator and judge), the system reaches NMI $0.740 \pm 0.055$
-and ARI $0.489 \pm 0.085$ on 20~Newsgroups at $\$0.17$ per run,
-beating a one-shot LLM baseline by $2.1\times$ on NMI and
-$4.8\times$ on ARI and the published TopicGPT pipeline by
-$1.22\times$ on NMI and $1.65\times$ on ARI
-(\S\ref{sec:eval-results-20ng}). A Sonnet 4.6 orchestrator
-pair at eleven times the cost reaches NMI $0.656 \pm 0.012$ and
-does not improve over the cheap pair, so we make the cheap pair the
-publication and install default. On the synthetic CoT-Pattern
-corpus the system reaches NMI $0.944 \pm 0.081$ across three seeds
-at $\$0.08$ per run, labelling on average $142$ of $149$ items at
-$100\%$ accuracy (\S\ref{sec:eval-results-cot}).
+orchestrator and judge), \textsc{taxonomy\_agent} reaches NMI $0.740
+\pm 0.055$ and ARI $0.489 \pm 0.085$ on 20~Newsgroups, beating a
+one-shot LLM baseline by $2.1\times$ on NMI and $4.8\times$ on ARI
+and the published TopicGPT pipeline by $1.22\times$ on NMI and
+$1.65\times$ on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6
+orchestrator pair at eleven times the cost reaches NMI $0.656 \pm
+0.012$ and does not improve over the cheap pair, so we make the
+cheap pair the publication and install default. On a synthetic
+CoT-Pattern corpus the system reaches NMI $0.944 \pm 0.081$ across
+three seeds, labelling on average $142$ of $149$ items at $100\%$
+accuracy (\S\ref{sec:eval-results-cot}).
 
-\noindent Our contributions are:
-\begin{itemize}
-  \item \textbf{A stateless re-deriving judge.} The labelling LLM
-        sees only the current taxonomy and the item text and never
-        the orchestrator's reasoning or prior labels, so the
-        orchestrator cannot force a label past it. Cost is linear in
-        the corpus on the cheap model.
-  \item \textbf{A typed dispatcher with validate-before-mutate and
-        per-operation failure isolation.} Each taxonomy edit is
-        checked against every precondition before any state changes,
-        and per-op failures within a batch do not roll back
-        successful sibling ops. A malformed edit returns the
-        unchanged taxonomy with a log entry the orchestrator can
-        read on the next step.
-  \item \textbf{An empirical demonstration that the cheap model
-        in both roles dominates.} On 20NG and CoT-Pattern,
-        DeepSeek-v4-Flash for both orchestrator and judge beats
-        every comparator, including a Claude Sonnet 4.6 orchestrator
-        pair at eleven times the cost on 20NG, so orchestrator
-        quality is not the bottleneck at this scale.
-  \item \textbf{An open-source artefact at} \repourl{} with a
-        \texttt{pip install} path, the install-default configuration
-        used in the paper, and a Streamlit Inspect tab that replays
-        the trace, partial taxonomies, and cost split of any run.
-\end{itemize}
+Our contributions are fourfold. First, we introduce a stateless
+re-deriving judge: the labelling LLM sees only the current taxonomy
+and the item text, never the orchestrator's reasoning or prior
+labels, so the orchestrator cannot force a label past it and
+inference cost is linear in the corpus on the cheap model. Second,
+we introduce a typed dispatcher with validate-before-mutate and
+per-operation failure isolation: each taxonomy edit is checked
+against every precondition before any state changes, per-op failures
+within a batch do not roll back successful sibling ops, and a
+malformed edit returns the unchanged taxonomy with a log entry the
+orchestrator can read on the next step. Third, we empirically
+demonstrate that the cheap model in both roles dominates: on 20NG
+and CoT-Pattern, DeepSeek-v4-Flash for both orchestrator and judge
+beats every comparator including a Claude Sonnet 4.6 orchestrator
+pair at eleven times the cost on 20NG, so orchestrator quality is
+not the bottleneck at this scale. Fourth, we release an open-source
+artefact at \repourl{} with a \texttt{pip install} path, the
+install-default configuration used in the paper, and a Streamlit
+Inspect tab that replays the trace, partial taxonomies, and cost
+split of any run.

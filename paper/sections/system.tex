@@ -6,6 +6,11 @@ problem. An orchestrator LLM proposes typed edits to a working
 taxonomy, a parallel judge LLM scores items against that taxonomy and
 reports a don't-fit rate, and the loop terminates once that rate falls
 below a configurable threshold, gated by a minimum-iteration floor.
+This section walks the architecture
+(\S\ref{sec:system:arch}), the tools and revise DSL together with
+the convergence signal (\S\ref{sec:system:tools}), and the
+operational safeguards that make the pipeline usable as a single
+command (\S\ref{sec:system:safeguards}).
 The user supplies two inputs: a corpus of texts and a one-sentence
 \emph{goal instruction} naming the axis of variation the taxonomy
 should discover. For 20~Newsgroups the goal instruction is
@@ -19,16 +24,20 @@ falls back to topic discovery.
 \subsection{Architecture}
 \label{sec:system:arch}
 
-Two roles are kept strictly separate. The \textbf{orchestrator} is a
-ReAct-style~\citep{yao2022react} agent built on LangGraph's
+Two roles are kept strictly separate.
+
+\paragraph{Orchestrator.}
+A ReAct-style~\citep{yao2022react} agent built on LangGraph's
 \texttt{create\_react\_agent}~\citep{langgraph}; it holds the working
 taxonomy as closure state and emits tool calls to inspect the corpus,
-edit the taxonomy, or dispatch work to the judge. The \textbf{judge}
-is a stateless function that labels one item at a time against the
-taxonomy the orchestrator hands it; it never sees the taxonomy history
-or the orchestrator's reasoning. A weak orchestrator cannot bluff a
-label past the judge because the judge derives it from item text
-against the current taxonomy. The orchestrator's context length
+edit the taxonomy, or dispatch work to the judge.
+
+\paragraph{Judge.}
+A stateless function that labels one item at a time against the
+taxonomy the orchestrator hands it; it never sees the taxonomy
+history or the orchestrator's reasoning. A weak orchestrator cannot
+bluff a label past the judge because the judge derives it from item
+text against the current taxonomy. The orchestrator's context length
 does not grow with the number of items, only with the number of
 taxonomy edits. The judge is trivially parallelisable via a thread
 pool.
@@ -38,7 +47,7 @@ supported there can fill either role (\S\ref{sec:evaluation} reports
 DeepSeek/DeepSeek and Sonnet/Sonnet pairs). Internally, the orchestrator
 runs as a LangGraph state machine whose closure holds the working
 taxonomy, the set of sampled item ids, a snapshot of the last
-finalised taxonomy, and a classify-call budget counter; because the
+finalised taxonomy, and a budget counter for classify calls; because the
 taxonomy lives only in this closure, the orchestrator never passes it
 as a tool argument, which shrinks payloads and rules out edits to
 stale copies.
@@ -78,9 +87,10 @@ vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution
 here is the typed dispatcher with these two invariants.
 
 \paragraph{Convergence.}
-After each \texttt{classify\_with\_judge} call the system computes the
-don't-fit rate (the fraction of items the judge labelled
-\texttt{"other"}). The orchestrator is allowed to call
+Stopping the loop requires a cheap signal that the working taxonomy
+already covers the corpus. After each \texttt{classify\_with\_judge}
+call the system computes the don't-fit rate (the fraction of items
+the judge labelled \texttt{"other"}). The orchestrator is allowed to call
 \texttt{finalize\_classify} once that rate falls below a threshold
 (default $0.10$) and the run has cleared a \texttt{min\_iterations}
 floor (default $3$). Classify prompts carry a fixed suffix
@@ -91,23 +101,31 @@ orchestrator, so a high don't-fit rate reflects coverage gaps and
 not hallucinated labels. The $0.10$ default is a usability choice
 that we report alongside external metrics in \S\ref{sec:evaluation}
 without claiming it is a calibrated leading indicator
-(\S\ref{sec:limitations}). Escape-hatch coercion, the floor's
-soft-error semantics, and judge-error isolation from the denominator
-are detailed in Appendix~A.
+(\S\ref{sec:limitations}). Escape-hatch coercion, the
+soft-error semantics of the floor, and the isolation of judge errors
+from the denominator are detailed in Appendix~A.
 
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}
 
 Three engineering choices make the system usable as a single-command demo.
+
+\paragraph{Cost tracking.}
 A \texttt{CostTracker} receives usage from every orchestrator and
 judge call and writes \texttt{cost.json} after each agent super-step,
-preferring OpenRouter's native \texttt{usage.cost} over a static price
-table. Partial progress is streamed to disk
+preferring OpenRouter's native \texttt{usage.cost} over a static
+price table.
+
+\paragraph{Partial-progress persistence.}
+Partial progress is streamed to disk
 (\texttt{taxonomy\_state.json} after every revise,
 \texttt{classifications.jsonl} row-by-row under a write lock during
-finalisation, and \texttt{trace.jsonl} for after-the-fact inspection),
-so a process death does not lose the latest taxonomy or labels. A
-single-file Streamlit app (\texttt{app.py}) wraps \texttt{run()} for
-non-CLI users, exposes the parameters that matter, streams the
+finalisation, and \texttt{trace.jsonl} for after-the-fact
+inspection), so a process death does not lose the latest taxonomy or
+labels.
+
+\paragraph{Streamlit wrapper.}
+A single-file Streamlit app (\texttt{app.py}) wraps \texttt{run()}
+for non-CLI users, exposes the parameters that matter, streams the
 working taxonomy live, and reads the same on-disk artifacts the CLI
 writes so runs are inspectable without re-execution.

@@ -80,7 +80,7 @@ deviations reflect deterministic UMAP/HDBSCAN under fixed
 \label{tab:20ng}
 \end{table*}
 
-\paragraph{Supervised metrics.}
+\paragraph{\textsc{taxonomy\_agent} leads supervised metrics.}
 At the install default, \textsc{taxonomy\_agent} leads every LLM and
 clustering baseline on the three supervised metrics: purity $0.569$
 against \texttt{topicgpt}'s $0.542$ (the strongest LLM comparator on
@@ -113,7 +113,7 @@ produces a degenerate $3$-cluster solution
 small-cluster, high-noise shape as BERTopic at library defaults; a
 \texttt{min\_cluster\_size} sweep does not raise mean NMI.
 
-\paragraph{Intrinsic coherence and tuned BERTopic.}
+\paragraph{Coherence trades off against supervised quality.}
 Coherence is not uniformly in taxonomy\_agent's favour:
 iterative\_proposal wins NPMI by emitting 16 lexically focused
 categories, and LDA and embed\_cluster\_llm lead $C_v$ by about
@@ -124,7 +124,7 @@ supervised metric. Under a sweep of \texttt{min\_topic\_size}
 micro-clusters and closes the purity gap, but ARI then sits at
 $0.127 \pm .038$ against our $0.489 \pm .085$, a $3.85\times$ lead.
 
-\paragraph{Cost.}
+\paragraph{Absolute spend stays under \$0.20 per 20NG run.}
 A cheap-pair \textsc{taxonomy\_agent} run on 20NG costs $\$0.17$
 on average, about $8\times$ the cost of embed\_cluster\_llm at the
 same labeller and roughly $1/11$ of the Sonnet orchestrator pair.
@@ -202,7 +202,7 @@ rows are not strictly commensurable; see Appendix~A.}
 \label{tab:cot}
 \end{table*}
 
-\paragraph{Pattern recovery.}
+\paragraph{\textsc{taxonomy\_agent} recovers every injected pattern on the labelled subset.}
 At the install default and averaged across three seeds,
 \textsc{taxonomy\_agent} labels roughly $142$ of $149$ items per run
 ($95\%$ coverage) and every prediction on the labelled subset
@@ -226,7 +226,7 @@ orchestrator/judge loop with a goal instruction outperforms
 single-shot prompting and embed-cluster-LLM pipelines on the
 reasoning-pattern axis.
 
-\paragraph{Ablation.}
+\paragraph{The typed revise dispatcher unblocks the orchestrator.}
 In a single-seed ablation that replaced the typed revise dispatcher
 with a loose one (stripping source-existence and name-collision
 checks), the run stalled at zero revise calls in 90\,s before we
@@ -236,7 +236,7 @@ from ordinary stochasticity; we report this as preliminary
 evidence and develop the two consistent interpretations in
 Appendix~A and \S\ref{sec:limitations}.
 
-\paragraph{Failure mode.}
+\paragraph{Cheap pair occasionally enters a monotonic-add loop.}
 The Sonnet pair lumps semantically related gold classes
 (\texttt{talk.politics.*} collapses to one macro-cluster, and CoT
 \texttt{hallucinated\_premise} recovers at $9/29$). The cheap pair

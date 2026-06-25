@@ -6,9 +6,7 @@ TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate
 topic labels from sampled documents with a refinement pass.
 TnT-LLM~\citep{wan2024tntllm} stages a summarise-then-distil
 pipeline that anticipates our generator-and-labeller split, though
-its refine step is a single batched summarisation; our
-\texttt{embed\_cluster\_llm} baseline occupies the same
-embed-cluster-LLM family without the distillation phase.
+its refine step is a single batched summarisation.
 BERTopic~\citep{grootendorst2022bertopic} remains the strongest
 non-LLM baseline. Three concurrent 2025 systems sit closest to ours:
 \citet{brady2025iterativetax} iteratively prompt an LLM to reuse or
@@ -57,14 +55,3 @@ CoT-failure benchmarks; \citet{lee2025stepwiseeval} survey the
 literature. We use CoT-Pattern as a second-domain stress test,
 motivated by~\citet{korbak2025cotmonitor}.
 
-\paragraph{Positioning.}
-Iteration, proposer-and-labeller separation, and the
-add/rename/merge/split/drop verbs are all standard. The
-contribution is two structural commitments: a typed dispatcher with
-validate-before-mutate and per-operation failure isolation, and a
-stateless judge that labels each item against the current taxonomy
-from item text alone, with no access to the orchestrator's
-tool-call history or prior label assignments. The first ensures
-malformed edits never corrupt state; the second makes cost linear
-in the corpus on the cheap model and prevents the orchestrator from
-forcing a label past the judge.
