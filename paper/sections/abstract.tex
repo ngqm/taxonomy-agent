@@ -1,26 +1,18 @@
-We present \textsc{taxonomy\_agent}, an open-source demo that
-discovers and refines a labelled taxonomy over an unlabelled text
-corpus through a structural commitment: an orchestrator LLM proposes
-edits through a typed dispatcher with validate-before-mutate and
-per-operation failure isolation, while a stateless judge LLM
-labels each item against the current taxonomy from item text alone,
-with no access to the orchestrator's tool-call history or prior
-label assignments. The judge runs on the cheap model and is called
-once per item, so per-item cost stays low at corpus scale and the
-orchestrator cannot force a label past the judge.
-On a 487-document 20~Newsgroups subsample with five seeds at the
-install default (DeepSeek-v4-Flash for both orchestrator and judge),
-\textsc{taxonomy\_agent} reaches NMI $0.740 \pm 0.055$ and ARI
-$0.489 \pm 0.085$ at $\$0.17 \pm 0.03$ per run, beating the
-strongest LLM baseline (the published TopicGPT~\citep{pham2024topicgpt}
-code routed through OpenRouter) by $1.22\times$ on NMI and
-$1.65\times$ on ARI, and a single-shot LLM baseline by $2.1\times$ on NMI. On a
-149-item synthetic corpus of failure patterns in chain-of-thought
-reasoning, the system reaches NMI $0.944 \pm 0.081$ across three
-seeds at $\$0.08$ per run, labelling on average $142$ of $149$
-items at $100\%$ accuracy. A Claude Sonnet 4.6 orchestrator pair at
-eleven times the cost reaches NMI $0.656 \pm 0.012$ on 20NG and
-does not improve over the cheap pair, so orchestrator quality is
-not the bottleneck at this scale. We caution that supervised metrics alone cannot separate
-semantic discovery from sharper surface extraction. Code,
+We present \textsc{taxonomy\_agent}, an open-source Python package and
+Streamlit interface that turns an unlabelled text corpus and a
+one-sentence goal into a labelled taxonomy with every item assigned to
+a named category. A single command launches the run; the UI streams
+the agent's trace, the evolving taxonomy, and partial state as items
+are labelled, and lets users inspect completed runs or recover from an
+interrupted session. Internally, \textsc{taxonomy\_agent} separates
+two LLM roles through a structured contract: an orchestrator samples
+documents and proposes typed edits to a working taxonomy through a
+dispatcher that validates preconditions before mutating state, while a
+stateless judge labels each item from item text alone, keeping
+per-item inference cost linear in corpus size. On a stratified
+20~Newsgroups subsample, \textsc{taxonomy\_agent} reaches NMI $0.740$,
+beating the published TopicGPT pipeline by $1.22\times$ on NMI and
+$1.65\times$ on ARI. On a synthetic corpus of chain-of-thought failure
+patterns, it reaches NMI $0.944$ and labels $95\%$ of items at perfect
+accuracy, where TopicGPT collapses to a single topic. Code,
 reproduction scripts, and corpora are at \repourl.
