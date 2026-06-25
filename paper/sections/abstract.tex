@@ -1,18 +1,20 @@
 We present \textsc{TaxonomyAgent}, an open-source Python package and
-Streamlit interface that turns an unlabelled text corpus and a
-one-sentence goal into a labelled taxonomy with every item assigned to
-a named category. A single command launches the run; the UI streams
-the agent's trace, the evolving taxonomy, and partial state as items
-are labelled, and lets users inspect completed runs or recover from an
-interrupted session. Internally, \textsc{TaxonomyAgent} separates
-two LLM roles through a structured contract: an orchestrator samples
-documents and proposes typed edits to a working taxonomy through a
-dispatcher that validates preconditions before mutating state, while a
+Streamlit interface for discovering structured taxonomies in unstructured
+text. Given a corpus and a one-sentence goal instruction,
+\textsc{TaxonomyAgent} discovers a labelled taxonomy and assigns every
+item to a named category; a single command launches the run, and the UI
+streams the agent's trace, the evolving taxonomy, and partial state as
+items are labelled. The goal-instruction mechanism makes discovery
+steerable toward a chosen axis of variation, which lets us target an
+underserved task in LLM alignment research: surfacing failure modes
+and reasoning strategies in chain-of-thought traces. On a 149-item
+synthetic corpus of CoT failure patterns, \textsc{TaxonomyAgent}
+reaches NMI 0.944 and labels 95\% of items at perfect accuracy, while
+the published TopicGPT pipeline collapses to a single surface topic.
+On 20~Newsgroups, \textsc{TaxonomyAgent} also handles classical
+topic modeling, reaching NMI 0.740 and beating TopicGPT by
+$1.22\times$. Internally, two LLM roles are separated by a structured
+contract: an orchestrator proposes typed taxonomy edits while a
 stateless judge labels each item from item text alone, keeping
-per-item inference cost linear in corpus size. On a stratified
-20~Newsgroups subsample, \textsc{TaxonomyAgent} reaches NMI $0.740$,
-beating the published TopicGPT pipeline by $1.22\times$ on NMI and
-$1.65\times$ on ARI. On a synthetic corpus of chain-of-thought failure
-patterns, it reaches NMI $0.944$ and labels $95\%$ of items at perfect
-accuracy, where TopicGPT collapses to a single topic. Code,
-reproduction scripts, and corpora are at \repourl.
+per-item inference cost linear in corpus size. Code, reproduction
+scripts, and corpora are at \repourl.

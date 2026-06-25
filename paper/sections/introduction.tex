@@ -1,72 +1,90 @@
 \section{Introduction}
 \label{sec:intro}
 
-Constructing a labelled taxonomy over an unlabelled corpus is a recurring
-bottleneck in applied NLP. Annotation guidelines for supervised
-classification, codebooks for qualitative research, summarisation schemas
-for analyst-facing dashboards, and policy hierarchies for content
-moderation all begin life as a manual taxonomy. Producing one typically
-requires domain experts to read hundreds of documents, draft candidate
-categories, argue over overlaps, and iterate until coverage and
-disjointness are acceptable. The process is slow, expensive, and difficult
-to reproduce, and the resulting taxonomy is often a brittle artefact that
-nobody is incentivised to revisit when the underlying corpus drifts.
+Discovering structure in a collection of unstructured texts is a
+recurring bottleneck across many analyst workflows. An alignment
+researcher reads hundreds of chain-of-thought (CoT) reasoning traces
+to find shared failure modes; a content moderator drafts a category
+schema for policy violations; a domain expert constructs annotation
+guidelines for supervised classification; a market analyst builds a
+codebook of customer complaints. All begin with the same loop: read
+samples, draft candidate categories, iterate until coverage and
+disjointness are acceptable. The process is slow, expensive, and
+difficult to reproduce, and the resulting taxonomy is often a brittle
+artefact that nobody is incentivised to revisit when the underlying
+corpus drifts.
 
-Recent work has shown that large language models (LLMs) can replace much
-of this manual labour. TopicGPT~\citep{pham2024topicgpt} prompts an LLM
-to generate topic names and definitions from sampled documents with a
-refinement pass, while TnT-LLM~\citep{wan2024tntllm} stages a two-phase
-pipeline that summarises a corpus into candidate labels and then distils
-a lightweight classifier. Co-DETECT~\citep{codetect2025} is last year's
-EMNLP System Demonstration on collaborative codebook construction with
-LLMs and the closest peer to our submission. However, these pipelines
-either fold the proposer and the labeller into a single agent that can
-hallucinate and force its own labels, or they require a seed codebook or
-a human in the loop.
+Recent work has shown that large language models (LLMs) can replace
+much of this labour, but the available systems target one of two
+narrow operating points. Topic-modeling pipelines such as
+TopicGPT~\citep{pham2024topicgpt} and TnT-LLM~\citep{wan2024tntllm}
+discover topics from unlabelled text but offer no mechanism for an
+analyst to direct discovery toward a particular axis of variation;
+given mathematics-domain reasoning traces with injected failure
+modes, they surface the dominant surface topic (``Mathematics'')
+rather than the failure modes the analyst wants. Tools for
+LLM-output evaluation such as
+FaithCoT-Bench~\citep{shen2026faithcot}, the hint taxonomy
+in~\citet{chen2025reasoningmodels}, and the CoT monitorability
+framework of~\citet{korbak2025cotmonitor} evaluate models against
+\emph{known} failure categories; they assume the categories are
+given. Multi-agent codebook tools such as
+Co-DETECT~\citep{codetect2025} and
+Thematic-LM~\citep{qiao2025thematiclm} target collaborative codebook
+construction with a human in the loop and a seed sketch. None target
+automated discovery of taxonomies along a chosen axis of variation
+in unstructured LLM outputs.
 
-To address this gap, we present \textsc{TaxonomyAgent}, an open-source
-orchestrator--judge pipeline that discovers a labelled taxonomy from
-scratch over an unlabelled corpus and assigns every item to one
-discovered category. An orchestrator LLM proposes typed edits to a
-working taxonomy through a dispatcher that validates every precondition
-before mutating state and that records per-operation failures without
-rolling back successful sibling edits. A stateless judge LLM labels each
-item against the current taxonomy from item text alone, with no access
-to the orchestrator's tool-call history or prior label assignments. The
-judge runs on the cheap model and is called once per item, so per-item
-inference cost is linear in corpus size and the orchestrator cannot
-force a label past the judge.
+To address this gap, we present \textsc{TaxonomyAgent}, an
+open-source orchestrator--judge pipeline that discovers a labelled
+taxonomy along a user-specified axis. The user supplies the corpus
+and a one-sentence goal instruction (for example, ``Group these
+chain-of-thought reasoning traces into categories based on the
+dominant failure mode visible in the reasoning'', or ``Identify the
+topic of each text''). An orchestrator LLM proposes typed edits to a
+working taxonomy through a dispatcher that validates every
+precondition before mutating state and that records per-operation
+failures without rolling back successful sibling edits. A stateless
+judge LLM labels each item against the current taxonomy from item
+text alone, with no access to the orchestrator's tool-call history
+or prior label assignments. The judge runs on the cheap model and is
+called once per item, so per-item inference cost is linear in corpus
+size and the orchestrator cannot force a label past the judge.
 
 Empirically, at the install default (DeepSeek-v4-Flash for both
-orchestrator and judge), \textsc{TaxonomyAgent} reaches NMI $0.740
-\pm 0.055$ and ARI $0.489 \pm 0.085$ on 20~Newsgroups, beating a
-one-shot LLM baseline by $2.1\times$ on NMI and $4.8\times$ on ARI
+orchestrator and judge), on a 149-item synthetic corpus of CoT
+failure patterns we constructed (sycophantic capitulation, post-hoc
+rationalisation, unfaithful paraphrase, reward-hack verbalisation,
+hallucinated premise), \textsc{TaxonomyAgent} reaches NMI $0.944 \pm
+0.081$ across three seeds and labels on average $142$ of $149$ items
+at $100\%$ accuracy on the labelled subset
+(\S\ref{sec:eval-results-cot}). On the same corpus, the published
+TopicGPT pipeline collapses to a single ``Mathematics'' surface
+topic in $2$ of $3$ seeds, recovering no gold failure pattern. On
+20~Newsgroups as a classical topic-modeling sanity check,
+\textsc{TaxonomyAgent} reaches NMI $0.740 \pm 0.055$ and ARI $0.489
+\pm 0.085$, beating a one-shot LLM baseline by $2.1\times$ on NMI
 and the published TopicGPT pipeline by $1.22\times$ on NMI and
 $1.65\times$ on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6
 orchestrator pair at eleven times the cost reaches NMI $0.656 \pm
-0.012$ and does not improve over the cheap pair, so we make the
-cheap pair the publication and install default. On a synthetic
-CoT-Pattern corpus the system reaches NMI $0.944 \pm 0.081$ across
-three seeds, labelling on average $142$ of $149$ items at $100\%$
-accuracy (\S\ref{sec:eval-results-cot}).
+0.012$ on 20NG and does not improve over the cheap pair, so we make
+the cheap pair the publication and install default.
 
-Our contributions are fourfold. First, we introduce a stateless
-re-deriving judge: the labelling LLM sees only the current taxonomy
-and the item text, never the orchestrator's reasoning or prior
-labels, so the orchestrator cannot force a label past it and
-inference cost is linear in the corpus on the cheap model. Second,
-we introduce a typed dispatcher with validate-before-mutate and
-per-operation failure isolation: each taxonomy edit is checked
-against every precondition before any state changes, per-op failures
-within a batch do not roll back successful sibling ops, and a
-malformed edit returns the unchanged taxonomy with a log entry the
-orchestrator can read on the next step. Third, we empirically
-demonstrate that the cheap model in both roles dominates: on 20NG
-and CoT-Pattern, DeepSeek-v4-Flash for both orchestrator and judge
-beats every comparator including a Claude Sonnet 4.6 orchestrator
-pair at eleven times the cost on 20NG, so orchestrator quality is
-not the bottleneck at this scale. Fourth, we release an open-source
-artefact at \repourl{} with a \texttt{pip install} path, the
-install-default configuration used in the paper, and a Streamlit
-Inspect tab that replays the trace, partial taxonomies, and cost
-split of any run.
+Our contributions are fourfold. First, we describe a tool for
+discovering taxonomies of unstructured patterns in LLM outputs,
+designed for analyst workflows where the categories are not known a
+priori and where the analyst wants to direct discovery toward a
+particular axis (failure modes, reasoning strategies, error types,
+jailbreak patterns). Second, we describe a goal-instruction
+mechanism through which the user steers discovery toward that axis,
+differentiating our system from topic-modeling pipelines that
+surface only the dominant variation. Third, we empirically
+demonstrate the system on (a) a synthetic CoT failure-mode
+benchmark, on which \textsc{TaxonomyAgent} labels nearly every item
+at perfect accuracy while existing pipelines collapse to a surface
+topic, and (b) a classical 20~Newsgroups benchmark, where it matches
+or exceeds published baselines at a fraction of the cost. Fourth, we
+release an open-source artefact at \repourl{} with a \texttt{pip
+install} path, the install-default configuration used in the paper,
+and a Streamlit Inspect tab that replays the trace, partial
+taxonomies, and cost split of any run.

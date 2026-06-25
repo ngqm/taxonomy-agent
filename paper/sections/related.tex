@@ -1,57 +1,72 @@
 \section{Related Work}
 \label{sec:related}
 
-\paragraph{LLM topic discovery and taxonomy induction.}
-TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate
-topic labels from sampled documents with a refinement pass.
-TnT-LLM~\citep{wan2024tntllm} stages a summarise-then-distil
-pipeline that anticipates our generator-and-labeller split, though
-its refine step is a single batched summarisation.
-BERTopic~\citep{grootendorst2022bertopic} remains the strongest
-non-LLM baseline. Three concurrent 2025 systems sit closest to ours:
-\citet{brady2025iterativetax} iteratively prompt an LLM to reuse or
-generate a label per embedding cluster;
-LOGOS~\citep{pi2025logos} runs a grounded-theory pipeline with
-LLM coding, semantic clustering, and iterative codebook refinement; and
-\citet{zhu2025contextawaretax} build LLM-guided hierarchical
-taxonomies of scientific papers. \textsc{TaxonomyAgent} differs on
-three operating axes: a typed edit DSL with per-operation failure
-isolation, an online ReAct loop in place of offline batched refine,
-and live cost and partial-progress tracking exposed through a
-Streamlit UI usable without configuration.
-\citet{yang2025llmitl} put an LLM inside a neural topic-model
-training loop, and \citet{huang2025clustasclass} reframe clustering
-as direct classification through an LLM (close to our `single\_shot'
-baseline). Adjacent threads on goal-driven
-clustering~\citep{wang2023goalex}, concept
-induction~\citep{lam2024lloom}, taxonomy
-adaptation~\citep{taxoadapt2025}, and LLM-guided semantic
-clustering~\citep{llmguided2025} target different input contracts;
-\citet{tan2024llmannot} survey the broader landscape.
+\paragraph{Chain-of-thought analysis and LLM-output evaluation.}
+A growing body of work analyses chain-of-thought (CoT) reasoning
+traces for safety-relevant patterns.
+FaithCoT-Bench~\citep{shen2026faithcot} and
+PRMBench~\citep{song2025prmbench} provide instance- and step-level
+benchmarks of CoT faithfulness against known failure categories. The
+hint taxonomy in~\citet{chen2025reasoningmodels} catalogues
+hint-utilisation patterns in reasoning models, and
+\citet{korbak2025cotmonitor} discuss CoT monitorability as a safety
+opportunity. Earlier work establishes that LLM CoT is often
+unfaithful~\citep{turpin2023biased, lanham2023faithfulness} and that
+LLMs exhibit
+sycophancy~\citep{sharma2023sycophancy} and reward-tampering
+behaviour~\citep{denison2024subterfuge, perez2022discovering}.
+\citet{lee2025stepwiseeval} survey the broader literature on
+stepwise reasoning evaluation. These tools evaluate models against
+categories chosen in advance. \textsc{TaxonomyAgent} inverts the
+workflow: given an unlabelled corpus of CoT traces and a goal
+instruction, it discovers the categories themselves, which makes it
+complementary to FaithCoT-Bench-style evaluation. The five failure
+modes in our CoT-Pattern corpus (sycophantic capitulation, post-hoc
+rationalisation, unfaithful paraphrase, reward-hack verbalisation,
+hallucinated premise) are sourced from this lineage.
 
 \paragraph{Multi-agent annotation and codebook construction.}
 Co-DETECT~\citep{codetect2025} is last year's EMNLP demonstration on
 collaborative codebook construction from a sketch codebook and a
 human in the loop. Recent multi-agent systems decompose the
-proposer-verifier roles further: Thematic-LM~\citep{qiao2025thematiclm}
-runs coder, aggregator, and reviewer agents in parallel;
-TAMA~\citep{xu2025tama} adds expert oversight on clinical
-interviews; and \citet{liu2025aiannotorch} evaluate LLM verifiers as
-a quality layer on LLM annotators. \textsc{TaxonomyAgent} sits at
-an orthogonal operating point: we discover a candidate taxonomy from
-scratch over an unlabelled corpus with a single goal instruction, no
-seed sketch and no human in the loop, then hand off the trace,
-working taxonomy, and per-item classifications for downstream review
-or Co-DETECT-style refinement. The orchestrator-and-judge separation
-reduces multi-agent coordination to a single ReAct loop.
+proposer-verifier roles further:
+Thematic-LM~\citep{qiao2025thematiclm} runs coder, aggregator, and
+reviewer agents in parallel; TAMA~\citep{xu2025tama} adds expert
+oversight on clinical interviews; and \citet{liu2025aiannotorch}
+evaluate LLM verifiers as a quality layer on LLM annotators.
+\textsc{TaxonomyAgent} sits at an orthogonal operating point: we
+discover a candidate taxonomy from scratch over an unlabelled corpus
+with a single goal instruction, no seed sketch and no human in the
+loop, then hand off the trace, working taxonomy, and per-item
+classifications for downstream review or Co-DETECT-style refinement.
+The orchestrator-and-judge separation reduces multi-agent
+coordination to a single ReAct loop.
 
-\paragraph{Chain-of-thought analysis.}
-The CoT-Pattern corpus borrows its five failure modes
-from~\citep{lanham2023faithfulness, turpin2023biased}; the hint
-taxonomy in \citet{chen2025reasoningmodels} maps almost one-to-one
-onto our labels. FaithCoT-Bench~\citep{shen2026faithcot} and
-PRMBench~\citep{song2025prmbench} ship instance- and step-level
-CoT-failure benchmarks; \citet{lee2025stepwiseeval} survey the
-literature. We use CoT-Pattern as a second-domain stress test,
-motivated by~\citet{korbak2025cotmonitor}.
-
+\paragraph{LLM topic discovery and taxonomy induction.}
+TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate topic
+labels from sampled documents with a refinement pass.
+TnT-LLM~\citep{wan2024tntllm} stages a summarise-then-distil
+pipeline that anticipates our generator-and-labeller split, though
+its refine step is a single batched summarisation.
+BERTopic~\citep{grootendorst2022bertopic} remains the strongest
+non-LLM baseline. Three concurrent 2025 systems sit closest to ours
+on the topic-modeling axis: \citet{brady2025iterativetax} iteratively
+prompt an LLM to reuse or generate a label per embedding cluster;
+LOGOS~\citep{pi2025logos} runs a grounded-theory pipeline with LLM
+coding, semantic clustering, and iterative codebook refinement; and
+\citet{zhu2025contextawaretax} build LLM-guided hierarchical
+taxonomies of scientific papers. \citet{yang2025llmitl} put an LLM
+inside a neural topic-model training loop, and
+\citet{huang2025clustasclass} reframe clustering as direct
+classification through an LLM (close to our \texttt{single\_shot}
+baseline). Adjacent threads on goal-driven
+clustering~\citep{wang2023goalex}, concept
+induction~\citep{lam2024lloom}, taxonomy
+adaptation~\citep{taxoadapt2025}, and LLM-guided semantic
+clustering~\citep{llmguided2025} target different input contracts;
+\citet{tan2024llmannot} survey the broader landscape. None of these
+systems expose a goal-instruction mechanism that allows the analyst
+to direct discovery toward a non-topical axis of variation, which is
+the gap \textsc{TaxonomyAgent} addresses; on our synthetic CoT
+corpus, TopicGPT recovers the surface mathematics topic rather than
+the gold failure modes.
