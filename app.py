@@ -28,6 +28,36 @@ import streamlit as st
 
 from demo import *  # helpers, guards, viz (paths, scanning, renderers)
 
+# ── Page bootstrap (must run on every rerun, so it lives here, not in demo/) ──
+st.set_page_config(page_title="Taxonomy Agent", layout="wide")
+st.title("Taxonomy Agent")
+st.caption(
+    "Give it a set of texts and a one-line goal, like “group these prompts by "
+    "the type of manipulation they attempt.” It works out the categories on "
+    "its own and labels every item, so you never define the label set up front."
+)
+
+if _EXAMPLE_RUN.exists():
+    st.info(
+        "**New here?** Open **Inspect** or **Compare** to browse finished runs "
+        "on DarkBench and 20 Newsgroups: the taxonomy the agent found, a map of "
+        "the corpus, and what it cost. Want to run your own texts? Go to the "
+        "**Run** tab and press Start. **You don't need your own API key; the "
+        "run uses ours.** If you'd rather use your own, add an OpenRouter key "
+        "in the sidebar.",
+        icon="👋",
+    )
+
+ss = st.session_state
+ss.setdefault("log_lines", [])
+ss.setdefault("result_dir", str(_EXAMPLE_RUN) if _EXAMPLE_RUN.exists() else None)
+ss.setdefault("running", False)
+# These back the Run-tab text widgets via key=… so presets update them in place.
+ss.setdefault("instruction_text", "")
+ss.setdefault("cat_focus_text", "")
+ss.setdefault("size_hint_text", "4–10")
+ss.setdefault("preset_applied", "— Custom —")
+
 # ── Sidebar ─────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.header("Configuration")

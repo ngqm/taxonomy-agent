@@ -100,41 +100,11 @@ def _scan_runs(roots: list[Path], max_depth: int = 3) -> list[dict]:
     rows.sort(key=lambda r: r["mtime"], reverse=True)
     return rows
 
-st.set_page_config(page_title="Taxonomy Agent", layout="wide")
-st.title("Taxonomy Agent")
-st.caption(
-    "Give it a set of texts and a one-line goal, like “group these prompts by "
-    "the type of manipulation they attempt.” It works out the categories on "
-    "its own and labels every item, so you never define the label set up front."
-)
-
-# A finished example run to preload, so the Inspect/Compare tabs show real
-# results out of the box (no API key, no waiting) — the heart of the demo.
+# A finished example run to preload the Inspect/Compare tabs. Constant only;
+# the page bootstrap that USES it (set_page_config, title, banner, session-state
+# init) lives in app.py so it re-runs on every Streamlit rerun, not once on
+# import.
 _EXAMPLE_RUN = PACKAGE_DIR / "example_runs" / "darkbench_manipulation"
-
-if _EXAMPLE_RUN.exists():
-    st.info(
-        "**New here?** Open **Inspect** or **Compare** to browse finished runs "
-        "on DarkBench and 20 Newsgroups: the taxonomy the agent found, a map of "
-        "the corpus, and what it cost. Want to run your own texts? Go to the "
-        "**Run** tab and press Start. **You don't need your own API key; the "
-        "run uses ours.** If you'd rather use your own, add an OpenRouter key "
-        "in the sidebar.",
-        icon="👋",
-    )
-
-ss = st.session_state
-ss.setdefault("log_lines", [])
-ss.setdefault(
-    "result_dir", str(_EXAMPLE_RUN) if _EXAMPLE_RUN.exists() else None
-)
-ss.setdefault("running", False)
-# Task-config defaults — these back the Run-tab text widgets via `key=…` so
-# preset selection can update them in place.
-ss.setdefault("instruction_text", "")
-ss.setdefault("cat_focus_text", "")
-ss.setdefault("size_hint_text", "4–10")
-ss.setdefault("preset_applied", "— Custom —")
 
 
 def _example_instruction() -> str:
