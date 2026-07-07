@@ -1,9 +1,13 @@
 # taxonomy_agent
 
 A reusable agentic pipeline that **discovers** a taxonomy of patterns in a corpus
-of texts and **classifies** every text into that taxonomy. Driven by a strong
-orchestrator LLM (e.g. Claude Sonnet) that calls a cheaper judge LLM (e.g.
-Llama 3.3 70B) through six tools.
+of texts and **classifies** every text into that taxonomy. An orchestrator LLM
+proposes typed edits to a working taxonomy while a cheaper judge LLM labels each
+item; both run through OpenRouter (default: DeepSeek-v4-Flash for both roles).
+
+**Live demo:** https://ngqm--taxonomy-agent-demo-serve.modal.run — explore
+finished DarkBench and 20 Newsgroups runs with no key needed, or run your own
+corpus with an OpenRouter key. Deploy details in [`DEPLOY.md`](DEPLOY.md).
 
 The orchestrator iterates: sample a batch, classify against the working
 taxonomy, propose new categories for misfits, revise via structured ops
