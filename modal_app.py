@@ -53,7 +53,7 @@ app = modal.App("taxonomy-agent-demo", image=image)
 #     _secrets = [modal.Secret.from_name("openrouter-demo-key")]
 # The app reads OPENROUTER_API_KEY from the environment and never displays it;
 # per-run caps (TAXONOMY_DEMO_HOSTED) bound each run. Leave empty for BYO-key.
-_secrets: list = []  # -> [modal.Secret.from_name("openrouter-demo-key")]
+_secrets: list = [modal.Secret.from_name("openrouter-demo-key")]
 
 
 @app.function(
