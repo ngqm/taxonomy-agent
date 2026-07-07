@@ -116,9 +116,24 @@ st.caption(
     "classify every item against it."
 )
 
+# A finished example run to preload, so the Inspect/Compare tabs show real
+# results out of the box (no API key, no waiting) — the heart of the demo.
+_EXAMPLE_RUN = PACKAGE_DIR / "example_runs" / "darkbench_manipulation"
+
+if _EXAMPLE_RUN.exists():
+    st.info(
+        "**Just exploring?** The **Inspect** and **Compare** tabs have finished "
+        "DarkBench and 20 Newsgroups runs loaded — discovered taxonomy, corpus "
+        "map, and cost, no API key needed. To run your own corpus, use the "
+        "**Run** tab (needs an OpenRouter key).",
+        icon="👀",
+    )
+
 ss = st.session_state
 ss.setdefault("log_lines", [])
-ss.setdefault("result_dir", None)
+ss.setdefault(
+    "result_dir", str(_EXAMPLE_RUN) if _EXAMPLE_RUN.exists() else None
+)
 ss.setdefault("running", False)
 # Task-config defaults — these back the Run-tab text widgets via `key=…` so
 # preset selection can update them in place.
@@ -1277,16 +1292,22 @@ with results_tab:
             # and the corpus map below (consistency across both views).
             cmap = _category_colors(list(counts.keys()))
 
-            # Representative example items per category (the three closest to
-            # the category centroid in embedding space), to ground each label
-            # in the actual corpus. Falls back to first-seen items if the
-            # embedding model is unavailable.
+            # Representative example item per category. Prefer a precomputed
+            # representative.json shipped with the run (no embedding model
+            # needed — this is what keeps the deployed demo light); otherwise
+            # embed live; otherwise fall back to first-seen items.
             _all_rows = art.get("classifications", []) or []
             _ex_texts = [(r.get("text") or "").strip() for r in _all_rows]
             _ex_cats = [r.get("category") or "other" for r in _all_rows]
             examples_by_cat: dict = {}
-            _examples_representative = False
-            if _all_rows and any(_ex_texts):
+            _rep_path = cand_path / "representative.json"
+            if _rep_path.exists():
+                try:
+                    _rep = json.loads(_rep_path.read_text())
+                    examples_by_cat = {c: [t] for c, t in _rep.items() if t}
+                except Exception:
+                    examples_by_cat = {}
+            if not examples_by_cat and _all_rows and any(_ex_texts):
                 try:
                     with st.spinner("Finding representative example items…"):
                         rep = _representative_examples(
@@ -1298,7 +1319,6 @@ with results_tab:
                         c: [_ex_texts[i] for i in idxs if _ex_texts[i]]
                         for c, idxs in rep.items()
                     }
-                    _examples_representative = bool(examples_by_cat)
                 except Exception:
                     examples_by_cat = {}
                 if not examples_by_cat:  # fallback: first-seen items
@@ -1404,56 +1424,68 @@ with results_tab:
             if rows and len(rows) >= 5 and any((r.get("text") or "").strip() for r in rows):
                 st.subheader("Corpus map")
                 st.caption(
-                    "Each point is one item, placed by semantic similarity "
-                    "(MiniLM embedding projected to 2D) and coloured by its "
-                    "discovered category. Tight, well-separated colours mean the "
-                    "taxonomy carves clean clusters. Runs locally, no API cost."
+                    "Each point is one item, placed by semantic similarity and "
+                    "coloured by its discovered category. Tight, well-separated "
+                    "colours mean the taxonomy carves clean clusters."
                 )
-                if st.checkbox(
-                    "Show 2D map",
+
+                def _render_map(xs, ys, texts_t, cats_t):
+                    import plotly.express as px
+                    map_df = pd.DataFrame({
+                        "x": xs, "y": ys, "category": cats_t,
+                        "item": [(t[:180] + "…") if len(t) > 180 else t
+                                 for t in texts_t],
+                    })
+                    fig = px.scatter(
+                        map_df, x="x", y="y", color="category",
+                        color_discrete_map=cmap,
+                        hover_data={"item": True, "category": True,
+                                    "x": False, "y": False},
+                        height=560,
+                        category_orders={"category": sorted(set(cats_t))},
+                    )
+                    fig.update_traces(marker=dict(size=6, opacity=0.78,
+                                                  line=dict(width=0)))
+                    fig.update_layout(
+                        legend_title_text="category",
+                        xaxis=dict(visible=False), yaxis=dict(visible=False),
+                        margin=dict(l=0, r=0, t=8, b=0),
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+
+                cap = 1500
+                sub = rows[:cap]
+                texts_t = [(r.get("text") or "")[:2000] for r in sub]
+                cats_t = [r.get("category") or "other" for r in sub]
+                _coords_path = cand_path / "map_coords.json"
+                if _coords_path.exists():
+                    # Precomputed — renders instantly with no embedding model
+                    # (this is what keeps the deployed demo light).
+                    try:
+                        _c = json.loads(_coords_path.read_text())
+                        _render_map(_c["x"][:len(sub)], _c["y"][:len(sub)],
+                                    texts_t, cats_t)
+                    except Exception as e:
+                        st.warning(f"Could not read the precomputed map: {e}")
+                elif st.checkbox(
+                    "Compute 2D map",
                     key="corpus_map_on",
-                    help="Embeds every item and projects to 2D — a few seconds "
-                         "for a few hundred items.",
+                    help="Embeds every item locally and projects to 2D. Needs "
+                         "sentence-transformers + umap-learn installed.",
                 ):
-                    cap = 1500
-                    sub = rows[:cap]
-                    texts_t = tuple((r.get("text") or "")[:2000] for r in sub)
-                    cats_t = [r.get("category") or "other" for r in sub]
                     with st.spinner("Embedding and projecting…"):
                         try:
-                            xs, ys = _corpus_umap(str(artifact_path), texts_t)
-                            import plotly.express as px
-                            map_df = pd.DataFrame({
-                                "x": xs, "y": ys, "category": cats_t,
-                                "item": [
-                                    (t[:180] + "…") if len(t) > 180 else t
-                                    for t in texts_t
-                                ],
-                            })
-                            fig = px.scatter(
-                                map_df, x="x", y="y", color="category",
-                                color_discrete_map=cmap,
-                                hover_data={"item": True, "category": True,
-                                            "x": False, "y": False},
-                                height=560,
-                                category_orders={"category": sorted(set(cats_t))},
-                            )
-                            fig.update_traces(marker=dict(size=6, opacity=0.78,
-                                                          line=dict(width=0)))
-                            fig.update_layout(
-                                legend_title_text="category",
-                                xaxis=dict(visible=False),
-                                yaxis=dict(visible=False),
-                                margin=dict(l=0, r=0, t=8, b=0),
-                            )
-                            st.plotly_chart(fig, use_container_width=True)
-                            if len(rows) > cap:
-                                st.caption(
-                                    f"Showing the first {cap:,} of "
-                                    f"{len(rows):,} items."
-                                )
+                            xs, ys = _corpus_umap(str(artifact_path),
+                                                  tuple(texts_t))
+                            _render_map(xs, ys, texts_t, cats_t)
                         except Exception as e:
-                            st.warning(f"Could not build the corpus map: {e}")
+                            st.warning(
+                                f"Could not build the corpus map ({e}). Install "
+                                "`sentence-transformers` and `umap-learn` for "
+                                "live maps, or open a bundled example run."
+                            )
+                if len(rows) > cap:
+                    st.caption(f"Showing the first {cap:,} of {len(rows):,} items.")
 
             # ── Supporting detail below the headline result: the cost
             # breakdown and the auditable iteration trace.

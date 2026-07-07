@@ -1,0 +1,21 @@
+{
+  "orchestrator": {
+    "model": "deepseek/deepseek-v4-flash",
+    "input_tokens": 134589,
+    "output_tokens": 5598,
+    "n_calls": 15,
+    "usd": 0.010124,
+    "price_source": "openrouter"
+  },
+  "judge": {
+    "model": "deepseek/deepseek-v4-flash",
+    "input_tokens": 268544,
+    "output_tokens": 136517,
+    "n_calls": 742,
+    "usd": 0.060548,
+    "price_source": "openrouter"
+  },
+  "total_usd": 0.070672,
+  "price_source": "openrouter",
+  "price_table_complete": true
+}
