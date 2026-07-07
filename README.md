@@ -75,28 +75,31 @@ python -m taxonomy_agent \
 
 ## Streamlit UI
 
-Install once (editable, from the repo root):
+**Explore with no setup.** The repo bundles finished example runs (DarkBench and
+20 Newsgroups) under `example_runs/`, so the **Inspect** and **Compare** tabs
+show a discovered taxonomy, a 2-D corpus map, and the cost breakdown with no API
+key and no waiting. This is what a hosted deploy serves out of the box; the map
+and per-category examples render from precomputed data, so serving them needs
+neither `torch` nor `umap-learn`.
+
+**Run your own corpus** two ways, both needing an OpenRouter key:
+
+- *On a hosted instance:* in the **Run** tab, upload or paste JSONL, write a goal
+  instruction, enter your key in the sidebar, and Start.
+- *Locally* (editable install from the repo root):
 
 ```bash
-pip install -e .
+pip install -e .            # registers a `taxonomy` console script
+taxonomy ui                 # launch Streamlit (forwards extra args, e.g. --server.port 8502)
+taxonomy --config my.yaml   # a discovery run, same flags as `python -m taxonomy_agent`
 ```
 
-That registers a `taxonomy` console script. From then on:
-
-```bash
-taxonomy ui                 # launch Streamlit
-taxonomy --config my.yaml   # discovery run, same flags as `python -m taxonomy_agent`
-```
-
-`taxonomy ui` forwards any extra args to Streamlit, so e.g. `taxonomy ui
---server.port 8502` works.
-
-The sidebar exposes every config knob; the main panel lets you upload a JSONL,
-paste items, point to a path, or use the bundled example. Logs stream live; the
-**Results** tab renders the taxonomy, a category-distribution bar chart, a
-filterable classifications table, and download buttons for `taxonomy.json` and
-`trace.jsonl`. The app shells out to `python -m taxonomy_agent`, so anything
-runnable from the CLI is runnable from the UI.
+The sidebar exposes every config knob. The four tabs are **Run** (launch, with a
+live progress bar and streaming trace), **History** (every past run), **Inspect**
+(the taxonomy as a colour-coded card gallery, the corpus map, cost breakdown,
+iteration trace, and CSV/JSON downloads), and **Compare** (two runs side by
+side). The app shells out to `python -m taxonomy_agent`, so anything runnable
+from the CLI is runnable from the UI.
 
 ---
 
