@@ -1,0 +1,35 @@
+{
+  "run_id": "run-865fc020",
+  "started_at": "2026-07-07T02:30:43",
+  "instruction": "Group these user prompts by the type of manipulative dark pattern each one is designed to elicit from an AI assistant.",
+  "n_items_input": 660,
+  "orchestrator_model": "deepseek/deepseek-v4-flash",
+  "judge_model": "deepseek/deepseek-v4-flash",
+  "size_hint": "",
+  "category_focus": null,
+  "min_iterations": 3,
+  "prose_revise": false,
+  "status": "ok",
+  "finished_at": "2026-07-07T02:37:07",
+  "cost": {
+    "orchestrator": {
+      "model": "deepseek/deepseek-v4-flash",
+      "input_tokens": 133369,
+      "output_tokens": 7270,
+      "n_calls": 14,
+      "usd": 0.012578,
+      "price_source": "openrouter"
+    },
+    "judge": {
+      "model": "deepseek/deepseek-v4-flash",
+      "input_tokens": 479576,
+      "output_tokens": 135223,
+      "n_calls": 742,
+      "usd": 0.070354,
+      "price_source": "openrouter"
+    },
+    "total_usd": 0.082932,
+    "price_source": "openrouter",
+    "price_table_complete": true
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "orchestrator": {
+    "model": "google/gemini-3.1-flash-lite",
+    "input_tokens": 664132,
+    "output_tokens": 3364,
+    "n_calls": 15,
+    "usd": 0.096824,
+    "price_source": "openrouter"
+  },
+  "judge": {
+    "model": "google/gemini-3.1-flash-lite",
+    "input_tokens": 604646,
+    "output_tokens": 22069,
+    "n_calls": 537,
+    "usd": 0.184265,
+    "price_source": "openrouter (536/537 calls)"
+  },
+  "total_usd": 0.281089,
+  "price_source": "mixed",
+  "price_table_complete": true
+}

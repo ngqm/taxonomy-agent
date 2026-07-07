@@ -1,0 +1,35 @@
+{
+  "run_id": "run-89e1b59a",
+  "started_at": "2026-07-07T02:25:12",
+  "instruction": "Identify the topic of each text.",
+  "n_items_input": 487,
+  "orchestrator_model": "google/gemini-3.1-flash-lite",
+  "judge_model": "google/gemini-3.1-flash-lite",
+  "size_hint": "4\u201310",
+  "category_focus": null,
+  "min_iterations": 3,
+  "prose_revise": false,
+  "status": "ok",
+  "finished_at": "2026-07-07T02:26:38",
+  "cost": {
+    "orchestrator": {
+      "model": "google/gemini-3.1-flash-lite",
+      "input_tokens": 664132,
+      "output_tokens": 3364,
+      "n_calls": 15,
+      "usd": 0.096824,
+      "price_source": "openrouter"
+    },
+    "judge": {
+      "model": "google/gemini-3.1-flash-lite",
+      "input_tokens": 604646,
+      "output_tokens": 22069,
+      "n_calls": 537,
+      "usd": 0.184265,
+      "price_source": "openrouter (536/537 calls)"
+    },
+    "total_usd": 0.281089,
+    "price_source": "mixed",
+    "price_table_complete": true
+  }
+}
