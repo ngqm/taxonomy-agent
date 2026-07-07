@@ -63,6 +63,24 @@ then add `secrets=[modal.Secret.from_name("openrouter-key")]` to the
 - **OpenRouter** bills LLM calls separately, on whoever's key is used. A typical
   small run is well under $0.05.
 
+## Safeguards on the public URL
+
+- **No secrets in the image.** `modal_app.py` excludes `.env`, `.modal.toml`,
+  `*.pem`, `*.key` from the build, and `agent.py` uses `load_dotenv(override=False)`
+  so a stray `.env` can never override a reviewer's key. Verify with a throwaway
+  `modal run` that checks `/root/app/.env` is absent.
+- **Per-run caps.** The image sets `TAXONOMY_DEMO_HOSTED=1`, which makes the app
+  cap a hosted run at **150 items and 8 iterations** (and pool ≤ 50), so no
+  single public run can run away on cost or container time. Local installs are
+  uncapped.
+- **BYO-key.** Runs use the reviewer's own OpenRouter key; no shared key unless
+  you explicitly attach one (above).
+- **Bound the blast radius on Modal:** keep `min_containers=0`, and set an
+  account **spending limit** and a **max container count** in the Modal
+  dashboard so a burst of traffic can't drain credits.
+- **If a key was ever exposed** (e.g. an early build that baked `.env`), rotate
+  it in the OpenRouter dashboard — treat it as compromised.
+
 ## Notes
 
 - Container storage is ephemeral: a reviewer's run persists for their session,

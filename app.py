@@ -953,6 +953,28 @@ with run_tab:
             ss.log_lines = []
             ss.running = True
 
+            # Hosted demo: cap corpus size and iterations so no single public
+            # run can run away on cost or container time.
+            if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+                CAP_ITEMS, CAP_ITERS, CAP_POOL = 150, 8, 50
+                max_iters = min(int(max_iters), CAP_ITERS)
+                if not pool_limit or int(pool_limit) > CAP_POOL:
+                    pool_limit = CAP_POOL
+                _n = _count_items(items_path)
+                if _n and _n > CAP_ITEMS:
+                    capped = Path(tempfile.gettempdir()) / "hosted_capped.jsonl"
+                    with open(items_path) as _f, open(capped, "w") as _g:
+                        for _i, _line in enumerate(_f):
+                            if _i >= CAP_ITEMS:
+                                break
+                            _g.write(_line)
+                    items_path = str(capped)
+                st.info(
+                    f"Hosted demo limits: up to {CAP_ITEMS} items and "
+                    f"{CAP_ITERS} iterations per run. Clone and run locally to "
+                    f"lift the caps."
+                )
+
             # Compute the output dir at click time so the timestamp isn't stale.
             output_dir = (output_dir_in or "").strip() or str(
                 DEFAULT_RUNS_ROOT / time.strftime("run_%Y%m%d_%H%M%S")
