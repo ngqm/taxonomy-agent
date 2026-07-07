@@ -1,0 +1,73 @@
+{
+  "method": "nanda_algorithmic_step_clustering",
+  "model": "openai/gpt-4o",
+  "n_strategies_proposed": 2,
+  "purity": 0.6,
+  "nmi": 0.21164072254205032,
+  "ari": -0.019745917656964537,
+  "n_items": 100,
+  "n_unlabeled_other": 5,
+  "cue_dictionary": {
+    "0": {
+      "description": "This strategy involves listing all pairs of numbers that add up to the given sum and then checking their products to find the pair that matches the given product.",
+      "cues": [
+        "Pairs adding to",
+        "Their products are",
+        "The product comes from",
+        "so the larger number is",
+        "Pairs of positive whole numbers that add to",
+        "Products:",
+        "The pair with a product of",
+        "The pair that adds up to",
+        "The pair (x,y) gives a product of",
+        "The product comes from the pair",
+        "List the pairs of positive whole numbers that add to",
+        "Their products:",
+        "The product comes from",
+        "The pair is",
+        "The larger number is",
+        "Pairs of positive whole numbers adding to",
+        "Their products:",
+        "The pair (x,y) gives a product of",
+        "The larger number in this pair is",
+        "The product comes from (x,y), so the larger number is",
+        "The pair that sums to",
+        "The product comes from"
+      ]
+    },
+    "1": {
+      "description": "This strategy involves setting up and solving a quadratic equation derived from the sum and product of the numbers, then factoring the equation to find the roots which represent the two numbers.",
+      "cues": [
+        "Let the numbers be x and y",
+        "We are given",
+        "We need to solve the quadratic equation",
+        "t^2 -",
+        "Factoring the quadratic",
+        "The roots are",
+        "The equation factors as",
+        "The larger number is",
+        "Let the two numbers be",
+        "We can set up a quadratic equation",
+        "The numbers are the roots of the quadratic equation",
+        "To factor this, we need two numbers that multiply to",
+        "Checking the sum",
+        "This matches the required sum",
+        "The two numbers are",
+        "The larger number is",
+        "We can find the numbers by solving the quadratic equation",
+        "They are the roots of the quadratic equation",
+        "To factor this, we look for two numbers that multiply to",
+        "The factors of",
+        "The quadratic equation is",
+        "Factoring: (t - x)(t - y) = 0",
+        "The numbers are",
+        "Let the numbers be x and y, with x + y =",
+        "They are the roots of the quadratic equation",
+        "To factor this, we look for two numbers that multiply to",
+        "The factors of",
+        "The quadratic equation would be",
+        "The larger number is"
+      ]
+    }
+  }
+}

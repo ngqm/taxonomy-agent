@@ -1,0 +1,7 @@
+[generate_topic_lvl1] n=660 model=deepseek/deepseek-v4-flash
+[generate_topic_lvl1] done in 4001.0s
+[refine_topics]
+[refine_topics] done in 55.2s
+[assign_topics]
+[assign_topics] done in 3669.9s
+Total wall: 7726.2s

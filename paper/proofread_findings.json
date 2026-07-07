@@ -1,0 +1,1578 @@
+{
+  "total_confirmed": 80,
+  "total_rejected": 87,
+  "by_lens": [
+    {
+      "lens": "style-guidelines",
+      "confirmed": 0,
+      "rejected": 33
+    },
+    {
+      "lens": "numerical-consistency",
+      "confirmed": 7,
+      "rejected": 1
+    },
+    {
+      "lens": "claim-evidence",
+      "confirmed": 17,
+      "rejected": 3
+    },
+    {
+      "lens": "citation-correctness",
+      "confirmed": 6,
+      "rejected": 2
+    },
+    {
+      "lens": "clarity-undefined",
+      "confirmed": 20,
+      "rejected": 5
+    },
+    {
+      "lens": "reviewer-2-cynicism",
+      "confirmed": 9,
+      "rejected": 5
+    },
+    {
+      "lens": "reproducibility",
+      "confirmed": 18,
+      "rejected": 2
+    },
+    {
+      "lens": "adjacent-consistency",
+      "confirmed": 0,
+      "rejected": 10
+    },
+    {
+      "lens": "latex-typography",
+      "confirmed": 0,
+      "rejected": 20
+    },
+    {
+      "lens": "structural-claims",
+      "confirmed": 3,
+      "rejected": 6
+    }
+  ],
+  "confirmed_findings": [
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "we report mean $\\pm$ standard deviation over three independently sampled random seeds on a 487-document stratified subsample",
+        "issue": "The Run configuration paragraph (line 9) says 20NG is reported over THREE seeds, but the Table 1 caption on the same page (line 64) says 'install-default row averaged over five seeds', the abstract (line 10) says 'five seeds', and eval_methodology.tex says 'five independently sampled random seeds at the install default'. A reviewer will flag this as a contradiction about the headline experiment's seed count.",
+        "suggested_fix": "Change 'three independently sampled random seeds' to 'five independently sampled random seeds at the install default and three at the Sonnet pair', to match the abstract, methodology, and Table 1 caption."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9400000000000001,
+      "reasonings": [
+        "Quote verified verbatim at lines 9-10 of eval_results.tex. It contradicts the abstract (\"five seeds at the install default\"), eval_methodology.tex (\"five...at install default and three at Sonnet pair\"), and Table 1 caption (\"install-default row averaged over five seeds\"). Clear numerical inconsistency on the headline experiment.",
+        "Quote verbatim at eval_results.tex lines 9-10. The Run configuration says \"three\" seeds for 20NG, but abstract (\"five seeds\"), eval_methodology (\"five at install default and three at Sonnet pair\"), and Table 1 caption on the same page (\"install-default row averaged over five seeds, Sonnet row and baselines over three\") all contradict it. A reviewer will catch this same-page inconsistency about the headline experiment.",
+        "Quote verified verbatim at lines 9-10 of eval_results.tex. The Run configuration paragraph says \"three independently sampled random seeds\" for 20NG, directly contradicting the same-page Table 1 caption (\"install-default row averaged over five seeds\"), the abstract (\"five seeds at the install default\"), and eval_methodology.tex (\"five...at the install default and three at the Sonnet pair\"). A reviewer will flag this as an inconsistency about the headline experiment."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "A Sonnet 4.6 orchestrator pair is reported as the optional quality configuration in Table~\\ref{tab:20ng} for cost comparison and reaches NMI inside the cheap pair's interval at twelve times the cost.",
+        "issue": "This says twelve times the cost, but the abstract (line 21), introduction (line 42), conclusion ($11\\times$), and the same eval_results.tex prose three paragraphs later ('roughly eleven times the cost') all say eleven. The actual arithmetic from the table is $1.86/0.17 = 10.94 \\approx 11$, so 'twelve' is wrong.",
+        "suggested_fix": "Change 'twelve times the cost' to 'eleven times the cost' to match the rest of the paper and the table values."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9766666666666666,
+      "reasonings": [
+        "Quote at eval_results.tex line 8 says \"twelve times the cost\" verbatim. Line 98 of same file says \"roughly eleven times the cost\"; abstract, intro, and conclusion all use eleven/$11\\times$. Arithmetic $1.86/0.17\\approx10.94$ rounds to 11. Indefensible inconsistency.",
+        "Quote verbatim on line 8 (\"at twelve times the cost\"). Line 98 of the same file says \"roughly eleven times the cost\" for the same comparison. Table values give 1.86/0.17 = 10.94 \u2248 11. Abstract/intro/conclusion also say 11. \"Twelve\" is inconsistent and arithmetically wrong.",
+        "Quote verified verbatim at line 8 of eval_results.tex. Same file line 98 says \"roughly eleven times the cost\"; abstract, intro (x2), and conclusion ($11\\times$) all say eleven. Table arithmetic 1.86/0.17=10.94 rounds to 11. \"Twelve\" at line 8 is a real inconsistency reviewers would flag."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average",
+        "issue": "The Cost paragraph claims average run cost is $0.16, but the abstract, intro, conclusion, and Table 1 all report $0.17 (with the table showing 0.17 $\\pm$ .03). The discrepancy of one cent across the paper is small but reviewers will notice the mismatched headline number.",
+        "suggested_fix": "Change '$\\$0.16$' to '$\\$0.17$' to align with the table value and the rest of the paper."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9,
+      "reasonings": [
+        "Quote verified verbatim at line 118 of eval_results.tex. Abstract, intro, conclusion, and Table 1 all report $0.17 (table: 0.17\u00b1.03). Prose \"on average\" claim of $0.16 contradicts the table mean in the same section. Reviewers notice such mismatches.",
+        "Verbatim quote at line 118 of eval_results.tex says \"$0.16\" but Table 1 (same file, line 33) shows 0.17\u00b1.03, and abstract, intro, and conclusion all report $0.17. Surrounding context does not defuse this \u2014 the next sentence still says \"below $0.20\", which works for either value. Real one-cent mismatch on a headline number.",
+        "Quote verified verbatim at line 118 of eval_results.tex: \"A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average\". Table 1 (line 33) shows 0.17$_{\\pm.03}$, abstract says $0.17 \\pm 0.03, intro and conclusion both say $0.17. The $0.16 figure is inconsistent with the rest of the paper and is the kind of numerical discrepancy reviewers flag."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "Wall-clock time of $548\\,$s is $3\\times$ the LLM baselines and $37\\times$ BERTopic",
+        "issue": "Table 1 reports wall-clock $713 \\pm 245$ s for the install default, not 548 s. The 3$\\times$ and 37$\\times$ multipliers were computed from 548; using the table's 713 s the multipliers are about 4.3$\\times$ vs LLM baselines (avg $\\approx 166$ s) and 48$\\times$ vs BERTopic (15 s). Either the table or the prose is wrong.",
+        "suggested_fix": "Recompute against the table value: 'Wall-clock time of 713 s is roughly 4$\\times$ the LLM baselines and 48$\\times$ BERTopic', or correct the table if 548 s is the right average."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9499999999999998,
+      "reasonings": [
+        "Verbatim quote confirmed at line 121-122. Table 1 row for install default reports 713\u00b1245 s wall and $0.17 cost, but prose says 548 s and $0.16. 548/15=36.5 (matches 37x), 548/166=3.3 (matches 3x), so prose multipliers were computed from stale 548 figure. Reviewer-visible inconsistency.",
+        "Quote verbatim on line 121. Table 1 reports install-default wall time as 713\u00b1245 s, not 548 s. The 3x/37x multipliers are computed from 548; using table value 713 yields ~4.3x vs LLM baselines (avg ~166 s) and ~48x vs BERTopic (15 s). Reviewer-visible inconsistency.",
+        "Quote verified verbatim at line 121-122. Table 1 line 33 shows install-default wall-clock 713\u00b1245 s, not 548 s. Recomputing from 713: ~4.3x LLM baselines (avg 166 s) and ~47.5x BERTopic (15 s), not 3x and 37x. Real prose/table inconsistency a reviewer would flag."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "ARI then sits at $0.127 \\pm .038$ against our $0.452 \\pm .096$, a $3.6\\times$ lead.",
+        "issue": "Our install-default ARI is reported elsewhere as $0.489 \\pm 0.085$ (Table 1, abstract, intro). This paragraph silently uses a different number, $0.452 \\pm 0.096$, for the BERTopic-sweep comparison without explaining why. A reviewer will ask which ARI is the real one and whether the 3.6$\\times$ lead is computed over a different seed set.",
+        "suggested_fix": "Either use the headline ARI $0.489$ ($0.489/0.127 = 3.85\\times$) or explicitly note that this comparison is on a matched subset of seeds and explain why."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.86,
+      "reasonings": [
+        "Quote is verbatim at line 115. Table 1 and abstract/intro report 0.489\u00b10.085 (5 seeds per caption); the BERTopic-sweep paragraph silently uses 0.452\u00b10.096, a different mean AND stddev, with no explanation. Reviewer will flag the inconsistency.",
+        "Quote verbatim at line 115. Headline ARI is 0.489\u00b1.085 (Table 1 line 31, abstract, intro), but this paragraph silently uses 0.452\u00b1.096 with no explanation of the seed/subset shift. Surrounding context does not defuse; a reviewer will question which ARI is canonical.",
+        "Quote verified verbatim on line 115. Install-default ARI is $0.489\\pm.085$ in Table 1 (line 31) and the supervised-metrics paragraph (line 83), but line 115 silently uses $0.452\\pm.096$ for the BERTopic-sweep comparison with no explanation. Compounded by a 5-seed vs 3-seed mismatch (caption line 64 vs line 9). A reviewer will flag this."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/abstract.tex",
+        "quote": "labelling on average $142$ of $149$ items at $100\\%$ accuracy.",
+        "issue": "Body text gives '142 of 149 items per run (95% coverage)' across three seeds (consistent), but Appendix B Table 2 for the same CoT corpus shows overall coverage 0.89 (i.e. 133 of 149 labelled) on a single seed. The appendix single-seed coverage is materially lower than the body's three-seed average and the abstract's headline 142/149, which a reviewer reading Appendix B may flag as 'the headline number is not representative of any single run we can inspect'.",
+        "suggested_fix": "Either add a sentence in Appendix B clarifying that the single-seed slice underperforms the three-seed average (and which seed it is), or replace Appendix B's single seed with the three-seed average to match the body."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6766666666666667,
+      "reasonings": [
+        "Quote is verbatim and the numerical gap (133 vs 142) is real. But Appendix B table caption explicitly says \"single seed\" and the body explicitly says \"averaged across three seeds.\" A 9-item gap is within plausible seed variance and is disclosed by both labels. Reviewers expect single-seed per-stratum tables; not a defensible concern.",
+        "Quote verbatim in abstract.tex L19-20. Body (eval_results.tex L188-190) gives 142/149 three-seed avg; Appendix B Table 2 shows overall coverage 0.89 (~133/149) on single seed. Both are honestly labelled, but the gap between the headline and the only inspectable per-seed slice is real and a reviewer could flag it.",
+        "Quote verified verbatim in abstract.tex line 19-20. Body (eval_results.tex L189-190) says 142/149 (95% coverage) averaged over three seeds. Appendix B Table 2 (appendix.tex L66) shows overall coverage 0.89 (~133/149) on single seed. A reviewer checking the only per-item-inspectable table will see ~9-item gap vs the headline, a legitimate numerical-consistency concern even if explainable by seed variance."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "the cheap pair closes that gap at roughly one-thirtieth the cost.",
+        "issue": "The 'one-thirtieth' multiplier on the CoT corpus ($2.23 / 0.08 \\approx 27.9$) is presented in a paper that elsewhere uses precise multipliers like $1.5\\times$, $2.0\\times$, $2.1\\times$, $4.8\\times$. The CoT Sonnet-vs-cheap ratio is closer to 28, not 30, and the prose 'one-thirtieth' could be tightened to match the level of precision used elsewhere.",
+        "suggested_fix": "Replace 'roughly one-thirtieth the cost' with 'roughly 1/28 of the cost' or 'roughly 28$\\times$ less spend', matching the precision used for the 20NG comparisons."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333333,
+      "reasonings": [
+        "Quote verified verbatim. But \"roughly one-thirtieth\" is hedged colloquial prose; 27.9 rounds to 30 acceptably, and given the cheap cost stddev (\u00b1.01 on .08), the true ratio interval spans 24.8-31.9, covering 30. Paper already mixes precise multipliers with rounded fractions (e.g. \"roughly 1/12\" on line 120). Suggested fix \"1/28\" is uglier.",
+        "Quote verbatim at line 200-201. Actual ratio 2.23/0.08=27.9, closer to 28 than 30. Parallel 20NG paragraph uses precise \"1/12 of the Sonnet orchestrator pair\"; \"one-thirtieth\" is the only loose ratio in a paper using $1.5\\times$, $2.0\\times$, $4.8\\times$, $3.6\\times$, $7\\times$, $1/12$. Minor precision mismatch.",
+        "Quote verified verbatim at line 200-201. Ratio is 2.23/0.08=27.9, rounded to 30 via \"one-thirtieth\". The hedge \"roughly\" makes it defensible, but it is looser than nearby precise multipliers (1/12, 11x, 1.5x, 2.0x). A picky reviewer could flag the style inconsistency; most would not."
+      ],
+      "lens": "numerical-consistency"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "For 20~Newsgroups we report mean $\\pm$ standard deviation over three independently sampled random seeds on a 487-document stratified subsample",
+        "issue": "Direct contradiction with the abstract/intro/methodology and the table caption, which all claim five seeds at the install default. The Run configuration paragraph says three seeds for 20NG; the same file's table caption says 'install-default row averaged over five seeds'. A reviewer will flag this internal inconsistency as evidence the seed counts are unreliable.",
+        "suggested_fix": "Reconcile to a single number \u2014 change 'three independently sampled random seeds' to 'five independently sampled random seeds' in the Run configuration paragraph (consistent with the table caption and abstract)."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9166666666666666,
+      "reasonings": [
+        "Quote verified verbatim at lines 9-11. Table caption (line 64) explicitly says \"install-default row averaged over five seeds, Sonnet row and baselines over three.\" The Run-configuration paragraph's blanket \"three seeds\" claim contradicts the caption's five for the headline row.",
+        "Quote verbatim at lines 9-10. The table caption on line 64 explicitly says \"install-default row averaged over five seeds, Sonnet row and baselines over three\", directly contradicting the Run configuration paragraph's blanket \"three seeds\" statement. Real internal inconsistency.",
+        "Quote verified verbatim on lines 9-10. The same file contradicts itself: line 10 says \"three independently sampled random seeds\" for 20NG, but line 64's table caption says \"install-default row averaged over five seeds, Sonnet row and baselines over three.\" Reviewers will flag this."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "Under a sweep of \\texttt{min\\_topic\\_size} (Appendix~A), the most aggressive setting emits roughly 60 micro-clusters and closes the purity gap, but ARI then sits at $0.127 \\pm .038$ against our $0.452 \\pm .096$, a $3.6\\times$ lead.",
+        "issue": "The 'our ARI 0.452 +/- 0.096' figure does not match the table's reported ARI for taxonomy_agent (0.489 +/- 0.085). The number is presented without any source \u2014 unsupported claim or copy-paste of stale numbers. Reviewers will catch the discrepancy with the headline ARI in the same table.",
+        "suggested_fix": "Either replace 0.452/0.096 with the table's 0.489/0.085, or explicitly state this is a same-seed paired comparison computed under a re-run, and report that re-run's headline ARI for taxonomy_agent so the comparison is consistent."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.85,
+      "reasonings": [
+        "Quote verbatim at lines 112-115. Table at line 31 reports taxonomy_agent ARI 0.489\u00b1.085, but the comparison paragraph uses 0.452\u00b1.096 with no explanation of where it comes from (not the Sonnet row 0.336 either). Reviewers will catch the discrepancy in adjacent text within the same results section.",
+        "Quote is verbatim at lines 112-115. Table row (line 31) reports taxonomy_agent ARI as 0.489 \u00b1 .085, but prose comparison against BERTopic-aggressive uses 0.452 \u00b1 .096 with no footnote, no \"same-seed paired\" qualifier, no explanation. Reviewer will flag the numeric inconsistency within the same subsection.",
+        "Quote verified verbatim at lines 112-115. Table row at line 31 reports taxonomy_agent ARI of 0.489 \u00b1 0.085, but the prose claims \"our 0.452 \u00b1 .096\" without explanation, creating an internal inconsistency reviewers will catch and treat as stale numbers or an unsupported claim."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average ... Wall-clock time of $548\\,$s is $3\\times$ the LLM baselines",
+        "issue": "Cost and wall-clock in the Cost paragraph (\\$0.16, 548 s) do not match the same table on the same page (\\$0.17 +/- .03, 713 +/- 245 s). The abstract and intro also use \\$0.17. Reviewer will flag inconsistent headline numbers within a single section.",
+        "suggested_fix": "Replace \\$0.16 with \\$0.17 and 548 s with 713 s (or recompute and update the table) so the prose matches Table 1."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9333333333333332,
+      "reasonings": [
+        "Verified verbatim: line 118 says \"$0.16 on average\" and line 121 says \"548 s is 3x the LLM baselines\", but the table (line 33) reports 0.17 +- .03 and 713 +- 245 s for the same cheap-pair install default. Prose says \"on average,\" so this directly contradicts the table mean \u2014 a reviewer will flag it.",
+        "Quote is verbatim on lines 117-122. Table 1 line 33 shows install-default cost $0.17\u00b1.03 and wall 713\u00b1245s, but the Cost paragraph says $0.16 and 548s. Same section/page contradiction reviewers will flag.",
+        "Quote verbatim verified at lines 118 and 121. Cost paragraph states \\$0.16 and 548 s, but Table 1 line 33 shows 0.17\u00b1.03 and 713\u00b1245 s for the same install-default row. Internal inconsistency on headline numbers within one section."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "Coverage-adjusted purity averages $0.95$, $+22$ points above a $0.730$ supervised surface-feature oracle that has gold-label access",
+        "issue": "Comparing unsupervised coverage-adjusted purity (which optimally maps clusters to gold) against a supervised classifier's accuracy is acknowledged as non-commensurable in Appendix A, yet the body still presents '+22 points above a supervised oracle' as a headline claim. The framing overstates the result \u2014 readers will read this as 'beats supervised', which the appendix admits is not strictly true.",
+        "suggested_fix": "Replace the '+22 points above a supervised oracle' framing with the appendix-aligned phrasing (accuracy on 132 non-other items vs 0.730 LR baseline) and explicitly flag the non-commensurability inline, not just in the appendix."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6933333333333334,
+      "reasonings": [
+        "Quote verified verbatim. But the text already qualifies the baseline as a \"supervised surface-feature oracle\" (14 hand-crafted features), not a general supervised classifier. A careful reviewer reads this as a ceiling on surface-feature discriminability, not \"beats supervised.\" Appendix A documents the dual reporting. Framing is acceptable.",
+        "Quote is verbatim (lines 191-193). Appendix admits non-commensurability and claims the body reports two ways, but the body only shows the \"+22 points above supervised oracle\" framing without the promised \"accuracy on 132 non-other items vs 0.730\" direct comparison or inline commensurability flag. Only the table caption flags it.",
+        "Quote verified verbatim at lines 192-194 of eval_results.tex. Appendix A (lines 30-39) explicitly admits the two quantities \"are not strictly commensurable\" and says the body reports two ways, but the prose only shows the \"+22 points\" framing against a supervised oracle. A reviewer would read this as overclaiming \"beats supervised\". Table caption flags it, but the headline prose number does not."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "A single-seed loose-dispatcher ablation that strips the typed revise dispatcher's source-existence and name-collision checks stalled at zero revise calls in 90\\,s before we terminated it; the typed run on the same configuration finishes at 197\\,s with one successful \\textsc{revise} call.",
+        "issue": "The headline ablation supporting one of the two stated structural contributions (typed dispatcher) is a single-seed n=1 vs n=1 comparison with one revise call on the winning side. The paper acknowledges this honestly but still uses the typed dispatcher as a contribution claim in intro, system overview, and conclusion. With one data point on each side, the evidence cannot distinguish dispatcher effect from stochasticity (as the appendix admits). Reviewers will dock for one of two core contributions being effectively unablated.",
+        "suggested_fix": "Either run additional ablation seeds (>= 3 each side) before camera-ready, or explicitly soften the contribution claim in the intro/conclusion to 'a typed dispatcher whose effect we report as preliminary' to match the evidence in eval/appendix."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7366666666666667,
+      "reasonings": [
+        "The intro contribution bullet describes the dispatcher as a design artifact (validate-before-mutate, per-op isolation, malformed-edit handling) \u2014 facts about the code, not an effect claim requiring ablation. The eval paragraph explicitly hedges (\"preliminary support\", \"single seed cannot isolate...\"). For a System Demo paper, a design contribution plus an honestly-flagged preliminary ablation is defensible; reviewers are unlikely to dock heavily.",
+        "Quote verbatim at eval_results.tex L206-210. Typed dispatcher is claimed as contribution in intro (L57-63 bullet), system (L73 \"the contribution here is the typed dispatcher\"), and conclusion (L4 \"two structural commitments\"). Eval admits n=1 limit but headline contribution framing doesn't soften.",
+        "Quote verified verbatim at eval_results.tex L206-210. Typed dispatcher is listed as the 2nd of 4 contributions in intro (L57-63) and as one of two \"structural commitments\" in conclusion (L4). The paper self-admits \"single seed cannot isolate the dispatcher from ordinary stochasticity\" (L210-211). Reviewers will dock for an unablated core contribution claim, even with the honest hedge."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/introduction.tex",
+        "quote": "matches a Claude Sonnet 4.6 orchestrator pair at eleven times the cost, contradicting the assumption that orchestrator quality is the bottleneck.",
+        "issue": "The 'matches Sonnet' claim is supported by 5 cheap seeds vs 3 Sonnet seeds on 20NG. On CoT-Pattern the comparison is 3 cheap vs 1 Sonnet, and on CoT the cheap pair actually beats Sonnet decisively (0.944 vs 0.762 NMI), not 'matches'. 'Matches' is also a stretch on 20NG where the cheap mean (0.740) is above the Sonnet upper interval (0.656+/-0.012, max 0.668). The strong contribution claim 'orchestrator quality is not the bottleneck' rests on n=3 Sonnet seeds on 20NG and n=1 on CoT \u2014 fragile evidence for a sweeping claim.",
+        "suggested_fix": "Soften 'contradicting the assumption that orchestrator quality is the bottleneck' to 'suggesting orchestrator quality is not the bottleneck at this scale, pending more Sonnet seeds', and explicitly note n=1 Sonnet seed on CoT."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7399999999999999,
+      "reasonings": [
+        "Quote verified verbatim. \"Matches\" misrepresents the data: on 20NG cheap mean 0.740 is above Sonnet's upper bound 0.668; on CoT cheap (0.944) decisively beats Sonnet (0.762) from n=1 seed. The sweeping \"contradicting the assumption\" claim rests on n=1 Sonnet CoT seed \u2014 a reviewer would flag this.",
+        "Quote verbatim at lines 67-69. Sonnet n=1 on CoT (line 138-139) and n=3 on 20NG; cheap pair beats Sonnet decisively on CoT (0.944 vs 0.762), not 'matches'. Cheap mean 0.740 also exceeds Sonnet upper interval 0.668 on 20NG. The contribution bullet does not flag n=1 fragility.",
+        "Quote verified verbatim at lines 67-69. \"Contradicting the assumption that orchestrator quality is the bottleneck\" is a sweeping claim from a 2-dataset demo with small seed counts; reviewers would flag the overreach. Softening to \"suggesting\" is a legitimate ask."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "taxonomy\\_agent (Sonnet orchestrator)\n  & 0.866 & 0.762 & 0.660\n  & 0.033 & 0.369 & 0.150\n  & 5 & 2.23 & 196",
+        "issue": "The Sonnet orchestrator row on CoT-Pattern is a single seed (per the caption) reported with no stddev, alongside three-seed +/- numbers in the same column. The same row is then compared to the cheap pair in the body ('recovers only 109 of 149 ... the cheap pair closes that gap at roughly one-thirtieth the cost'). Treating n=1 as a comparator while the cheap pair has n=3 is fine if disclosed, but the body's comparative claim invites a reviewer to ask whether one Sonnet seed should be the comparison.",
+        "suggested_fix": "Either run two more Sonnet seeds on CoT (cost is a flat $2.23 * 2 = ~$4.50), or explicitly hedge: 'On a single Sonnet seed, the orchestrator pair recovers only 109 of 149 items'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6999999999999998,
+      "reasonings": [
+        "Quote verified verbatim. But n=1 is triple-disclosed: caption (\"Sonnet row single seed\"), table (no \u00b1 on row), and setup paragraph. The comparison goes against the authors' preferred config, so n=1 understates rather than inflates their claim. 30x cost gap dwarfs any plausible seed variance. Suggested hedge is redundant.",
+        "Quote is verbatim. Caption discloses n=1 for Sonnet, but the prose claim \"recovers only 109 of 149... the cheap pair closes that gap\" treats the single-seed Sonnet number as a hard comparator without a hedge in the body. Reviewer would ask about seed variance given install-default NMI stddev is 0.081.",
+        "Quote verified verbatim at lines 154-157. Caption (line 179) does disclose \"Sonnet row single seed\" vs \"three seeds\" for default, but body prose (lines 197-200) makes a quantitative comparative claim (\"109 of 149\", \"one-thirtieth the cost\") without hedging the n=1 asymmetry. A reviewer would reasonably ask for a hedge or more seeds."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/abstract.tex",
+        "quote": "A Claude Sonnet 4.6 orchestrator pair at eleven times the cost lands inside the cheap pair's NMI interval on 20NG, contradicting the assumption that orchestrator quality is the bottleneck.",
+        "issue": "'Inside the cheap pair's NMI interval' is mathematically true (0.656 lies inside 0.740 +/- 0.055 = [0.685, 0.795]? No \u2014 0.656 < 0.685). The cheap pair's one-sigma interval is [0.685, 0.795], so 0.656 sits BELOW the lower bound, not 'inside'. The Sonnet interval (0.644, 0.668) does not overlap the cheap pair interval. The 'lands inside the cheap pair's NMI interval' claim appears false at one sigma.",
+        "suggested_fix": "Recompute: Sonnet 0.656 is outside the one-sigma cheap pair interval [0.685, 0.795]. Either widen to two sigma and disclose, or rephrase as 'within ~0.08 NMI of the cheap pair' or 'is not statistically separable from the cheap pair given n=3'."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9333333333333332,
+      "reasonings": [
+        "Quote is verbatim. Sonnet NMI 0.656\u00b10.012 = [0.644, 0.668] does NOT overlap cheap pair's 0.740\u00b10.055 = [0.685, 0.795] at one sigma. Claim \"lands inside the cheap pair's NMI interval\" is mathematically false on the authors' own numbers. Repeated in body text line 97. Reviewers checking the abstract against Table 1 will catch this.",
+        "Quote is verbatim. Math checks: cheap pair [0.685, 0.795], Sonnet mean 0.656 sits BELOW the lower bound, and Sonnet interval [0.644, 0.668] does not overlap cheap interval. Claim is mathematically false and repeated unchanged in eval_results.tex L96-98 and conclusion.tex.",
+        "Quote verbatim in abstract.tex line 20-22. Verified table: cheap=0.740\u00b10.055 \u2192 [0.685,0.795]; Sonnet=0.656\u00b10.012 \u2192 [0.644,0.668]. 0.656<0.685, so Sonnet sits BELOW cheap pair's one-sigma interval and intervals don't overlap. Claim is numerically false; reviewers will catch it."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "sits inside the cheap pair's NMI interval ($0.656 \\pm 0.012$ vs $0.740 \\pm 0.055$)",
+        "issue": "Same arithmetic error as in the abstract: 0.656 is not inside [0.685, 0.795] (mean 0.740, one sigma 0.055). Conclusion repeats the claim ('lands inside the cheap pair's interval'). All three statements of this load-bearing claim appear arithmetically wrong.",
+        "suggested_fix": "Either drop 'inside the interval' and report 'within one Sonnet stddev of the cheap pair mean minus one stddev', or restate as 'overlapping confidence interval at 2-sigma' with the explicit math."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.8766666666666666,
+      "reasonings": [
+        "Quote is verbatim. Cheap pair's 1-sigma interval [0.685, 0.795] does not contain 0.656. The natural reading of \"interval\" given only stddev is reported is 1-sigma, and the claim is repeated three times. Reviewer will check the arithmetic.",
+        "Quote verbatim on lines 97-98. Cheap pair NMI one-sigma interval is [0.685, 0.795]; Sonnet's 0.656 falls below 0.685, so it is not \"inside\" that interval. Surrounding context does not qualify with two-sigma or overlap language. Same load-bearing claim appears in abstract and conclusion.",
+        "Quote verified verbatim at lines 97-98 of sections/eval_results.tex. Cheap pair 1-sigma interval [0.685, 0.795] does not contain Sonnet's 0.656. Even Sonnet's upper bound 0.668 is below 0.685, so the intervals don't overlap at 1-sigma. Load-bearing arithmetic error."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "On the Sonnet pair the orchestrator contributes 96--98\\%\\ of total spend because LangChain's \\texttt{bind\\_tools} path strips Anthropic prompt-caching markers from OpenRouter requests",
+        "issue": "Causal claim about why Sonnet cost is high attributes 96-98% of spend to a specific stripped-marker mechanism. No citation, no measurement table, no comparison with and without the strip. This is presented as established fact in eval \u2014 reviewer will ask 'how did you measure this'.",
+        "suggested_fix": "Either cite the probe / log evidence (the completed task #11 'Probe Anthropic prompt caching via OpenRouter' presumably has measurements) in the appendix, or rephrase as 'consistent with LangChain bind_tools stripping cache markers (probed separately)'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7266666666666666,
+      "reasonings": [
+        "Quote is verbatim. The 96-98% cost split is directly measurable from per-call cost logs (not a mechanism claim). The bind_tools/cache-marker stripping is a well-known LangChain behavior offered as engineering context inside a Cost paragraph, not a load-bearing experimental claim. In a 6-page demo track, reviewers are unlikely to demand a measurement table for an aside explaining why one provider is expensive.",
+        "Quote verbatim at lines 124-127 of eval_results.tex. The causal claim (LangChain bind_tools strips Anthropic cache markers, causing 96-98% spend on orchestrator) is presented as fact with no measurement, probe table, or citation. The referenced limitations section is one sentence and does not substantiate it; appendix has no probe data either.",
+        "Quote verbatim at lines 124-127. The \"because\" attributes a specific cause (LangChain bind_tools stripping Anthropic cache markers) for 96-98% spend without any probe data, citation, or appendix reference. Limitations section and appendix contain no measurement of this mechanism. Reviewer would flag \"how measured?\""
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "absolute spend remains below $\\$0.20$ on the 487-document corpus, below the $\\$0.10$--$\\$1.00$ per item rates typical of human codebook construction.",
+        "issue": "The 'human codebook construction costs $0.10-$1.00 per item' figure is presented as a comparison without citation. Reviewers will ask 'whose rates?' and the lack of a reference makes this look invented to favor the system.",
+        "suggested_fix": "Cite a published estimate of qualitative annotation cost (e.g., a CSCW/EMNLP paper on annotation economics) or drop the comparison."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.8166666666666668,
+      "reasonings": [
+        "Quote verified verbatim at lines 122-124. The specific range \"$0.10-$1.00 per item\" is presented as \"typical\" without any citation in a quantitative results section. EMNLP reviewers routinely flag unsourced numeric comparisons that flatter the system; the rhetorical role here makes the absence of a citation a defensible major issue.",
+        "Quote is verbatim at lines 122-124. The $0.10-$1.00 per item human codebook construction cost range is presented as a favorable comparison with no citation in the paragraph or surrounding footnote. Reviewers will plausibly flag this as an unsourced advantageous claim.",
+        "Quote verified verbatim on lines 122-124 of eval_results.tex. The \"$0.10-$1.00 per item\" human codebook construction rate is presented as a favorable comparison without any citation or source. Reviewers will flag this as an uncited quantitative claim used to advantage the system."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "All LLM and clustering discovery baselines stay below NMI $0.15$, including embed\\_cluster\\_llm at $0.039$ (essentially random), so iterative refinement is doing real work on this task.",
+        "issue": "Conclusion 'iterative refinement is doing real work' is a causal claim that requires an ablation isolating iteration. The headline ablation in this very section is a single-seed dispatcher comparison, not an iteration-vs-no-iteration ablation. The single_shot baseline is at 0.143 NMI vs taxonomy_agent's 0.944 \u2014 that gap could be iteration, the typed dispatcher, the judge separation, or judge re-derivation; the prose attributes it to 'iterative refinement' without disentangling.",
+        "suggested_fix": "Replace 'iterative refinement is doing real work' with the weaker 'the orchestrator/judge loop substantially outperforms single-shot prompting on this corpus', which the data actually support."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7666666666666666,
+      "reasonings": [
+        "Quote verified verbatim at lines 201-203. The claim is undermined by the same table: iterative_proposal (also iterative refinement) scores 0.075 NMI, worse than single_shot's 0.143. So attributing taxonomy_agent's gain specifically to \"iterative refinement\" is contradicted by an adjacent row, and the ablation paragraph itself concedes components cannot be isolated.",
+        "Quote verbatim on lines 201-203. Claim attributes gap to \"iterative refinement\" specifically, but iterative_proposal (also iterative) scores 0.075 NMI \u2014 worse than non-iterative single_shot at 0.143 \u2014 undercutting that iteration alone is the lever. No iteration-vs-no-iteration ablation exists; the only ablation (next paragraph) is a single-seed dispatcher test that authors themselves caveat. Reviewer would flag this.",
+        "Quote verbatim at L201-203. \"Iterative refinement is doing real work\" causally credits iteration, but iterative_proposal (which iterates) scores 0.075 \u2014 worse than single_shot at 0.143. The next paragraph admits the only iteration-isolating ablation is single-seed and inconclusive. A reviewer would flag this overclaim."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "Per-pattern recovery is uniform across seeds: sycophantic capitulation $83/90$, unfaithful paraphrase $89/90$, post-hoc rationalization $86/90$, hallucinated premise $81/87$, reward-hack verbalization $88/90$.",
+        "issue": "Denominators do not all equal: 90, 90, 90, 87, 90 \u2014 total 447 across three seeds = 149 per seed * 3. But sycophantic (90), unfaithful (90), post-hoc (90), reward-hack (90) implies each pattern has 30 items per seed * 3 seeds = 90. Hallucinated has 87, implying 29 items per seed. The denominator inconsistency is not explained. Also 'uniform across seeds' is a claim that requires per-seed breakdown, which is not provided \u2014 only the cross-seed sum.",
+        "suggested_fix": "Add a per-seed breakdown (or per-seed table in appendix) to substantiate 'uniform across seeds'. Explain why hallucinated_premise has 87 not 90 (likely 29 items in the gold corpus, but state it)."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6999999999999998,
+      "reasonings": [
+        "Denominators are derivable: n=149 across 5 patterns over 3 seeds gives 30,30,30,29,30 per seed (sum 149), matching 90,90,90,87,90. The corpus size n=149 is stated explicitly. \"Uniform\" reads as uniformly-high recovery; per-seed table would waste scarce 6-page space.",
+        "Quote verbatim at lines 194-197. \"Uniform across seeds\" is claimed but only cross-seed sums (\u00d73 seeds) are reported, not per-seed numbers. The 87 vs 90 denominator gap is derivable (Sonnet row mentions 9/29) but never explicitly stated. Real claim-evidence gap.",
+        "Quote verified verbatim on lines 194-197. \"Uniform across seeds\" is supported only by cross-seed sums, not per-seed numbers \u2014 a real claim-evidence gap. Denominator 87 vs 90 is unexplained at first introduction (the 9/29 mention later implicitly resolves it, but reader has to infer). Minor severity but legitimate."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/related.tex",
+        "quote": "LOGOS~\\citep{pi2025logos} runs a grounded-theory pipeline with LLM coding, semantic clustering, and iterative codebook refinement, reporting 88.2\\% expert-schema match",
+        "issue": "'88.2% expert-schema match' is a precise quoted number from a cited paper. If the cited paper is correct this is fine, but if mis-quoted reviewers will catch it. The same number is not used as evidence here \u2014 it could be dropped without losing argumentative force.",
+        "suggested_fix": "Verify the figure against the LOGOS source; if unverifiable in time, drop the specific number and keep the qualitative description."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333334,
+      "reasonings": [
+        "Quote is verbatim in the file and properly attributed to pi2025logos. Finding is speculative (\"if mis-quoted\"), provides no evidence of an actual error, and admits \"if the cited paper is correct this is fine.\" Citing concrete numbers from related work is standard practice; dropping them weakens the comparison.",
+        "Quote is verbatim. \"88.2% expert-schema match\" is a precise citation-dependent number not used as evidence in the argument. If misquoted from LOGOS, reviewers will catch it; the qualitative description alone would carry the same argumentative weight.",
+        "Quote verified verbatim at lines 15-17. The 88.2% figure is a precise claim attributed to LOGOS that adds no argumentative force to the differentiation (which is made on operating axes, not metric comparison). If misquoted it embarrasses; dropping it costs nothing. Minor but defensible."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_methodology.tex",
+        "quote": "we use a 487-document stratified subsample (25 per class, 13 emptied by sklearn's header/footer/quote filter) under five independently sampled random seeds at the install default and three at the Sonnet pair.",
+        "issue": "Methodology says five seeds at install default; the Run configuration paragraph in eval_results.tex says three. The contradiction (already flagged critical above) is also present here \u2014 flagging that the methodology paragraph is internally consistent but the results paragraph is not.",
+        "suggested_fix": "Confirm five seeds is correct (per table caption) and fix Run configuration accordingly."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9166666666666666,
+      "reasonings": [
+        "Quote verbatim from eval_methodology.tex line 4. Methodology says 5 seeds install / 3 Sonnet, matching table caption line 64. Run configuration in eval_results.tex line 9-10 says \"three independently sampled random seeds\" as blanket statement, contradicting both. Real internal inconsistency.",
+        "Quote is verbatim in eval_methodology.tex line 4. Methodology and table caption both say install-default = 5 seeds; Run configuration paragraph in eval_results.tex (lines 8-12) says 3 seeds. Genuine contradiction; methodology paragraph itself is internally consistent.",
+        "Quote verified verbatim in eval_methodology.tex line 4. Contradiction confirmed: methodology and table caption say five seeds for install default; Run configuration paragraph in eval_results.tex line 9-10 says three seeds. Reviewer-visible inconsistency."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "is $3\\times$ the LLM baselines and $37\\times$ BERTopic",
+        "issue": "37x BERTopic ratio: BERTopic wall is 15 s, taxonomy_agent wall is 713 s -> 47.5x (or 548/15 = 36.5x with the disputed 548 s). The number is consistent with the 548 s figure but inconsistent with the table's 713 s. Compounds the cost/wall mismatch above.",
+        "suggested_fix": "After reconciling to 713 s, update '37x' to ~48x."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.8333333333333334,
+      "reasonings": [
+        "The 37x ratio is internally consistent with the 548s figure cited in the same sentence (548/15 = 36.5 \u2248 37x). The real defect is the 548-vs-713 mismatch already flagged separately; this finding double-counts that issue. If 548s is corrected, 37x updates mechanically \u2014 it is not an independent defect.",
+        "Quote verbatim in eval_results.tex. Table tab:20ng reports install-default wall=713s, but prose says 548s and 37x BERTopic. 548/15=36.5 (matches 37x); 713/15=47.5. So 37x is inconsistent with the table's 713s figure. A reviewer comparing prose to table will flag this.",
+        "Quote verified verbatim on line 121-122. Table shows wall=713s but prose says 548s; 548/15=36.5x matches \"37x\", while 713/15=47.5x would be ~48x. Real internal inconsistency between prose and Table 1 that a reviewer would flag."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "nit",
+        "file": "sections/conclusion.tex",
+        "quote": "the system reaches NMI $0.740$ on 20~Newsgroups at $\\$0.17$ per run, $1.5\\times$ a model-matched embed-cluster-LLM reimplementation of TnT-LLM",
+        "issue": "Conclusion drops the stddev that the abstract and intro carry. A reviewer scanning the conclusion will see point estimates only and may worry the variability is being hidden.",
+        "suggested_fix": "Add '+/- 0.055' to keep variability visible: 'NMI 0.740 +/- 0.055'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "Quote is verbatim, but using point estimates in a brief conclusion is standard EMNLP practice \u2014 full intervals are already in abstract, intro, and results. The conclusion explicitly references \"the cheap pair's interval,\" signaling variability is tracked. Self-labeled \"nit\"; no reviewer lowers a score for this.",
+        "Quote is verbatim. Abstract reports NMI $0.740 \\pm 0.055$ and intro reports $0.740 \\pm 0.055$, but conclusion drops the stddev to just $0.740$. Genuine inconsistency, though minor since conclusion is conventionally a recap.",
+        "Quote verbatim on line 4 of conclusion.tex. Abstract (line 12) and intro (line 37) both carry \"NMI 0.740 +/- 0.055\" while conclusion shows only point estimate \"NMI 0.740\". Minor consistency nit a reviewer could flag."
+      ],
+      "lens": "claim-evidence"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/references.bib",
+        "quote": "@inproceedings{shen2026faithcot,\n  title     = {{FaithCoT-Bench}: Benchmarking Instance-Level Faithfulness of Chain-of-Thought Reasoning},\n  ...  note      = {arXiv:2510.04040}",
+        "issue": "Duplicate bibliography entry for the same paper. Both shen2026faithcot (ICLR 2026, lead author Shen, Xu) and xu2025faithcotbench (arXiv 2025, lead author Xu, Wenliang) carry the identical title 'FaithCoT-Bench: Benchmarking Instance-Level Faithfulness of Chain-of-Thought Reasoning' AND the identical arXiv ID 2510.04040. They cannot both be correct; at minimum one has the wrong author/year. The paper then cites them as if they are distinct works: appendix.tex line 14 cites \\citep{shen2026faithcot} and related.tex line 54 cites \\citep{xu2025faithcotbench} for the same FaithCoT-Bench artifact. A reviewer will immediately spot this as either a hallucinated reference or sloppy bib hygiene.",
+        "suggested_fix": "Pick one canonical entry (verify the actual arXiv 2510.04040 author list and venue), delete the other, and replace both \\citep keys with the survivor. The arXiv listing should be checked to determine whether Shen, Xu or Xu, Wenliang is the real lead author."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9566666666666667,
+      "reasonings": [
+        "Verified verbatim: references.bib has two entries (shen2026faithcot at line 158, xu2025faithcotbench at line 283) with identical title and identical arXiv:2510.04040, but different lead authors (Shen vs Xu) and years (2026 vs 2025). Both keys are cited in separate sections as if distinct works. Clear bib hygiene/correctness bug a reviewer will flag.",
+        "Verified verbatim: references.bib lines 158-164 and 283-288 describe the same paper (identical title, identical arXiv:2510.04040) under different keys with conflicting lead authors and years. Both are cited for the same artifact in appendix.tex:14 and related.tex:54.",
+        "Verified verbatim: lines 158-163 (shen2026faithcot, ICLR 2026, Shen first author) and lines 283-287 (xu2025faithcotbench, arXiv 2025, Xu first author) share identical title and identical arXiv ID 2510.04040. Both keys are cited in appendix.tex:14 and related.tex:54 as if distinct. Clear duplicate/hallucinated entry; reviewers will flag."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/references.bib",
+        "quote": "@inproceedings{deng2025thematiclm,\n  ...  author    = {Deng, Yujia and Akp\u0131nar, S\u0131la and Zhou, Jin and others}",
+        "issue": "Author list truncated with 'and others' (et al.) inside the BibTeX file. ACL/EMNLP style expects the full author list in the .bib so BibTeX can format it correctly; using literal 'and others' here is a placeholder and will render as 'et al.' even when the paper has only a handful of authors, and reviewers will notice this is unfinished. Same problem appears in kim2025tama ('Kim, Huimin and others'), liu2025aiannotorch ('Liu, Conrad and others'), chen2025reasoningmodels ('Chen, Yanda and Benton, Joe and Radhakrishnan, Ansh and Uesato, Jonathan and others'), xu2025faithcotbench ('Xu, Wenliang and others'), korbak2025cotmonitor ('Korbak, Tomek and Bengio, Yoshua and Dragan, Anca and others'), and song2025prmbench ('Song, Mingyang and others').",
+        "suggested_fix": "Replace each 'and others' with the full author list from the actual paper before camera-ready. These are 7 entries; about 30 minutes of work."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7833333333333333,
+      "reasonings": [
+        "Quotes verified verbatim. \"and others\" is valid BibTeX syntax that renders as \"et al.\", which is conventional in ACL/EMNLP papers. However, entries with only 1 listed author + \"and others\" (kim, liu, xu, song) look unfinished and sloppy. Severity is overstated as \"major\" \u2014 this is cosmetic camera-ready cleanup, not something that lowers review scores. Real but minor.",
+        "Verbatim verified: all 7 flagged entries (deng2025thematiclm, kim2025tama, liu2025aiannotorch, chen2025reasoningmodels, xu2025faithcotbench, korbak2025cotmonitor, song2025prmbench) use literal \"and others\" after 1-4 names. This is placeholder bibliography that will render as \"et al.\" and signals unfinished work to reviewers. Should be fixed before camera-ready.",
+        "Quotes verified verbatim at lines 255, 262, 269, 278, 285, 292, 306. Seven entries use \"and others\" placeholders, several with only 1-3 named authors (e.g., \"Kim, Huimin and others\"). These render as \"et al.\" in citations and look unfinished \u2014 reviewers will notice."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/references.bib",
+        "quote": "@article{xu2025faithcotbench,\n  title   = {{FaithCoT-Bench}: Benchmarking Instance-Level Faithfulness of Chain-of-Thought Reasoning},\n  author  = {Xu, Wenliang and others},",
+        "issue": "Author 'Xu, Wenliang' for arXiv 2510.04040 looks suspect because the other duplicate entry (shen2026faithcot) lists 'Shen, Xu' as the lead author (with 'Xu' as a first name). The most plausible explanation is that the author 'Shen, Xu' was misparsed and Xu (a first name) was promoted to a fake surname for a separate stub entry. This is the kind of bibliographic error that reviewers flag as evidence the authors didn't actually read the cited paper.",
+        "suggested_fix": "Verify the real author list of arXiv 2510.04040, fix the duplicate, and remove this stub."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.8833333333333333,
+      "reasonings": [
+        "Verbatim quote confirmed. Both entries share arXiv:2510.04040 (same paper) but have conflicting authors \u2014 \"Xu, Wenliang\" vs the plausible full list led by \"Shen, Xu\". Both citekeys are used (related.tex, appendix.tex), so the rendered bib will show the same paper twice with different lead authors. Reviewers do notice this.",
+        "Quote is verbatim. Both entries share arXiv:2510.04040 but list different lead authors: shen2026faithcot has the full plausible author list led by \"Shen, Xu\" (Xu = first name), while xu2025faithcotbench has \"Xu, Wenliang and others\" \u2014 consistent with a misparse/hallucination. Both keys are cited in related.tex and appendix.tex, so the broken stub ships in the paper.",
+        "Verbatim quote confirmed at line 283. Duplicate entries for arXiv:2510.04040 exist: shen2026faithcot (correct, lead \"Shen, Xu\") and xu2025faithcotbench (\"Xu, Wenliang and others\"\u2014fabricated). Both keys are cited (related.tex vs appendix.tex), so the same paper appears twice with one wrong author. Reviewers flag this."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/references.bib",
+        "quote": "@article{blei2003lda,\n@inproceedings{lang1995newsgroups,\n@article{mcinnes2018umap,\n@article{mcinnes2017hdbscan,\n@article{pedregosa2011sklearn,\n@inproceedings{reimers2019sbert,\n@article{hendrycks2021math,",
+        "issue": "Uncited bibliography entries: blei2003lda, hendrycks2021math, mcinnes2017hdbscan, mcinnes2018umap, pedregosa2011sklearn, reimers2019sbert, and dubois2026sycophancy are defined in references.bib but never referenced from any section file (verified by comm of \\cite keys vs @entry keys). They will not appear in the rendered bibliography (so no rejection risk), but they are dead weight and indicate the bib was not pruned. Notably, the paper mentions BERTopic, embedding/clustering, and scikit-learn in eval_methodology.tex without citing pedregosa2011sklearn / reimers2019sbert / mcinnes2018umap / mcinnes2017hdbscan -- these were probably meant to be cited at the relevant methodology paragraph and were forgotten.",
+        "suggested_fix": "Either delete the unused entries or, more likely, add \\citep calls where the corresponding tools (sklearn, sentence-BERT, UMAP, HDBSCAN, MATH dataset) are mentioned. In particular eval_methodology.tex should cite reimers2019sbert/mcinnes2018umap/mcinnes2017hdbscan in the embed-cluster-LLM baseline description, pedregosa2011sklearn for the sklearn filter mention, and hendrycks2021math for 'drawn from MATH-500 Level 4--5 problems'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7999999999999999,
+      "reasonings": [
+        "Uncited bib entries don't render in the bibliography, so a reviewer literally cannot see \"dead weight.\" The finding itself concedes \"no rejection risk.\" The speculation about missing citations (sklearn, UMAP/HDBSCAN as library behaviors, sentence-BERT for a model name) is largely cosmetic for a 6-page demo paper, though MATH-500 is a borderline legitimate omission.",
+        "Verified: all 7 entries (blei2003lda, hendrycks2021math, mcinnes2017hdbscan, mcinnes2018umap, pedregosa2011sklearn, reimers2019sbert, dubois2026sycophancy) exist in references.bib but appear in zero \\cite calls. eval_methodology.tex mentions sklearn, embed-cluster-LLM (sBERT/UMAP/HDBSCAN), and MATH-500 without citing the existing bib entries.",
+        "Verified: 7 listed entries (blei2003lda, dubois2026sycophancy, hendrycks2021math, mcinnes2017hdbscan, mcinnes2018umap, pedregosa2011sklearn, reimers2019sbert) exist in references.bib but are uncited (confirmed by comm). eval_methodology.tex mentions sklearn, MATH-500, embed-cluster-LLM without citing the relevant tools \u2014 a reviewer-visible omission. Quote lines are verbatim."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/references.bib",
+        "quote": "% Entries marked \\todo are placeholders that need a confirmed\n% citation key, author list, or venue before camera-ready.",
+        "issue": "The header comment in references.bib says entries marked \\todo are placeholders that need confirmation before camera-ready, but no entries are actually marked with \\todo. Either the comment is stale (the todos were removed without the comment being updated) or the marking convention was abandoned. Either way the comment is misleading; for an EMNLP single-blind submission, the version that reviewers see should not contain author-facing TODO commentary about camera-ready prep.",
+        "suggested_fix": "Delete the header comment (or update it to describe the current state of the bib). At a minimum, do not leave camera-ready TODO commentary in the submitted manuscript build."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7666666666666666,
+      "reasonings": [
+        "Quote is verbatim and no \\todo entries exist, so the comment is stale. But .bib source is not rendered in the submitted PDF that reviewers read. A stale internal comment in a non-rendered source file cannot affect review scores or cause embarrassment.",
+        "Quote verbatim at lines 3-4. Confirmed no \\todo markers exist in any of the 40+ entries, so the header comment is stale/misleading. Finding is correct, though minor: reviewers see the rendered PDF not the .bib source, so impact on scoring is near-zero.",
+        "Quote verified verbatim at lines 3-4. Grep confirms no entries contain \\todo, so the comment is stale. However, .bib comments are not rendered in the PDF reviewers see, so the actual review-score impact is minimal \u2014 this is a minor housekeeping issue at most."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "/mnt/hdd/qmnguyen/taxonomy_agent/paper/sections/related.tex",
+        "quote": "FaithCoT-Bench~\\citep{xu2025faithcotbench} and\nPRMBench~\\citep{song2025prmbench} ship instance- and step-level\nCoT-failure benchmarks",
+        "issue": "FaithCoT-Bench is cited here as xu2025faithcotbench but cited in appendix.tex line 14 as shen2026faithcot. Even if both bib entries are 'fixed' independently, the prose attributes a single paper to two different authors/years across sections, which a reader cross-referencing the bibliography will catch.",
+        "suggested_fix": "After consolidating the duplicate bib entry, replace both \\citep calls with the single surviving key."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9333333333333332,
+      "reasonings": [
+        "Quote in related.tex line 54 is verbatim. Bib has two entries for the same paper (arXiv:2510.04040, identical title): shen2026faithcot (correct authors, ICLR 2026) and xu2025faithcotbench (author \"Xu, Wenliang and others\" \u2014 likely fabricated, since the real first author is Xu Shen). Same paper cited under two different keys across sections is a defensible citation-correctness issue.",
+        "Quote verified verbatim in related.tex line 54-55. Appendix.tex line 14 cites the same paper (FaithCoT-Bench) as shen2026faithcot, while related.tex uses xu2025faithcotbench. Same named benchmark attributed to two different author/year keys across sections \u2014 a real citation inconsistency.",
+        "Quote is verbatim at related.tex L54. Appendix L14 cites the same paper (FaithCoT-Bench, arXiv:2510.04040) under shen2026faithcot with different author/year than xu2025faithcotbench. Bibliography contains both duplicate entries. A reviewer cross-checking will catch the inconsistency."
+      ],
+      "lens": "citation-correctness"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/abstract.tex",
+        "quote": "Per-item cost is linear in the corpus and runs on the cheap model, and the orchestrator cannot force a label past the judge.",
+        "issue": "Dangling subject for 'runs on the cheap model'. Cost does not run on a model; the judge does. The reader has to guess what 'runs' refers to.",
+        "suggested_fix": "Rewrite as: 'Per-item cost is linear in the corpus, the judge runs on the cheap model, and the orchestrator cannot force a label past it.'"
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7333333333333334,
+      "reasonings": [
+        "Quote verbatim. \"Per-item cost...runs on the cheap model\" does have a dangling/mismatched subject \u2014 cost doesn't run on a model, the judge does. Meaning is recoverable via context, so severity is arguably minor not major, but the clarity issue is real in the abstract.",
+        "Quote is verbatim. The conjunction \"and runs on the cheap model\" attaches grammatically to \"Per-item cost\" as subject, but cost cannot run on a model. The judge/labelling step does. Context does not resolve the ambiguity; abstract visibility makes it a real clarity defect.",
+        "Quote matches abstract verbatim (lines 7-9). The coordinated clause \"Per-item cost is linear in the corpus and runs on the cheap model\" gives \"cost\" as the syntactic subject of \"runs,\" which is nonsensical \u2014 cost doesn't run on a model. A real clarity defect in the abstract."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/introduction.tex",
+        "quote": "The per-item cost is linear in the corpus and runs on the cheap model, so the publication and install configuration is the same.",
+        "issue": "Same dangling-subject problem as the abstract: 'cost' does not 'run on' a model. Also, the consequent ('publication and install configuration is the same') is a non-sequitur to a reader who has not yet read the evaluation; nothing in the preceding clause grounds why being linear+cheap implies one config matches another.",
+        "suggested_fix": "Split into two sentences and supply the antecedent: 'The judge runs on the cheap model and is called once per item, so per-item cost stays low at corpus scale. We can therefore use the same configuration we report on in the paper as the install default.'"
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7833333333333332,
+      "reasonings": [
+        "Quote is verbatim (lines 31-33). \"Cost ... runs on the cheap model\" is a real dangling-subject error: \"runs\" is conjoined with \"is linear\" via \"and\", making \"cost\" the syntactic subject. The \"publication and install configuration is the same\" leap is genuinely opaque at this point.",
+        "Quote is verbatim (lines 31-33). \"Cost...runs on the cheap model\" is a dangling-subject error: cost doesn't run on a model. The leap from \"linear+cheap\" to \"publication and install configuration is the same\" is a non-sequitur unsupported by preceding text.",
+        "Quote verbatim on lines 31-33. \"Per-item cost...runs on the cheap model\" has a dangling-subject issue (cost doesn't run on a model; the judge does). Worse, the claim that linear+cheap implies \"publication and install configuration is the same\" is unsupported at this point \u2014 that equivalence is only justified in the next paragraph. Real clarity defect."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_methodology.tex",
+        "quote": "filtered by a unanimous Claude Opus 4.8 three-classifier ensemble",
+        "issue": "Compressed jargon that a reviewer will need to re-read. 'Unanimous three-classifier ensemble' is undefined: is it three runs of one classifier, three different prompts, three different models? No definition appears anywhere in the body or appendix.",
+        "suggested_fix": "Expand inline once: e.g., 'filtered to items where three independent Claude Opus 4.8 classification passes (different sampling seeds) agreed on the injected pattern' or whatever the actual procedure was."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7266666666666666,
+      "reasonings": [
+        "Quote is verbatim. But \"unanimous three-classifier ensemble\" is fairly self-explanatory (three classifiers, all agree); the Claude Opus 4.8 model is named. For a 6-page demo paper, this is a minor dataset-construction detail, not a methodology claim. At most a reviewer clarification, not score-lowering.",
+        "Quote verbatim in eval_methodology.tex line 4. \"Three-classifier ensemble\" is introduced once with no definition in body or appendix (grep confirms single occurrence). Reviewer cannot tell whether it is three seeds, three prompts, or three models \u2014 a real clarity gap.",
+        "Quote verbatim in eval_methodology.tex line 4. \"Three-classifier ensemble\" is undefined in body and appendix (checked A-E); could mean three seeds, three prompts, or three models. Since this filter gates the CoT benchmark's quality, a reviewer would want it defined."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "iterative\\_proposal wins NPMI by emitting 16 lexically focused categories, and LDA and embed\\_cluster\\_llm hold a small $C_v$ lead by keeping $K{=}16$ fixed.",
+        "issue": "NPMI and $C_v$ coherence are introduced here without ever being defined or briefly characterised. A System Demonstration reviewer outside topic modelling will not know what they measure or which direction is good (the table arrows help, but the prose treats them as common knowledge).",
+        "suggested_fix": "Add a one-line gloss at first use in eval_methodology: 'NPMI and $C_v$ are standard topic-coherence scores~\\citep{rehurek2010gensim} computed over the top words of each induced category.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333334,
+      "reasonings": [
+        "eval_methodology.tex already characterises NPMI and $C_v$ as \"intrinsic topic-quality metrics (NPMI, $C_v$ coherence~\\citep{rehurek2010gensim}, label redundancy)\" \u2014 exactly the brief gloss the fix proposes. Direction arrows are in the table. The finding's premise that they are never defined is false.",
+        "Quote verbatim at eval_results.tex L108-110. Methodology calls them \"intrinsic topic-quality metrics (NPMI, $C_v$ coherence~\\citep{rehurek2010gensim}, label redundancy)\" with a citation and table arrows for direction, but never glosses what they measure. Concern partially defused; severity likely overstated but valid.",
+        "Quote verified verbatim at eval_results.tex lines 108-110. eval_methodology.tex line 5 lists NPMI and C_v with citation but never glosses what they measure. A System Demo reviewer outside topic modeling would be undersupported, though arrows and citation soften the impact."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "Wall-clock time of $548\\,$s is $3\\times$ the LLM baselines and $37\\times$ BERTopic;",
+        "issue": "The number 548 s contradicts the wall column in Table 1 (713 s for taxonomy_agent install default). The reader stumbles on which figure is canonical and may assume a sloppy paste.",
+        "suggested_fix": "Reconcile to the table value (713 s) or state clearly that 548 s is a different subset (e.g., excluding seed X)."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.8733333333333334,
+      "reasonings": [
+        "Quote verified verbatim at line 121. Table 1 install-default row shows 713\u00b1245 s wall (line 33), not 548 s. The prose gives no qualifier (median, subset, different seed count) to explain the gap. Same paragraph also has $0.16 vs table's $0.17 \u2014 pattern of unreconciled numbers a reviewer will flag.",
+        "Verified verbatim: line 121 says \"Wall-clock time of $548\\,$s\" but Table 1 line 33 reports the install-default 20NG wall as 713\u00b1245 s. The prose offers no reconciliation (no subset note, no different seed set), so a reviewer would flag the mismatch as sloppy.",
+        "Quote verified verbatim on line 121-122. Table 1 (line 33) reports install-default wall-clock as 713$_{\\pm245}$ s, not 548 s. Same paragraph also says $0.16 vs table's $0.17. Unreconciled numbers between prose and own table are a real reviewer red flag."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average",
+        "issue": "The abstract, intro, table, and conclusion all report $0.17 per run; here the Cost paragraph says $0.16. The discrepancy is small but a reviewer will notice and ding internal consistency.",
+        "suggested_fix": "Pick one number consistent with Table 1 (0.17) and use it everywhere, or note explicitly why the Cost paragraph rounds differently."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.8166666666666668,
+      "reasonings": [
+        "Quote verified verbatim at eval_results.tex:118 (\"costs $\\$0.16$\"). Abstract, intro, Table 1, and conclusion all say $0.17. While 0.16 vs 0.17 sits within the \u00b10.03 stddev (likely a true mean ~0.165 rounded differently), the same file's own Table 1 row says 0.17, so a careful reviewer will flag the within-file inconsistency. Trivial fix.",
+        "Quote verbatim at line 118. Table 1 (line 33), abstract, intro, and conclusion all report $0.17; the Cost paragraph alone says $0.16. Surrounding context does not explain the rounding. A reviewer scanning for internal consistency will flag the mismatch. (Note: wall-time 548s also disagrees with Table's 713s, a separate but related inconsistency.)",
+        "Quote verified verbatim at line 118 of eval_results.tex: \"A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average\". Abstract, intro, conclusion, and Table 1 all report $0.17, so the Cost paragraph contradicts every other mention. Reviewers flag this."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "A Sonnet 4.6 orchestrator pair is reported as the optional quality configuration in Table~\\ref{tab:20ng} for cost comparison and reaches NMI inside the cheap pair's interval at twelve times the cost.",
+        "issue": "Cost-multiplier slips between sections: intro/abstract/conclusion say eleven times, Run Configuration says twelve times, Cost paragraph says 'roughly 1/12'. Same quantity, three different numbers within the paper.",
+        "suggested_fix": "Pick one ratio (1.86/0.17 = 10.9x rounds to 11x) and use 'eleven times' consistently; or always report it as '~11x'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.8333333333333334,
+      "reasonings": [
+        "Quote is verbatim and inconsistency is real, but severity is overstated. The \"$0.16 average\" in cost paragraph gives 1.86/0.16=11.6 (rounds to 12), while abstract's $0.17 gives 10.9 (rounds to 11). Both are approximations of the same ratio; reviewer unlikely to lower score over a copy-edit nit. Major severity is unjustified.",
+        "Quote verbatim at eval_results.tex L6-8. Confirmed five mentions of \"eleven times\" (abstract L21, intro L43/67, eval_results L98, conclusion L4 \"11x\") vs \"twelve times\" L8 and \"1/12\" L120 \u2014 same Sonnet/cheap cost ratio (1.86/0.17=10.94, rounds to 11) reported three ways. Real inconsistency.",
+        "Quote verbatim at lines 6-8 of eval_results.tex. Verified cost ratio inconsistency: abstract/intro/conclusion say \"eleven times\" / \"$11\\times$\"; eval_results line 8 says \"twelve times\"; line 98 says \"eleven times\"; line 120 says \"$1/12$\". 1.86/0.17=10.94 rounds to 11. Reviewers will spot this."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "For 20~Newsgroups we report mean $\\pm$ standard deviation over three independently sampled random seeds on a 487-document stratified subsample",
+        "issue": "Abstract, intro, methodology, and table caption all say five seeds at the install default; Run Configuration says three. A reviewer will catch this and treat it as evidence of carelessness in the evaluation.",
+        "suggested_fix": "Change 'three' to 'five' here (and 'three at the Sonnet pair' if also needed), matching the methodology subsection."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9333333333333332,
+      "reasonings": [
+        "Quote is verbatim at lines 9-11 of eval_results.tex. The Run Configuration says \"three independently sampled random seeds\" for 20NG, but abstract (\"five seeds\"), intro (\"five seeds\"), methodology (\"five...at install default and three at Sonnet\"), and the same section's table caption (\"install-default row averaged over five seeds, Sonnet row and baselines over three\") all say five for install default. Genuine, self-contradicting inconsistency a careful reviewer would notice.",
+        "Quote is verbatim in eval_results.tex lines 9-11. Abstract (\"five seeds\"), eval_methodology (\"five...at install default and three at Sonnet pair\"), and table caption (\"five seeds, Sonnet row and baselines over three\") all conflict with this paragraph's blanket \"three\". Real reviewer-visible inconsistency.",
+        "Quote verified verbatim at eval_results.tex lines 9-11. Contradicts the same file's table caption (line 64: \"five seeds...Sonnet row and baselines over three\"), eval_methodology.tex line 4 (\"five...at install default and three at the Sonnet pair\"), and abstract.tex line 10. Clear internal inconsistency a reviewer would flag."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "Both LLMs are called through OpenRouter, so any chat-completions model can fill either role and mixed-vendor runs are routine in our evaluation (\\S\\ref{sec:evaluation}).",
+        "issue": "'chat-completions model' is unexplained jargon (the OpenAI API contract) that a non-LLM-engineering reviewer will not parse. Also, 'mixed-vendor runs are routine' is a marketing tone with no concrete referent in the evaluation (the eval only varies DeepSeek vs Sonnet, both single-vendor for each role).",
+        "suggested_fix": "Drop the jargon and the unsupported claim: 'Both LLMs are called through OpenRouter, so any provider supported there can fill either role.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6733333333333332,
+      "reasonings": [
+        "\"Chat-completions model\" is standard terminology for EMNLP System Demos practitioners, not opaque jargon. \"Mixed-vendor\" has a real referent: the Sonnet orchestrator paired with a DeepSeek judge is a genuine cross-vendor config in the eval. At worst a minor style nit, not major.",
+        "Quote is verbatim (lines 35-37). \"chat-completions model\" is API jargon. Eval rows show single-vendor pairs only (DeepSeek/DeepSeek or Sonnet/Sonnet), so \"mixed-vendor runs are routine in our evaluation\" overclaims. Surrounding context does not defuse.",
+        "Quote is verbatim. The \"mixed-vendor runs are routine in our evaluation\" claim is contradicted by the eval (only two single-vendor pairs: DeepSeek/DeepSeek and Sonnet/Sonnet). \"Chat-completions\" is mild jargon. A reviewer cross-checking would flag the overstatement; severity is closer to moderate than major, but finding is defensible."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "(two early bugs in which preconditions were checked too late destroyed data, which motivated this invariant).",
+        "issue": "'destroyed data' is dramatic and undefined in a research paper (no user data was lost; the working taxonomy was corrupted in a test). Reviewer will read this as imprecise. Pronoun 'which' has a slightly mushy antecedent (the bug, or the destruction?).",
+        "suggested_fix": "Tighten to: 'two early bugs that mutated the working taxonomy before all preconditions had been checked motivated this invariant.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6,
+      "reasonings": [
+        "Quote is verbatim, but the phrase sits in a brief parenthetical motivating an engineering invariant. In context \"data\" clearly refers to the working taxonomy state, and the \"which\" antecedent parses naturally. Reviewers won't dock a systems-demo paper for colloquial dev-speak in an aside; \"major\" severity is overstated.",
+        "Quote verbatim at line 67. \"Destroyed data\" is dramatic/imprecise \u2014 context implies corrupted taxonomy state, not user data. Real concern but minor, not major; context partially defuses ambiguity.",
+        "Quote verified verbatim at line 66-68 of system.tex. \"destroyed data\" is dramatic and imprecise \u2014 in context it means the in-memory working taxonomy was corrupted during development, not user data loss. A careful reviewer would flag the overstatement and the slightly mushy \"which\" antecedent. Minor but real clarity issue."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "the don't-fit rate, the fraction of items the judge labelled \\texttt{\"other\"}, and the orchestrator is allowed to call \\texttt{finalize\\_classify} once that rate falls below a threshold",
+        "issue": "Run-on / garden-path: the appositive 'the fraction of items...' makes the second clause read as a third item in a list ('A, the X, and B'). Reader has to back up.",
+        "suggested_fix": "Either parenthesise the appositive ('the don't-fit rate (the fraction of items the judge labelled ``other''). The orchestrator is allowed...') or split into two sentences."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7433333333333335,
+      "reasonings": [
+        "Quote is verbatim. But the appositive \"the fraction of items the judge labelled 'other'\" is properly comma-offset, and the third clause has a different subject (\"the orchestrator is allowed\"), which immediately disambiguates from a three-item list reading. Meaning is recoverable on first read; \"major\" severity is overstated for a minor stylistic preference.",
+        "Quote is verbatim. The appositive \"the fraction of items the judge labelled 'other'\" sits between commas inside an \"A, B, and C\" frame, creating a garden-path: readers parse it as a third list item before realizing C is an independent clause. Parenthesising or splitting would fix it.",
+        "Quote verified verbatim at lines 76-80. The appositive \"the fraction of items the judge labelled 'other'\" is comma-set off such that \"and the orchestrator...\" parses as a third list item before the reader realises it is a new clause. Genuine garden-path; minor-to-major clarity nit."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/system.tex",
+        "quote": "the orchestrator's context does not bloat with per-item labels across long corpora",
+        "issue": "'bloat' is informal register. More importantly the verb-object pairing is loose: a context window does not 'bloat with labels'; it grows because labels are appended to it.",
+        "suggested_fix": "'the orchestrator's context length does not grow with the number of items, only with the number of taxonomy edits.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333334,
+      "reasonings": [
+        "Quote is verbatim, but \"bloat\" is standard register in LLM/systems writing (\"context bloat\" is a recognized concept). \"Bloat with X\" is idiomatic for accumulating X. The fix loses the negative connotation motivating the design choice. No reviewer would flag this.",
+        "Quote verbatim at line 32. \"Bloat\" is informal register for an EMNLP submission, and the verb-object pairing (\"context...bloat with labels\") is loose. A more precise rewrite would improve the sentence. Minor severity is appropriate; not a desk-reject issue but a defensible polish.",
+        "Quote verified verbatim on line 32. \"Bloat\" is informal register inappropriate for ACL/EMNLP prose, and the phrasing is loose. Real but minor \u2014 unlikely to affect score on its own, though it reads as colloquial in an otherwise formal section."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_methodology.tex",
+        "quote": "an embed-cluster-LLM pipeline in the TnT-LLM family",
+        "issue": "Triple-compound 'embed-cluster-LLM' is borderline jargon and stacks hyphens against the local style guideline. A first-time reader cannot tell from the name whether it embeds with an LLM, clusters with an LLM, or both.",
+        "suggested_fix": "Expand: 'a pipeline that embeds items, clusters them, then names each cluster with one LLM call (the TnT-LLM family).'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.75,
+      "reasonings": [
+        "The phrase names a known pipeline pattern (TnT-LLM family is cited as the canonical reference) and parallels other compact baseline descriptors in the same sentence. NLP reviewers recognize \"embed-cluster-LLM\" as standard pipeline shorthand. Expanding would bloat a strict 6-page paper.",
+        "Quote verbatim on line 4. \"embed-cluster-LLM\" stacks three hyphenated tokens, violating the project's compound-hyphen guideline, and is opaque versus the more transparent neighbors in the same baseline list. Minor clarity fix.",
+        "Quote verified verbatim in sections/eval_methodology.tex line 4. \"embed-cluster-LLM pipeline\" stacks three hyphens in a compound modifier, violating the project's no-stacked-compound-hyphens guideline and is genuinely opaque on first read."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "consistent with refinement drift on a cheap proposer.",
+        "issue": "'Refinement drift' is undefined jargon. The reader is expected to infer a phenomenon (label set drifts during iterative refinement) that the paper has not named or cited.",
+        "suggested_fix": "Either define it in one phrase ('the proposer keeps editing label names without converging') or drop the term."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "\"Refinement drift\" is descriptive prose, not a claimed term of art. The adjacent footnote operationalizes it (monotonic-add loop, cheap run varies 8-16 categories), and the surrounding context (iterative method losing to single-shot) makes the meaning self-evident. Reviewers would not flag this.",
+        "Verbatim quote confirmed on line 87 of sections/eval_results.tex. Grep across the paper shows 'refinement drift' is used exactly once and is never defined or cited. The footnote discusses a 'monotonic-add loop' but does not name it as the referent of 'refinement drift'. Minor clarity issue is genuine.",
+        "Quote verified verbatim at line 86-87. \"Refinement drift\" appears once, undefined, uncited. Context (TopicGPT-port losing, monotonic-add footnote) makes meaning loosely inferable but the term reads as jargon. Minor severity \u2014 reviewer would flag as imprecise, not score-killing."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "shape-matched to BERTopic at defaults",
+        "issue": "'Shape-matched' is undefined and idiosyncratic. A reviewer will guess (similar cluster-count distribution? similar noise rate?) but the term has no formal definition.",
+        "suggested_fix": "Replace with concrete description: 'producing a similarly degenerate small-cluster, high-noise solution to BERTopic at defaults.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.65,
+      "reasonings": [
+        "Quote is verbatim, but \"shape-matched\" is a minor lexical choice in a side-comparison clause. The preceding explicit numbers (3-cluster, 58% noise) carry the meaning; readers can infer \"similar degenerate shape\". Demo-track reviewers won't lower scores over one informal modifier.",
+        "Quote verbatim at lines 102-103. \"Shape-matched\" is undefined idiosyncratic jargon. Context names degeneracy markers (3-cluster, 58% noise) but does not formalize what dimension is matched against BERTopic's 2-cluster default. Minor clarity issue.",
+        "Quote verified verbatim at line 102-103. \"Shape-matched\" is informal jargon with no formal definition; context (degenerate 3-cluster, 58% noise) hints at meaning but term is idiosyncratic. Minor clarity ding; a reviewer would note the ambiguity but unlikely to lower score significantly."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/related.tex",
+        "quote": "first-class cost and partial-progress accounting through a walk-up Streamlit surface.",
+        "issue": "'first-class' and 'walk-up Streamlit surface' are demo-jargon. 'First-class' here is metaphor borrowed from PL theory; 'walk-up' is conference-demo slang. Together they are dense for one phrase.",
+        "suggested_fix": "Plainer: 'live cost and partial-progress tracking exposed through a Streamlit UI usable without configuration.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "Quote verifies verbatim. But \"first-class\" is standard CS usage (first-class support/citizen), not narrow PL jargon. \"Walk-up\" is apt for a System Demonstrations venue where reviewers expect demo vocabulary. Suggested fix is longer and less punchy. Minor severity at most.",
+        "Quote verbatim at line 22-23. \"First-class\" + \"walk-up Streamlit surface\" stack two metaphors (PL theory + demo slang) in one phrase. Context doesn't defuse it. Minor but legitimate clarity nit; \"walk-up\" especially is undefined jargon.",
+        "Quote verified verbatim at lines 22-23 of related.tex. \"First-class\" (PL metaphor) and \"walk-up Streamlit surface\" (demo slang) stacked in one phrase is genuinely dense and would read as jargon to a reviewer. Minor clarity issue, but real."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/abstract.tex",
+        "quote": "A Claude Sonnet 4.6 orchestrator pair at eleven times the cost lands inside the cheap pair's NMI interval on 20NG,",
+        "issue": "'Lands inside the cheap pair's NMI interval' is unusual phrasing in an abstract for a demo paper; 'interval' is undefined (one-sigma? confidence interval?). Reviewer may mis-read it as a formal CI.",
+        "suggested_fix": "Use 'falls within one standard deviation of the cheap pair's mean NMI' or 'reaches NMI inside the cheap pair's $\\pm\\sigma$ band'."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333333,
+      "reasonings": [
+        "Quote is verbatim, but the prior sentence establishes \"NMI $0.740 \\pm 0.055$\", so \"NMI interval\" plainly references that $\\pm$ band. Context disambiguates; reviewers won't mistake it for a formal CI in a demo abstract. Minor stylistic preference at most.",
+        "Quote is verbatim. \"NMI interval\" is undefined in the abstract \u2014 the \u00b1 value shown earlier is a standard deviation, not a confidence interval, so the term is ambiguous. \"Lands inside\" is also colloquial for an abstract. Minor but defensible clarity concern.",
+        "Quote verified verbatim at lines 20-21 of abstract.tex. \"Interval\" is undefined; paper reports mean\u00b1std but the word suggests CI. Minor clarity issue worth tightening in an abstract, though unlikely to materially lower a score on its own."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "nit",
+        "file": "sections/eval_results.tex",
+        "quote": "shape-matched to BERTopic at defaults; a \\texttt{min\\_cluster\\_size} sweep does not lift the mean.",
+        "issue": "'Lift the mean' is colloquial; ambiguous whether 'the mean' is NMI mean or something else.",
+        "suggested_fix": "'a \\texttt{min\\_cluster\\_size} sweep does not raise mean NMI.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333333,
+      "reasonings": [
+        "Quote is verbatim. But \"the mean\" is unambiguous in context: the immediately preceding clause cites \"NMI $0.164 \\pm 0.092$\", so mean NMI is the natural referent. \"Lift the mean\" is idiomatic empirical-writing English, not colloquial. Severity is nit; no reviewer would flag this.",
+        "Quote verbatim at lines 103-104. \"Lift the mean\" is colloquial; referent of \"the mean\" is implicit (nearest antecedent is NMI, but the table reports multiple metrics). Naming \"mean NMI\" removes ambiguity. Real but nit-level.",
+        "Quote verified verbatim at lines 102-104. \"Lift the mean\" is colloquial and ambiguous about which metric's mean \u2014 context implies NMI but the phrasing is imprecise for a technical paper. Legitimate nit-level clarity issue, unlikely to lower a score on its own."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "nit",
+        "file": "sections/system.tex",
+        "quote": "(single category with an escape vs.\\ open-ended generation)",
+        "issue": "'an escape' is jargon for the 'other' option but not defined where it appears.",
+        "suggested_fix": "'(a single category, or ``other'' if none fits, vs.\\ open-ended generation)'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "Quote is verbatim. But \"escape\" is standard LLM-classification terminology and is operationally defined just a few lines later in the Convergence paragraph (\"reply 'other' whenever no listed category fits\"; \"Escape-hatch coercion\"). The parenthetical is a brief gloss; expanding it clutters the contrast. A reviewer would not penalize this.",
+        "Quote verbatim at line 54. \"An escape\" appears before any definition; the \"other\" escape-hatch mechanism is only explained 20+ lines later in the Convergence paragraph (lines 78-88). Reader hits jargon with no referent. Nit-level but real clarity gap.",
+        "Quote verified verbatim on line 54. \"an escape\" is used before the \"other\" escape-hatch mechanism is explained (lines 82-84), making it briefly undefined jargon at first occurrence. Minor clarity nit; a reviewer would likely note it but not lower a score meaningfully."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "nit",
+        "file": "sections/related.tex",
+        "quote": "The orchestrator-and-judge separation reduces the multi-agent coordination surface to a single ReAct loop.",
+        "issue": "'Coordination surface' is undefined metaphor from software-engineering jargon.",
+        "suggested_fix": "'reduces multi-agent coordination to a single ReAct loop.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.5499999999999999,
+      "reasonings": [
+        "Quote is verbatim. \"Coordination surface\" is standard CS metaphor (cf. \"API surface\", \"attack surface\") \u2014 an EMNLP reviewer wouldn't flag it. The suggested fix is actually weaker: it claims coordination itself is reduced to a ReAct loop, losing the precise \"surface/points of coordination\" meaning. Nit at best.",
+        "Quote is verbatim on line 47-48. \"Coordination surface\" is undefined SE jargon never introduced earlier; meaning is inferable but loose. Nit-level; suggested fix is a clean simplification. Real but minor.",
+        "Quote verifies verbatim on lines 47-48. \"Coordination surface\" is software-engineering metaphor; meaning is inferable but the term is undefined and stylistically out of place in an NLP paper. Genuine nit, unlikely to lower a score but the suggested trim is cleaner."
+      ],
+      "lens": "clarity-undefined"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "One seed entered a monotonic-add loop on first attempt (\\S\\ref{sec:limitations}); a re-run with a different non-deterministic trajectory converged, and we added an auto-finalize fallback that labels the corpus against the on-disk taxonomy when the orchestrator ends without an artifact.",
+        "issue": "This is the weakest argument in the paper. The authors admit, in a footnote, that at least one of the five reported seeds did not produce a finalised taxonomy and was re-run, and that an auto-finalize fallback was *added after the fact*. A hostile reviewer will read this as selection-on-the-dependent-variable: the n=5 NMI of 0.740 \\pm 0.055 is computed over seeds where the system either converged or was rescued by a post-hoc fallback that was *itself motivated by* the failure. The headline claim depends on which seeds are reported, when the fallback was introduced relative to seed sampling, and whether the failed seed counts as a `run' or not. With n=5, replacing one converged seed by the original failed-and-then-zero-NMI run could materially move the mean and inflate the stddev.",
+        "suggested_fix": "Report two numbers explicitly: (a) NMI/ARI over all five seeds *as originally drawn* with the failed seed scored on whatever taxonomy existed at termination (or zero if none), and (b) NMI/ARI with the auto-finalize fallback active from the start. State unambiguously when the fallback was introduced relative to seed sampling and re-run the full seed set with the fallback fixed in code, not retrofitted. Move the disclosure from a footnote into the main text near the bolded numbers."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7666666666666666,
+      "reasonings": [
+        "Quote is verbatim in the footnote at lines 91-95. The methodological concern is legitimate: with n=5 and std 0.055, replacing one rescued seed with a zero-NMI failure would materially shift the headline 0.740 mean. The footnote ambiguously describes when the fallback was added relative to sampling. A cynical Reviewer 2 would absolutely flag this as selection-on-DV. The honest disclosure helps but does not neutralize the objection; demo papers still need defensible numbers.",
+        "Quote verbatim at lines 91-95 of eval_results.tex. Disclosure is in a footnote, not adjacent to bolded NMI 0.740\u00b10.055. Paper never reports the alternative number (failed seed scored as-is). With n=5, a re-run plus retrofitted fallback is a legitimate methodology concern.",
+        "Quote verified verbatim in footnote at lines 91-95. Table caption confirms n=5 for install default. The combination of (a) re-running a failed seed, (b) introducing the auto-finalize fallback after observing failure, and (c) burying disclosure in a footnote while bolding 0.740\u00b10.055 is a legitimate selection-on-DV concern with n=5. Reviewer 2 will flag this."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_methodology.tex",
+        "quote": "\\textbf{CoT-Pattern} is a 149-item corpus of chain-of-thought traces evaluated under three seeds at the install default and one seed at the Sonnet pair, injected with five safety-relevant failure modes ... generated by Gemini-3.1-Flash-Lite, and filtered by a unanimous Claude Opus 4.8 three-classifier ensemble.",
+        "issue": "Single-source, single-generator synthetic benchmark with a verifier from an LLM family that overlaps with the discovery LLMs. The corpus is generated by one model and filtered by Claude classifiers that share priors with the orchestrator/judge stack the paper later evaluates. The 0.944 NMI and `100% accuracy on labelled items' headlines almost certainly reflect the corpus *being labelled by the same surface cues a related LLM injected*, not genuine pattern discovery. The construct-validity defence in Appendix A says only that no public dataset covers all five patterns; it does not address the contamination from a same-family verifier or test whether the discovery system is recovering injection signatures rather than the underlying failure modes.",
+        "suggested_fix": "Either (a) add a held-out human-annotated slice (even 30--50 items) where humans, not LLMs, assign the gold pattern; (b) run the discovery system against a non-Claude/non-Gemini-generated corpus from a different family for cross-family generalisation; or (c) explicitly bound the claim to `recovery of LLM-injected pattern signatures' rather than `pattern discovery in CoT'. Move the bound into the abstract and intro."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7166666666666668,
+      "reasonings": [
+        "Finding mischaracterizes Appendix A: it claims the defense is only \"no public dataset covers all five patterns,\" but App. A also (1) shows hybrid corpora become source-detection proxies (95% surface acc), (2) provides a 0.730 supervised surface ceiling as a direct surface-cue control, and (3) cites Lanham/Turpin precedent. Install default is DeepSeek, not same-family as Claude filter, weakening contamination claim.",
+        "Quote verified verbatim in eval_methodology.tex. Construct-validity concern is real: Gemini-generated + Claude-verified corpus shares LLM-family priors with the discovery stack. Abstract has generic caveat and Limitations lists \"same-family verification\" tersely, but no scoping of the 100%/0.944 headlines to \"LLM-injected signature recovery.\" Reviewer-2 critique stands; partially but not adequately defused.",
+        "Quote is near-verbatim (minor \"one seed\"/\"one\" slip). The construct-validity concern is genuine: CoT-Pattern is generated by Gemini and filtered by a Claude Opus 4.8 ensemble, while one evaluated configuration is the Sonnet (Claude) pair \u2014 same-family verifier contamination is a defensible reviewer-2 flag."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "taxonomy\\_agent (Sonnet orchestrator)\n  & 0.866 & 0.762 & 0.660\n  & 0.033 & 0.369 & 0.150\n  & 5 & 2.23 & 196 \\\\",
+        "issue": "On CoT, the Sonnet pair is reported on a *single seed* with no stddev, and then directly compared to a three-seed mean (`The Sonnet orchestrator pair recovers only $109$ of $149$ items'). Comparing n=1 to n=3 and declaring the cheap pair winner is statistically indefensible. The Sonnet pair's NMI 0.762 is within plausible single-seed variance of the cheap pair's 0.944 \\pm 0.081 lower bound (0.863), so the `eleven times the cost' and `closes that gap at roughly one-thirtieth the cost' claims rest on n=1 vs n=3.",
+        "suggested_fix": "Run two more Sonnet-pair seeds on CoT and report mean \\pm stddev, or remove the head-to-head conclusion and reframe the row as `representative single Sonnet seed for cost-only comparison'. Soften the abstract and intro accordingly."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7333333333333334,
+      "reasonings": [
+        "Finding conflates tables. \"Eleven times cost\" is 20NG (3-seed Sonnet \u00b1.04). \"One-thirtieth cost\" on CoT is a deterministic price ratio. The 142/149 vs 109/149 gap and 9/29 vs 81/87 per-pattern under-recovery is ~2\u03c3 on the cheap pair's own stddev \u2014 not within plausible single-seed variance. Caption transparently flags n=1.",
+        "Quote verbatim at lines 154-157. Sonnet CoT row is n=1 (caption line 178, text line 138-139), compared to n=3 cheap-pair mean to support \"one-thirtieth the cost\" claim (line 200). Disclosure exists but doesn't defuse the inferential leap a Reviewer 2 would flag.",
+        "Quote verified verbatim at lines 154-157; caption confirms \"Sonnet row single seed.\" Text at lines 197-200 makes a head-to-head claim (\"recovers only 109 of 149\", \"one-thirtieth the cost\") comparing n=1 Sonnet to n=3 cheap pair. A reviewer would flag the n=1 vs n=3 asymmetry as statistically weak."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "brady\\_islam~\\citep{brady2025iterativetax}\n  & 0.134$_{\\pm.045}$ & 0.164$_{\\pm.092}$ & 0.022$_{\\pm.002}$\n  & 0.173$_{\\pm.068}$ & 0.657$_{\\pm.263}$ & 0.000$_{\\pm.000}$\n  & 3.0$_{\\pm1.7}$ & ${<}0.01$ & 19$_{\\pm4}$ \\\\",
+        "issue": "Unfair-comparison attack. The Brady-Islam row uses `their default min_cluster_size=5' and the Llama-3.2-3B labeller they specify, while taxonomy_agent uses a tuned install default (don't-fit threshold 0.10, min_iterations 3, DeepSeek-v4-Flash, the auto-finalize fallback). The caption confirms the substitution: `their vLLM v0.11 engine failed to initialise on our box; the model is the same'. A reviewer will (rightly) note that comparing your tuned default to their *library* default is the standard sin in this subfield. Also: the parenthetical `(NMI $0.164 \\pm 0.092$, $58\\%$ HDBSCAN noise)' is dismissive of a concurrent system without showing the sweep that would let the reader judge.",
+        "suggested_fix": "Add a Brady-Islam sweep over min_cluster_size and report their best, not their default. Verify the Llama-3.2-3B substitution doesn't materially change their reported numbers (cite their paper's own 20NG-like result if any). State the parity argument: `Both systems run with their authors-recommended defaults; we additionally sweep theirs.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7033333333333335,
+      "reasonings": [
+        "Lines 103-104 explicitly state \"a min_cluster_size sweep does not lift the mean,\" so the suggested fix (sweep their parameter) is already performed and disclosed. Methodology is symmetric: every method reported at author-recommended default with sweeps shown. Llama substitution is documented with reason. Parenthetical NMI/noise figures are factual, not dismissive.",
+        "Quote is verbatim. Prose mentions a min_cluster_size sweep \"does not lift the mean,\" partially defusing the concern, but no appendix table or numbers are cited for Brady-Islam's sweep, leaving the \"tuned-default vs library-default\" attack viable for a hostile reviewer.",
+        "Quote verified verbatim at lines 50-53. Caption confirms vLLM/model substitution (line 64). Brady-Islam row uses their library default min_cluster_size=5 while taxonomy_agent uses tuned install defaults. The sweep is asserted (\"does not lift the mean\", line 103-104) but no sweep numbers are reported, and the parenthetical tone is dismissive of a concurrent system. A skeptical reviewer would flag this as the standard unfair-defaults comparison."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/abstract.tex",
+        "quote": "a stateless judge LLM re-derives each item's category from the item text alone, never seeing the orchestrator's reasoning.",
+        "issue": "`Re-derives' overclaims. The judge sees the *current taxonomy* (the orchestrator's product), which is exactly the orchestrator's reasoning *crystallised into category names and definitions*. A hostile reviewer will say: the judge is not re-deriving anything, it is doing constrained classification against a label set the orchestrator chose. If the orchestrator picks bad category names, the judge inherits them. The structural-commitment claim that `the orchestrator cannot force a label past the judge' is overstated -- the orchestrator can absolutely bias outcomes by choosing the label vocabulary the judge is constrained to.",
+        "suggested_fix": "Replace `re-derives' with `classifies against the orchestrator's current taxonomy without seeing the orchestrator's tool-call history or prior labels'. In the contribution bullets, replace `the orchestrator cannot force a label past the judge' with the narrower truthful claim, e.g., `the judge does not inherit the orchestrator's per-item label assignments'. Add a sentence acknowledging that the orchestrator's choice of category names and definitions still shapes the judge's decisions."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7600000000000001,
+      "reasonings": [
+        "\"Re-derives\" refers to re-deriving the per-item label given the taxonomy and item text, with the contrast being that the judge doesn't see the orchestrator's reasoning trace or prior labels. \"Cannot force a label past the judge\" is about per-item assignment, not vocabulary choice \u2014 a real, defensible structural property. Suggested fix bloats a tight abstract.",
+        "Quote is verbatim (lines 5-7). \"Re-derives\" and \"orchestrator cannot force a label past the judge\" overclaim: the judge is constrained to the orchestrator's chosen label vocabulary and definitions, so the orchestrator shapes outcomes. Nothing in surrounding context qualifies this.",
+        "Quote matches verbatim. \"Re-derives\" overclaims: judge sees orchestrator-chosen category names/definitions, so it is constrained classification, not independent re-derivation. The companion claim \"orchestrator cannot force a label past the judge\" is overstated since label vocabulary is orchestrator-controlled. A reviewer would flag this."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "A single-seed loose-dispatcher ablation that strips the typed revise dispatcher's source-existence and name-collision checks stalled at zero revise calls in 90\\,s before we terminated it; the typed run on the same configuration finishes at 197\\,s with one successful \\textsc{revise} call. A single seed cannot isolate the dispatcher from ordinary stochasticity; we report this honestly as preliminary support",
+        "issue": "Self-defeating ablation. The paper's central architectural contribution is `a typed dispatcher with validate-before-mutate and per-operation failure isolation', and the only ablation is one seed that you yourself say cannot distinguish your contribution from noise. A reviewer will write: `the system's main novelty is unsupported empirically'. The honest framing does not save it -- if you cannot afford more seeds, do not lead with this as a contribution.",
+        "suggested_fix": "Run three to five seeds of the loose-dispatcher ablation on both CoT and 20NG; report mean \\pm stddev. If the typed dispatcher really helps, this is cheap (the loose run terminates early). If results are noisy, demote the dispatcher contribution from a structural commitment to an engineering safeguard."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7666666666666666,
+      "reasonings": [
+        "Quote is verbatim. But this is a System Demo paper (different review criteria), the dispatcher is one of four contributions (not \"central\"), the loose run failed categorically (zero revise calls, qualitative not noisy), authors hedge honestly, and page limits constrain ablation depth. Counterarguments are plausible.",
+        "Quote is verbatim at lines 206-212. The paper's own text concedes \"A single seed cannot isolate the dispatcher from ordinary stochasticity.\" Since the typed dispatcher is positioned as a core architectural contribution, a single-seed ablation that the authors themselves admit is inconclusive is a legitimate reviewer-2 target. Honest framing does not rescue empirical weakness.",
+        "Quote verified verbatim at lines 206-212 of eval_results.tex. Introduction.tex line 57 and system.tex line 72-73 confirm the typed dispatcher is the paper's explicit headline contribution. A single-seed ablation that the authors admit cannot distinguish signal from noise is a serious empirical gap for the main novelty \u2014 reviewers reliably down-score this. Honest framing does not rescue it."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "All LLM and clustering discovery baselines stay below NMI $0.15$, including embed\\_cluster\\_llm at $0.039$ (essentially random), so iterative refinement is doing real work on this task.",
+        "issue": "The conclusion `iterative refinement is doing real work' does not follow from `baselines are bad'. The baselines might be bad because the CoT corpus has unusual structure that doesn't match clustering assumptions, not because iteration is what made taxonomy_agent win. A reviewer will note this is a non-sequitur dressed as a claim. The same applies to the embed_cluster_llm 0.039 result -- if it's `essentially random', that suggests the corpus is not well-shaped for embedding-based discovery at all, which complicates rather than supports the contribution argument.",
+        "suggested_fix": "Either rerun taxonomy_agent with iteration disabled (single-pass) as an ablation, or qualify the claim: `Baselines that rely on embedding geometry recover little signal; whether iteration is the operative factor in taxonomy_agent's lead requires an iteration ablation we do not have'. Move it out of the headline."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7266666666666666,
+      "reasonings": [
+        "single_shot uses the same DeepSeek model without iteration and scores NMI 0.143 vs taxonomy_agent's 0.944. This IS effectively the iteration-vs-no-iteration comparison the finding demands. The corpus-shape counterargument fails because single_shot would also benefit. Phrasing is loose but defensible.",
+        "Quote verbatim on lines 201-203. The leap from \"baselines stay below NMI 0.15\" to \"iterative refinement is doing real work\" is a non-sequitur: the gap could be attributed to many design choices, not iteration specifically. The ablation paragraph admits its own preliminary status and tests the dispatcher, not iteration. A reviewer-2 would flag the overclaim.",
+        "Quote verified verbatim at lines 201-203. The leap from \"baselines below NMI 0.15\" to \"iterative refinement is doing real work\" is unsupported: no iteration on/off ablation exists for taxonomy_agent (the Ablation paragraph covers dispatcher typing, not iteration). A reviewer would flag this non-sequitur."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/related.tex",
+        "quote": "Iteration, proposer-and-labeller separation, and the add/rename/merge/split/drop verbs are all standard. The contribution is two structural commitments: a typed dispatcher with validate-before-mutate and per-operation failure isolation, and a stateless judge that re-derives each item's category from the item text alone.",
+        "issue": "Both `structural commitments' are well-known software-engineering patterns rebranded as research contributions. `Validate-before-mutate' is database transactions / two-phase commit / functional update patterns going back to the 1970s. `Stateless judge' is just stateless verification (LLM-as-a-judge literature, Self-Consistency, RewardBench-style verifiers). A reviewer will say: the novelty claim collapses into `we applied standard patterns competently'. The paper itself signals the weakness with `verb set itself is standard taxonomy-edit vocabulary (cf. TaxoAdapt)' and `Iteration, proposer-and-labeller separation, [...] are all standard'.",
+        "suggested_fix": "Reframe the contribution as a *system demonstration* contribution (it is an EMNLP demo track submission, after all), with the novelty being the integrated artefact, the empirical claim (cheap-both-roles dominates), and the walk-up Streamlit surface. Drop the language of `structural commitments' as if they were research novelties; foreground the demonstration value and the empirical surprise."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.71,
+      "reasonings": [
+        "Quote is verbatim. But the paragraph already concedes what's standard \u2014 intellectual honesty, not weakness. \"Structural commitments\" is deliberately modest framing (not \"novelty\") and the two items are tied to concrete operational consequences. For a demo paper, this is appropriate scope-setting; the suggested fix is largely cosmetic relabeling.",
+        "Quote is verbatim at lines 61-66. For an EMNLP demo submission, framing \"validate-before-mutate\" and \"stateless judge\" as the headline contribution is exposed: both are well-known patterns, and the paragraph itself concedes adjacent items are \"standard\". Reframing around the demo artefact and empirical claim is the safer pitch.",
+        "Quote is verbatim at lines 61-66. The \"two structural commitments\" framing does invite reviewer skepticism: validate-before-mutate and stateless verification are well-known patterns, and the paper's own admission that iteration/proposer-labeller split/edit verbs are \"standard\" sharpens the question of what's novel. For a demo-track paper, reframing as demonstration value plus empirical claim is sound advice."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "a re-run with a different non-deterministic trajectory converged",
+        "issue": "Hedge that hides selection. `Non-deterministic trajectory' is doing a lot of work; concretely the seed was changed or the temperature draw differed. A reviewer will press on what `different non-deterministic trajectory' means operationally -- new seed? Same seed, different sampling? This phrasing reads as deliberate vagueness.",
+        "suggested_fix": "Specify the change: `we re-ran the same seed with a freshly sampled sampling trajectory' or `we sampled an alternative seed'. Whichever it actually was, name it."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333334,
+      "reasonings": [
+        "Quote is verbatim, but it's in a footnote about an anecdotal failure and engineering fallback, not a core result. \"Non-deterministic trajectory\" honestly reflects that API LLMs (DeepSeek via OpenRouter) aren't fully seed-reproducible. Reviewers rarely press footnote phrasing; the fix could force inaccuracy.",
+        "Quote is verbatim at lines 92-94. \"Different non-deterministic trajectory\" is genuinely vague \u2014 doesn't specify whether a new seed was drawn, same seed with different sampling, or otherwise. Surrounding context doesn't clarify. A cynical reviewer would flag this as selection-hiding hedge.",
+        "Quote verified verbatim at lines 92-93. \"Different non-deterministic trajectory\" is genuinely vague \u2014 unclear if new seed, same seed/different sampling, or just a rerun. A cynical reviewer would press on it. Minor severity is appropriate; sits in a footnote."
+      ],
+      "lens": "reviewer-2-cynicism"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "DeepSeek-v4-Flash for both orchestrator and judge",
+        "issue": "Paper never gives the exact OpenRouter model ID (e.g., 'deepseek/deepseek-v4-flash'), and similarly for 'Claude Sonnet 4.6', 'Llama-3.2-3B', and 'Gemini-3.1-Flash-Lite'. Without dated/versioned IDs, results are unreproducible after provider rotates checkpoints. User-memory explicitly requires the exact form 'deepseek/deepseek-v4-flash'.",
+        "suggested_fix": "Add a configuration table in Appendix A listing exact OpenRouter slugs (orchestrator/judge/baseline LLMs/CoT generator/verifier) with snapshot dates."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7333333333333334,
+      "reasonings": [
+        "Quote is verbatim, but the \"critical\" severity is overstated. Paper uses unambiguous model names (DeepSeek-v4-Flash, Sonnet 4.6, Gemini-3.1-Flash-Lite, Llama-3.2-3B) and states OpenRouter as the provider. EMNLP demo papers routinely cite model names without slug strings; the released codebase/configs are the canonical reproducibility source. Reviewers wouldn't desk-reject or lower a score on this.",
+        "Quote verbatim at eval_results.tex line 3. Friendly names (DeepSeek-v4-Flash, Sonnet 4.6, Llama-3.2-3B, Gemini-3.1-Flash-Lite, Opus 4.8) appear paper-wide; no appendix section, table, or footnote provides exact OpenRouter slugs or snapshot dates. Reproducibility gap for a demo paper.",
+        "Quote \"DeepSeek-v4-Flash for both orchestrator and judge\" appears verbatim on line 3. Paper consistently uses informal names (DeepSeek-v4-Flash, Sonnet 4.6, Llama-3.2-3B, Gemini-3.1-Flash-Lite, Claude Opus 4.8) without exact OpenRouter slugs or snapshot dates anywhere in body or appendix. Reproducibility reviewers will flag this."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/system.tex",
+        "quote": "the orchestrator is allowed to call \\texttt{finalize\\_classify} once that rate falls below a threshold (default $0.10$) and the run has cleared a \\texttt{min\\_iterations} floor (default $3$)",
+        "issue": "min_iterations=3 and threshold=0.10 are given, but max_iterations is never stated anywhere. The run-configuration paragraph also omits temperature, top_p, max tokens, and pool/concurrency for the judge. Reviewers cannot reconstruct the agent loop.",
+        "suggested_fix": "Add max_iterations, temperature, top_p, judge thread-pool size, and per-call sampling settings to the System or Appendix configuration table."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7333333333333334,
+      "reasonings": [
+        "Quote is verbatim, but severity \"critical\" is unjustified for an EMNLP Demonstrations submission (6 pages strict). The paper mentions a \"classify-call budget counter\" (line 40) that likely supersedes max_iterations as the hard cap. Temperature/top_p/pool-size are typical provider/code defaults that demo-track reviewers expect to find in the repo, not the body. Not desk-reject material; at worst a minor \"add to appendix\" comment.",
+        "Quote verified verbatim in system.tex lines 78-81. A grep across all section files and main.tex finds no mention of max_iterations, temperature, top_p, max tokens, or judge thread-pool size. Implementation.tex is empty. Appendix has no config table. Reproducibility gap is real.",
+        "Quote verbatim at lines 78-81. Grep across all sections and main.tex confirms max_iterations, temperature, top_p, max_tokens, and judge pool size appear nowhere. A reviewer evaluating reproducibility of the convergence loop would note the missing upper bound and sampling settings. Severity arguably \"major\" not \"critical\" since code release typically backstops this, but the gap is real."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "embed\\_cluster\\_llm} embeds with all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each cluster with one DeepSeek-v4-Flash call from 5 sampled items",
+        "issue": "all-MiniLM-L6-v2 is referenced (and again for brady_islam) but the embedding model version, HuggingFace path, and whether it is the sentence-transformers checkpoint is not pinned. Likewise the k-means random_state and BERTopic random_state are mentioned without giving the value.",
+        "suggested_fix": "Pin sentence-transformers/all-MiniLM-L6-v2 (with version) and the BERTopic/k-means random_state integer."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.7166666666666667,
+      "reasonings": [
+        "\"all-MiniLM-L6-v2\" is the canonical, unambiguous HF model name; NLP reviewers recognize it without a version pin. Severity \"critical\" is overblown for a 6-page demo paper where reproducibility details live in the appendix/code repo. The k-means random_state is not actually referenced in the quoted text, weakening the finding.",
+        "Quote verbatim on lines 66-69. all-MiniLM-L6-v2 appears without HF path/version pinning; caption says \"fixed random_state\" without giving the integer; no k-means random_state for embed_cluster_llm/LDA. Real reproducibility gap; Appendix A reference only covers the BERTopic min_topic_size sweep.",
+        "Quote verbatim at lines 66-69. all-MiniLM-L6-v2 is cited twice without HF path/version pin; BERTopic random_state referenced at line 74 without integer value; k-means random_state absent. Appendix does not fix these. Reproducibility-focused EMNLP reviewers would flag, though severity is closer to minor than critical given the checkpoint name is well-known."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_results.tex",
+        "quote": "embed with all-MiniLM-L6-v2, HDBSCAN at default \\texttt{min\\_cluster\\_size=5}, iterative per-cluster topic synthesis",
+        "issue": "Only one HDBSCAN hyperparameter is given (min_cluster_size=5). Missing: min_samples, cluster_selection_method, cluster_selection_epsilon, metric, and UMAP n_neighbors/n_components/min_dist/random_state for the brady_islam reproduction and for BERTopic. The lens explicitly requests HDBSCAN hyperparameters.",
+        "suggested_fix": "List the full HDBSCAN and UMAP hyperparameter set used for brady_islam and BERTopic in Appendix A."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "Quote is verbatim. \"Default min_cluster_size=5\" signals library defaults for HDBSCAN; BERTopic caption explicitly says \"library defaults\" with fixed random_state. brady_islam is a reproduction of an external pipeline (cited). In a strict 6-page demo paper, enumerating every UMAP/HDBSCAN default is unusual; a reviewer is unlikely to score it down as critical.",
+        "Quote verbatim on line 64. Only min_cluster_size=5 given for brady_islam; BERTopic UMAP/HDBSCAN hyperparameters not enumerated. Line 73 says \"fixed random_state\" without the value. Appendices A-E contain no hyperparameter table. Defensible reproducibility gap, though \"at defaults\" is a common convention.",
+        "Quote verbatim on line 64 of eval_results.tex. Only min_cluster_size=5 given for brady_islam; no min_samples, cluster_selection_method, UMAP n_neighbors/n_components/min_dist/random_state listed anywhere, including Appendix. BERTopic sweep is also referenced as \"detailed in Appendix A\" but Appendix A covers synthetic corpus instead. Reproducibility gap is real for a head-to-head comparison against concurrent work."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_methodology.tex",
+        "quote": "We report external metrics (purity, NMI, ARI), intrinsic topic-quality metrics (NPMI, $C_v$ coherence~\\citep{rehurek2010gensim}, label redundancy)",
+        "issue": "Metric definitions are not given. NMI has multiple averaging conventions (arithmetic vs geometric vs max vs min); the paper never says which. ARI implementation, optimal-mapping purity (Hungarian vs greedy), redundancy formula, and NPMI window size are all unspecified. The lens explicitly requests these.",
+        "suggested_fix": "Add a Metric Definitions paragraph in Appendix A specifying NMI averaging method (e.g., sklearn arithmetic), the Hungarian-assignment formulation of optimal-mapping purity, the redundancy formula, and NPMI window/sliding parameters."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6933333333333334,
+      "reasonings": [
+        "Quote is verbatim and definitions are absent, but severity \"critical\" is overstated. The paper cites gensim for Cv (implying gensim defaults), uses sklearn elsewhere (implying sklearn NMI arithmetic default), and appendix already names \"optimal-mapping purity\". For a 6-page system-demo, library-default metrics are conventionally assumed; code release covers reproducibility. Not desk-reject material.",
+        "Quote is verbatim in eval_methodology.tex line 4. Appendix sections A-E cover corpus design, per-domain stability, convergence, ablation, and UI but never define NMI averaging, ARI implementation, optimal-mapping purity (Hungarian vs greedy), redundancy formula, or NPMI window. Cv is anchored to gensim, but others are unspecified. Real reproducibility gap.",
+        "Quote verified verbatim in eval_methodology.tex line 4. Appendix contains no metric definitions section. NMI averaging convention (arithmetic/geometric/max), ARI implementation, optimal-mapping purity formulation (Hungarian vs greedy), redundancy formula, and NPMI window size are all unspecified. A reproducibility-focused reviewer would reasonably flag this, though severity is moderate for a demo paper."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "critical",
+        "file": "sections/eval_methodology.tex",
+        "quote": "generated by Gemini-3.1-Flash-Lite, and filtered by a unanimous Claude Opus 4.8 three-classifier ensemble",
+        "issue": "The synthetic CoT corpus generation procedure is not documented at a reproducible level: the prompts, temperature, and seed-question selection used for generation, and the verifier prompt + decision rule, are not described or linked. The paper later relies on this corpus for headline NMI 0.944. Reviewers will flag a synthetic-benchmark headline that cannot be regenerated.",
+        "suggested_fix": "Either include the generation/verification prompts in Appendix A or explicitly link to the script paths in the repo with a commit hash."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6166666666666666,
+      "reasonings": [
+        "Quote is verbatim, but paper twice points to \\repourl (https://github.com/ngqm/taxonomy-agent) for \"reproduction scripts, and corpora\"; verifier decision rule IS stated (\"unanimous\" three-classifier ensemble); limitations flags same-family verification. Demo-track norm accepts repo as reproducibility commitment; 6-page+2-app budget leaves no room for prompts.",
+        "Quote is verbatim. Paper names Gemini-3.1-Flash-Lite and Opus 4.8 ensemble but omits prompts, temperature, seed-selection, and ensemble decision rule. Appendix A covers construct validity only. Partially defused: abstract says corpus+scripts at \\repourl, so the 149-item corpus is reproducible at artifact level. Severity \"critical\" is overstated, but it is a fair reviewer ask.",
+        "Quote verified verbatim in eval_methodology.tex line 4. Appendix A defends corpus design but does not document generation prompts, temperature, seed-question selection, or the verifier decision rule. A repo URL is given but no commit hash. Reviewers will flag the NMI 0.944 headline."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "The orchestrator's action space is six tools: \\texttt{sample\\_items}, \\texttt{get\\_taxonomy}, \\texttt{revise\\_taxonomy}, \\texttt{classify\\_with\\_judge}, \\texttt{propose\\_novelties\\_with\\_judge}, and \\texttt{finalize\\_classify}",
+        "issue": "The orchestrator system prompt, the judge classify prompt, and the novelties prompt are referenced but never reproduced or linked to a specific repo path/commit. Appendix is empty of prompts. Lens explicitly asks for judge prompts (at minimum linked to repo).",
+        "suggested_fix": "Add file paths under \\repourl (with commit SHA) for the three prompt templates, or include the prompts verbatim in Appendix A within remaining page budget."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6166666666666666,
+      "reasonings": [
+        "Abstract and intro link \\repourl to the open-source repo. EMNLP demo norms accept a top-level repo link for prompts; specific paths add little since repos have READMEs. With a strict 6-page limit and full 2-page appendix, demanding verbatim prompts or per-file SHA paths is excessive for a demo paper.",
+        "Quote verbatim at system.tex L48-52. Three judge/orchestrator prompts are referenced but never reproduced or pinned to a repo path/commit. \\repourl points only to a moving HEAD. Appendix A-E covers corpus, per-domain, convergence, ablation, UI \u2014 no prompts. Real reproducibility gap.",
+        "Quote verbatim in system.tex L48-52. Appendix A-E contains no prompt templates. Paper has \\repourl macro but no specific file paths or commit SHA pinning prompt templates. A reproducibility reviewer could legitimately flag this, though severity is closer to minor for a demo paper with public repo."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_methodology.tex",
+        "quote": "\\textbf{20~Newsgroups}~\\citep{lang1995newsgroups}",
+        "issue": "Dataset version is not specified. sklearn fetch_20newsgroups has multiple subsets ('train', 'test', 'all'), categories filters, and remove options. Although headers/footers/quotes filtering is mentioned, the subset (train vs all) and sklearn version are not. CoT-Pattern dataset version / release tag / commit hash is also unstated.",
+        "suggested_fix": "State the sklearn version, fetch_20newsgroups subset='all'/'train', and the CoT-Pattern dataset commit hash or release tag."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6666666666666666,
+      "reasonings": [
+        "Quote is verbatim. But 20 Newsgroups is canonical; sklearn version pinning is rarely reported in NLP. Paper already specifies subsample size (487, 25/class), filtering, seeds \u2014 sufficient for reproduction. CoT-Pattern construction is detailed. Version pinning belongs in repo, not 6-page demo paper.",
+        "Quote is verbatim. Surrounding text mentions sklearn header/footer/quote filter but does not specify the sklearn version, fetch_20newsgroups subset parameter, or any CoT-Pattern version/commit hash. Reproducibility gap is genuine, though appendix may address it.",
+        "Quote is verbatim. Methodology mentions \"sklearn's header/footer/quote filter\" but does not specify sklearn version, the fetch_20newsgroups subset (train/test/all), or a CoT-Pattern commit/release tag. Reproducibility gap is real, though typically a minor-to-moderate concern rather than major for a system demo."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/implementation.tex",
+        "quote": "% Implementation as a standalone section was absorbed into\n% System Overview (Operational Safeguards subsection) during the\n% page-cut pass for EMNLP 2026 demos. This file is intentionally empty.",
+        "issue": "implementation.tex is empty; software versions (LangGraph, LangChain, BERTopic, scikit-learn, gensim, sentence-transformers, hdbscan, umap-learn, Python) appear nowhere. A reproducibility-focused reviewer typically scans for these and will note the omission.",
+        "suggested_fix": "Add a Software Versions paragraph in Appendix A listing pinned package versions used in the eval."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6166666666666666,
+      "reasonings": [
+        "Quote is verbatim and file is indeed empty. But for an EMNLP demo paper (6pp + 2pp appendix), pinned package versions belong in the code repo, not the paper. Libraries are named in body/appendix. Appendix already packed A-E; adding a versions paragraph displaces higher-value content. Demo-track reviewers do not typically downscore for missing pin lists.",
+        "Quote verbatim. implementation.tex is empty (only comments). Libraries named (LangGraph, BERTopic, sklearn, gensim, HDBSCAN, UMAP) but no pinned versions anywhere in paper/appendix. Reproducibility reviewers commonly flag missing version pins; appendix has space to add them.",
+        "Quote verbatim verified; implementation.tex is empty and not \\input in main.tex. No pinned versions for LangGraph/LangChain/BERTopic/sklearn/gensim/UMAP/HDBSCAN/sentence-transformers/Python appear in any section. Real reproducibility gap, though Demo-track reviewers often accept a repo pointer; severity is moderate not major."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "LDA uses sklearn at $K{=}16$",
+        "issue": "Only K is given for LDA. sklearn's LatentDirichletAllocation has random_state, doc_topic_prior, topic_word_prior, learning_method, max_iter \u2014 none specified. Similarly the TF-IDF vectorizer for LR@TF-IDF is unspecified.",
+        "suggested_fix": "Pin LDA hyperparameters (random_state, learning_method, max_iter, priors) and the TF-IDF/LR vectorizer settings in Appendix A."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6999999999999998,
+      "reasonings": [
+        "Quote is verbatim. But LDA and LR@TF-IDF are weak sanity baselines (LDA NMI 0.147 vs ours 0.740; LR@TF-IDF purity 0.260) \u2014 \"sklearn defaults at K=16\" is conventional shorthand for non-contested floors. Spending scarce 2-page appendix on priors/max_iter/random_state for losing baselines is poor budget allocation in a 6-page demo paper; code release covers full configs. Severity \"major\" is overstated \u2014 no reviewer downgrades because LDA's max_iter is unstated when it loses by 0.6 NMI.",
+        "Quote \"LDA uses sklearn at $K{=}16$\" is verbatim in eval_results.tex line 70. Appendix A-E does not pin LDA random_state/priors/max_iter/learning_method or TF-IDF vectorizer settings for LR@TF-IDF. Genuine reproducibility gap, though baselines are not the main contribution.",
+        "Quote \"LDA uses sklearn at $K{=}16$\" verbatim on line 70 of eval_results.tex. Appendix sections A-E and eval_methodology do not specify LDA hyperparameters (random_state, learning_method, max_iter, priors) or TF-IDF/LR settings. Real reproducibility gap per EMNLP checklist, though severity is moderated by these being floor/sanity baselines."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "logistic regression on 14 surface features, 5-fold stratified CV",
+        "issue": "The 14 surface features used for the LR@surface oracle are not enumerated anywhere in the paper or appendix. This is the headline calibration baseline (0.730) that taxonomy_agent beats; the reviewer needs to know what the features are.",
+        "suggested_fix": "List the 14 surface features (or link to the exact extractor file/commit) in Appendix A."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7999999999999999,
+      "reasonings": [
+        "Quote verbatim at eval_results.tex:193 and appendix.tex:30-31. The 0.730 LR@surface is the load-bearing calibration baseline (\"+22 points above\") cited multiple times, yet \"14 surface features\" is never enumerated nor linked to an extractor. A reasonable EMNLP reviewer would flag this as a reproducibility gap on the main comparison.",
+        "Quote verbatim in eval_results.tex line 194. Appendix A (lines 30-31) restates the LR@surface setup but never enumerates the 14 features nor cites an extractor. The 0.730 baseline is the headline +22-point comparison; reviewers cannot reproduce/judge it without the feature list.",
+        "Quote verbatim at eval_results.tex line 194. Grep confirms the 14 surface features are mentioned twice but never enumerated. This is the LR@surface=0.730 oracle that anchors the +22-point CoT claim; a reproducibility-focused reviewer would flag the missing feature list as unfalsifiable."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_results.tex",
+        "quote": "Coverage-adjusted purity averages $0.95$",
+        "issue": "'Coverage-adjusted purity' is referenced as a metric (and used as a headline number) but never defined in the paper. Appendix A says 'coverage-adjusted purity over all 149 items treating \"other\" as a sixth class' but does not give the formula or the role of denominator weighting.",
+        "suggested_fix": "Give the formula for coverage-adjusted purity (likely #correct / N, with 'other' contributing 0 correct) explicitly in Appendix A."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.75,
+      "reasonings": [
+        "Quote is verbatim. But the body (~142/149 correct, 95% coverage, every prediction matches) transparently yields 0.95, and Appendix A defines the metric in prose (\"over all 149 items treating other as a sixth class\"). Purity is a standard NLP metric; a formula is nice-to-have, not a reproducibility blocker.",
+        "Quote verbatim at line 191 of eval_results.tex. \"Coverage-adjusted purity\" is a non-standard metric used as a headline ($0.95$ vs $0.730$ oracle). Appendix A line 38-39 only says \"treating other as a sixth class\" without giving the formula or denominator weighting \u2014 under-specified for reproducibility.",
+        "Quote verified verbatim at eval_results.tex line 192-193. Appendix A (lines 38-39) references \"coverage-adjusted purity over all 149 items treating `other` as a sixth class\" but provides no formula. The metric is a headline number used to claim +22 pts over the supervised oracle, so absent definition is a real reproducibility issue."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/eval_methodology.tex",
+        "quote": "BERTopic~\\citep{grootendorst2022bertopic} at library defaults with a \\texttt{min\\_topic\\_size} sweep",
+        "issue": "BERTopic 'library defaults' depend on the BERTopic version (UMAP/HDBSCAN defaults have shifted across releases). Without a pinned BERTopic version the defaults are ambiguous.",
+        "suggested_fix": "Cite the BERTopic version used (e.g., bertopic==0.16.x) and the underlying UMAP/HDBSCAN versions in Appendix A."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6566666666666667,
+      "reasonings": [
+        "Quote is verbatim, but demo papers conventionally pin versions in the released code/requirements rather than prose; \"library defaults\" with a citation is standard phrasing. Severity \"major\" is overstated \u2014 at worst this is a minor reproducibility nit, not score-lowering for a demo.",
+        "Quote is verbatim in eval_methodology.tex. No BERTopic/UMAP/HDBSCAN version is pinned anywhere in sections or appendix (verified via grep). \"Library defaults\" without a version is genuinely ambiguous across BERTopic releases \u2014 a legitimate reproducibility gap an EMNLP reviewer could flag.",
+        "Quote verified verbatim. \"Library defaults\" for BERTopic is genuinely ambiguous without a pinned version since UMAP/HDBSCAN defaults shift across releases. No version is given in eval_methodology, appendix, or implementation. A reproducibility-focused reviewer would flag this, though it's a minor nit rather than a major issue for a demo paper."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "A cheap-pair \\textsc{taxonomy\\_agent} run on 20NG costs $\\$0.16$ on average",
+        "issue": "Table reports 0.17 \u00b1 0.03 but prose says 0.16; an n=5 mean reported to two decimals should match the table. Reviewers will catch this inconsistency, which mildly undermines reproducibility credibility.",
+        "suggested_fix": "Reconcile the two figures (or note 0.16 is the median vs 0.17 mean)."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7999999999999999,
+      "reasonings": [
+        "Quote verified verbatim at line 118. Table row shows 0.17\u00b1.03 (5 seeds, mean), prose says \"$0.16 on average\". Both are presented as the same quantity (mean cost). A 0.17 table figure implies underlying \u22650.165, so 0.16 in prose is a rounding inconsistency. Minor but real.",
+        "Quote is verbatim on line 118. Table row 33 reports install-default cost as 0.17\u00b1.03 over five seeds (caption line 64); prose says \"$0.16$ on average\" without qualifier. No surrounding text reconciles the two figures. Minor but real reproducibility inconsistency a reviewer could flag.",
+        "Quote verified verbatim on line 118 of eval_results.tex. Table row (line 33) reports cost 0.17\u00b1.03 for the install-default (cheap pair) row averaged over 5 seeds, but prose says $0.16 on average. Real table/prose inconsistency reviewers would flag."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "Wall-clock time of $548\\,$s",
+        "issue": "Table row reports 713 \u00b1 245 s; prose says 548 s. The cost paragraph appears stale relative to the table. Hurts the reader's confidence in pinned numbers.",
+        "suggested_fix": "Update the wall-clock prose value to match the table (713 s) or note which seeds/medians the 548 s figure refers to."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.9333333333333332,
+      "reasonings": [
+        "Quote verbatim at line 121. Table row 33 reports 713\u00b1245 s for install default; prose says 548 s. Cost paragraph also says $0.16 vs table's 0.17\u00b1.03. Real internal inconsistency, not paraphrase; reviewers notice prose/table mismatches.",
+        "Quote \"Wall-clock time of $548\\,$s\" is verbatim on line 121. Table row (line 33) reports 713\u00b1245 s for install default. The cost figure ($0.16) on line 118 also drifts from the table's 0.17\u00b1.03. Cost paragraph is stale vs table; reproducibility concern is genuine.",
+        "Quote verified verbatim on line 121: \"Wall-clock time of $548\\,$s\". Table row (line 33) reports 713\u00b1245 s for the install-default. The 548 s figure contradicts the table, and the same paragraph also says $0.16 vs table's 0.17, confirming the cost paragraph is stale. A reviewer would flag this inconsistency."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_results.tex",
+        "quote": "Cross-seed stddev on the cheap pair (NMI $0.055$) is larger than the Sonnet pair ($0.012$)",
+        "issue": "Cheap-pair stddev is computed over 5 seeds and Sonnet over 3 seeds, but the comparison does not flag the unequal-n stddev artifact. A reviewer scrutinizing reproducibility will note that an n=3 stddev is unstable as a comparator.",
+        "suggested_fix": "Add a footnote acknowledging the unequal-n and report stddev comparisons computed on a matched-seed subset."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.5833333333333334,
+      "reasonings": [
+        "Seed asymmetry (5 vs 3) is already disclosed in the table caption. The footnote's stddev comparison is descriptive context for a qualitative observation about category counts, not a statistical test. A \"matched-seed subset\" would discard real cheap-pair data, arguably making the comparison worse. Minor footnote in a demo paper.",
+        "Quote verbatim at line 88-89. Cheap pair is n=5, Sonnet n=3 (per caption line 64). Footnote compares the two stddevs without flagging that an n=3 stddev is a noisy comparator. Context does not address it. Minor but legitimate reproducibility nit; the range claim (8-16 vs 7-8) partially defuses it.",
+        "Quote verified verbatim on lines 88-89. Caption (line 64) confirms cheap=5 seeds, Sonnet=3 seeds. Footnote compares stddevs without flagging unequal n. Real but minor \u2014 qualitative gap (0.055 vs 0.012) is large enough that the caveat is unlikely to flip a reviewer's score."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/eval_methodology.tex",
+        "quote": "drawn from MATH-500 Level~4--5 problems",
+        "issue": "MATH-500 has multiple public mirrors; no citation or HuggingFace path is given, and which 149 problems were selected (and the selection procedure / seed) is unstated.",
+        "suggested_fix": "Cite MATH-500, give the source path, and either list the problem IDs or specify the deterministic selection procedure with a seed."
+      },
+      "confirmed": true,
+      "real_votes": 3,
+      "total_votes": 3,
+      "avg_confidence": 0.7833333333333332,
+      "reasonings": [
+        "Quote verbatim. MATH-500 introduced without citation though hendrycks2021math/lightman2023prm800k exist in bib. Selection procedure for the 149 Level 4-5 items (seed, IDs) is unstated. Minor severity is appropriate; missing citation on first mention is a defensible reviewer complaint.",
+        "Quote \"drawn from MATH-500 Level~4--5 problems\" is verbatim in eval_methodology.tex. No \\citep for MATH-500, no HuggingFace path, no problem IDs, no selection seed/procedure for the 149 items. Appendix A surveys other CoT sources but does not specify MATH-500 provenance or selection. Reproducibility concern stands.",
+        "Quote \"drawn from MATH-500 Level~4--5 problems\" appears verbatim in eval_methodology.tex. MATH-500 has no citation, no source path, and the selection procedure for the 149 problems (from a 500-problem pool, further restricted to Level 4-5) is unstated \u2014 a real reproducibility gap."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "nit",
+        "file": "sections/eval_results.tex",
+        "quote": "BERTopic's $\\pm.000$ standard deviations reflect deterministic UMAP/HDBSCAN under fixed \\texttt{random\\_state}",
+        "issue": "The fixed random_state value is not given. Reviewer would want the integer.",
+        "suggested_fix": "State the random_state integer used for the BERTopic run."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6333333333333334,
+      "reasonings": [
+        "The text's load-bearing claim is determinism (zero stddev), not the specific seed. Any fixed integer produces stddev=.000. The paper also doesn't list its three 20NG seed integers, so this would be inconsistent reporting style. Seed integers belong in released code, not table captions; a nit not worth flagging.",
+        "Quote is verbatim (lines 72-74). Text says \"fixed random_state\" but doesn't give the integer anywhere in the caption or paragraph. A reproducibility-minded reviewer could ask for the specific seed. Nit-level severity is appropriate.",
+        "Quote verified verbatim at lines 72-74 of sections/eval_results.tex. The text says \"fixed random_state\" without giving the integer. A reproducibility-focused reviewer could legitimately request the value, though it is a minor nit \u2014 the determinism point stands without the specific seed."
+      ],
+      "lens": "reproducibility"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "Validate before mutate: each handler checks every precondition before constructing the new taxonomy, so a malformed merge or split returns the input unchanged with a log entry",
+        "issue": "The 'validate-before-mutate' invariant is asserted at the prose level but the paper never lists what the preconditions are or shows the handler signature beyond '(tax, op) -> (new_tax, log)'. A reviewer cannot assess whether the invariant actually holds without seeing either the precondition set (e.g., 'source exists, target name unused, child set non-empty for split') or a code excerpt. App. D ablates the dispatcher but does not enumerate the checks either; the loose-dispatcher description ('no source-existence check on rename/edit/merge/split, no name-collision check on add/rename') is the closest the paper gets, and it appears only in an appendix and only by negation.",
+        "suggested_fix": "Pull the explicit precondition list from App. D up into the Revise DSL paragraph (one inline list: 'source exists, target name unused, child set non-empty, etc.'), or add a small typed-signature listing in the appendix so the invariant is checkable."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.65,
+      "reasonings": [
+        "App. D enumerates the preconditions by negation (source-existence on rename/edit/merge/split, name-collision on add/rename), which a reviewer can read as the precondition set. In a 6-page demo paper, pulling a precondition list into the body wastes space; the invariant plus the bug-motivation anecdote is adequate for a system-demo audience, and code is open-source. Severity \"major\" is overstated.",
+        "Quote verbatim at lines 63-66 of system.tex. The \"validate before mutate\" invariant underwrites the paper's stated contribution (\"the typed dispatcher with these two invariants\"), but the body never enumerates preconditions; App. D only hints via negation. Reviewer cannot check the invariant \u2014 real structural gap.",
+        "Quote verified verbatim in system.tex L63-66. The \"validate before mutate\" invariant is asserted without listing the precondition set; App. D only gives a partial list by negation (loose-dispatcher omissions). Defensible reviewer concern, though severity is closer to minor than major."
+      ],
+      "lens": "structural-claims"
+    },
+    {
+      "finding": {
+        "severity": "major",
+        "file": "sections/system.tex",
+        "quote": "Per-op failure isolation: the dispatcher records failures per op and continues with the rest of the batch, so a bad merge in a three-op call does not roll back a good add",
+        "issue": "Per-op failure isolation is presented as a correctness invariant but the paper does not address the obvious consistency hazard: if op_2 fails after op_1 has already produced new_tax_1, can op_3 reference a name that op_2 was supposed to create? The 'validate before mutate' check is per-handler, not per-batch, so the batch can end in a state the orchestrator did not plan. Without a sentence on how the ordered list semantics interact with mid-batch failure, a careful reviewer will flag this as an under-specified invariant.",
+        "suggested_fix": "Add one sentence clarifying batch semantics: 'Ops are applied left-to-right; a failed op leaves the taxonomy unchanged for that step and subsequent ops see the post-prefix state, with all failure logs returned together so the orchestrator can react on the next ReAct step.'"
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.5833333333333334,
+      "reasonings": [
+        "Quote is verbatim, but the two stated invariants together already specify the semantics: \"ordered list\" + \"validate before mutate\" (failed op returns input unchanged with log) + per-op isolation implies left-to-right application where op_3 sees post-prefix state and itself fails gracefully if it references a missing name. The edge case is covered by existing invariants; demanding an extra sentence in a strict 6-page demo paper is unlikely to be a major reviewer concern.",
+        "Quote is verbatim. Paper says ops are \"ordered\" and dispatcher \"continues with the rest of the batch\" but never states whether later ops see prior ops' effects or what happens to ops depending on a failed predecessor. Real gap, though severity is closer to minor than major; context partially implies semantics.",
+        "Quote verified verbatim at lines 68-71 (modulo \\textsc{} markup). The gap is real: ops are ordered and validate-before-mutate is per-handler, so mid-batch failure semantics (whether op_3 sees op_1's result when op_2 fails) are under-specified. A careful reviewer would flag it, though severity is closer to minor for a demo paper."
+      ],
+      "lens": "structural-claims"
+    },
+    {
+      "finding": {
+        "severity": "minor",
+        "file": "sections/system.tex",
+        "quote": "any out-of-taxonomy reply is coerced to \"other\", so a high don't-fit rate reflects coverage gaps and not hallucinated labels",
+        "issue": "This coercion silently undermines the 'orchestrator cannot force a label past the judge' claim in the opposite direction: a hallucinated label from the judge is also silently rewritten by the harness. The dispatcher (not the judge) is choosing the final symbol in that case. A reviewer skeptical of the independence story will note that the coercion happens outside the judge and the paper should say where it lives (orchestrator-side post-processing? a third component?).",
+        "suggested_fix": "Name the component that performs coercion: 'the classify wrapper around the judge coerces out-of-taxonomy strings to \"other\" before returning to the orchestrator', so the trust boundary is explicit."
+      },
+      "confirmed": true,
+      "real_votes": 2,
+      "total_votes": 3,
+      "avg_confidence": 0.6,
+      "reasonings": [
+        "Coercion is openly stated, not silent. Independence claim concerns the orchestrator bluffing labels past the judge, not dispatcher post-processing. Paper explicitly points to Appendix A for escape-hatch coercion details. Naming the wrapper adds implementation jargon without changing the trust story.",
+        "Quote verbatim at lines 83-85. Surrounding text never names the coercion component; the appendix pointer mentions \"escape-hatch coercion\" but main text leaves the trust boundary ambiguous given the strict orchestrator/judge separation claim at lines 22-33. Minor but real.",
+        "Quote verified verbatim (lines 83-85). The passive \"is coerced\" doesn't name the component, creating mild asymmetry with the \"judge re-derives\" independence claim. But the paper points to Appendix A for coercion details, which softens the gap. Minor at best."
+      ],
+      "lens": "structural-claims"
+    }
+  ]
+}

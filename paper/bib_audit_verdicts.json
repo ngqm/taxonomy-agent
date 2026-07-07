@@ -1,0 +1,656 @@
+[
+  {
+    "key": "blei2003lda",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://www.jmlr.org/papers/v3/blei03a.html"
+    ]
+  },
+  {
+    "key": "brady2025iterativetax",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Brady, William J. and Islam, Mohammad Atari",
+        "correct_value": "Brady, Alexander and Islam, Tunazzina",
+        "severity": "major"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2510.15125",
+      "https://arxiv.org/abs/2510.15125v2",
+      "https://arxiv.org/html/2510.15125v2",
+      "https://www.semanticscholar.org/paper/Iterative-Topic-Taxonomy-Induction-with-LLMs:-A-of-Brady-Islam/a8de2233a23f77e19376c339f272bf2e7f6db47d"
+    ]
+  },
+  {
+    "key": "chen2025reasoningmodels",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Chen, Yanda and Benton, Joe and Radhakrishnan, Ansh and Uesato, Jonathan and others",
+        "correct_value": "Chen, Yanda and Benton, Joe and Radhakrishnan, Ansh and Uesato, Jonathan and Denison, Carson and Schulman, John and Somani, Arushi and Hase, Peter and Wagner, Misha and Roger, Fabien and Mikulik, Vlad and Bowman, Samuel R. and Leike, Jan and Kaplan, Jared and Perez, Ethan",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2505.05410"
+    ]
+  },
+  {
+    "key": "codetect2025",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2507.05010",
+      "https://arxiv.org/html/2507.05010v1",
+      "https://aclanthology.org/volumes/2025.emnlp-demos/",
+      "https://2025.emnlp.org/program/demo_papers/",
+      "https://github.com/EdisonNi-hku/Co-DETECT/"
+    ]
+  },
+  {
+    "key": "deng2025thematiclm",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Deng, Yujia and Akp\u0131nar, S\u0131la and Zhou, Jin and others",
+        "correct_value": "Qiao, Tingrui and Walker, Caroline and Cunningham, Chris and Koh, Yun Sing",
+        "severity": "critical"
+      },
+      {
+        "field": "other",
+        "bib_says": "citation key is deng2025thematiclm (first author Deng)",
+        "correct_value": "First author is Qiao; consider renaming the key to qiao2025thematiclm to match the actual lead author",
+        "severity": "major"
+      },
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "649--658",
+        "severity": "minor"
+      },
+      {
+        "field": "doi",
+        "bib_says": "(missing)",
+        "correct_value": "10.1145/3696410.3714595",
+        "severity": "minor"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of the ACM Web Conference (WWW)",
+        "correct_value": "Proceedings of the ACM on Web Conference 2025 (WWW '25) \u2014 acceptable as-is but DBLP/ACM use 'Proceedings of the ACM on Web Conference 2025'",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://dl.acm.org/doi/10.1145/3696410.3714595",
+      "https://dblp.org/pid/399/3261.html",
+      "https://openreview.net/pdf?id=jiv0Gl6sto",
+      "https://www.researchgate.net/publication/391016560_Thematic-LM_A_LLM-based_Multi-agent_System_for_Large-scale_Thematic_Analysis"
+    ]
+  },
+  {
+    "key": "denison2024subterfuge",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2406.10162"
+    ]
+  },
+  {
+    "key": "grootendorst2022bertopic",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2203.05794"
+    ]
+  },
+  {
+    "key": "hendrycks2021math",
+    "verdict": "confirmed",
+    "issues": [
+      {
+        "field": "venue",
+        "bib_says": "arXiv preprint arXiv:2103.03874",
+        "correct_value": "Published at NeurIPS 2021 Datasets and Benchmarks Track (Round 2). The arXiv citation is acceptable but the canonical venue is NeurIPS Datasets & Benchmarks 2021.",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2103.03874",
+      "https://datasets-benchmarks-proceedings.neurips.cc/paper/2021/hash/be83ab3ecd0db773eb2dc1b0a17836a1-Abstract-round2.html",
+      "https://openreview.net/forum?id=7Bywt2mQsCe",
+      "https://github.com/hendrycks/math/"
+    ]
+  },
+  {
+    "key": "huang2025clustasclass",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Huang, Chen and He, Wenqiang",
+        "correct_value": "Huang, Chen and He, Guoxiu",
+        "severity": "major"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of SIGIR-AP",
+        "correct_value": "Proceedings of the 2025 Annual International ACM SIGIR Conference on Research and Development in Information Retrieval in the Asia Pacific Region (SIGIR-AP '25); DOI 10.1145/3767695.3769519",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2410.00927",
+      "https://arxiv.org/abs/2410.00927v3",
+      "https://dl.acm.org/doi/10.1145/3767695.3769519",
+      "https://dblp.org/db/conf/sigir-ap/sigir-ap2025.html"
+    ]
+  },
+  {
+    "key": "kim2025tama",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Kim, Huimin and others",
+        "correct_value": "Xu, Huimin and Yi, Seungjun and Lim, Terence and Xu, Jiawei and Well, Andrew and Mery, Carlos M. and Zhang, Aidong and Zhang, Yuji and Ji, Heng and Pingali, Keshav and Leng, Yan and Ding, Ying",
+        "severity": "major"
+      },
+      {
+        "field": "other",
+        "bib_says": "citation key kim2025tama (implies first author Kim)",
+        "correct_value": "First author is Huimin Xu, not Kim; consider renaming key to xu2025tama for consistency",
+        "severity": "major"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2503.20666",
+      "https://dblp.org/rec/journals/corr/abs-2503-20666.html",
+      "https://ui.adsabs.harvard.edu/abs/2025arXiv250320666X/abstract"
+    ]
+  },
+  {
+    "key": "korbak2025cotmonitor",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Korbak, Tomek and Bengio, Yoshua and Dragan, Anca and others",
+        "correct_value": "Korbak, Tomek and Balesni, Mikita and Barnes, Elizabeth and Bengio, Yoshua and Benton, Joe and Bloom, Joseph and Chen, Mark and Cooney, Alan and Dafoe, Allan and Dragan, Anca and Emmons, Scott and Evans, Owain and Farhi, David and Greenblatt, Ryan and Hendrycks, Dan and Hobbhahn, Marius and Hubinger, Evan and Irving, Geoffrey and Jenner, Erik and Kokotajlo, Daniel and Krakovna, Victoria and Legg, Shane and Lindner, David and Luan, David and M\\k{a}dry, Aleksander and Michael, Julian and Nanda, Neel and Orr, Dave and Pachocki, Jakub and Perez, Ethan and Phuong, Mary and Roger, Fabien and Saxe, Joshua and Shlegeris, Buck and Soto, Mart\\'in and Steinberger, Eric and Wang, Jasmine and Zaremba, Wojciech and Baker, Bowen and Shah, Rohin and Mikulik, Vlad. Note: the bib lists only Korbak, Bengio, Dragan then 'and others'; ordering on arXiv is Korbak first, then alphabetical middle authors with Baker, Shah, Mikulik last.",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2507.11473"
+    ]
+  },
+  {
+    "key": "lam2024lloom",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://dl.acm.org/doi/10.1145/3613904.3642830",
+      "https://hci.stanford.edu/publications/2024/Lam_LLooM_CHI24.pdf",
+      "https://github.com/michelle123lam/lloom"
+    ]
+  },
+  {
+    "key": "lang1995newsgroups",
+    "verdict": "minor-fix-needed",
+    "citations_used": [
+      "https://dblp.uni-trier.de/rec/conf/icml/Lang95.html",
+      "https://dl.acm.org/doi/10.5555/3091622.3091662",
+      "https://www.semanticscholar.org/paper/NewsWeeder:-Learning-to-Filter-Netnews-Lang/38b3a4447a47a6a6ed1869f3da03352c487f8fe3"
+    ],
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "331--339",
+        "severity": "minor"
+      },
+      {
+        "field": "publisher",
+        "bib_says": "(missing)",
+        "correct_value": "Morgan Kaufmann",
+        "severity": "nit"
+      }
+    ]
+  },
+  {
+    "key": "langgraph",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://github.com/langchain-ai/langgraph"
+    ]
+  },
+  {
+    "key": "lanham2023faithfulness",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Lanham, Tamera and Chen, Anna and Radhakrishnan, Ansh and Steiner, Benoit and Denison, Carson and Hernandez, Danny and Li, Dustin and Durmus, Esin and Hubinger, Evan and Kernion, Jackson and others",
+        "correct_value": "Lanham, Tamera and Chen, Anna and Radhakrishnan, Ansh and Steiner, Benoit and Denison, Carson and Hernandez, Danny and Li, Dustin and Durmus, Esin and Hubinger, Evan and Kernion, Jackson and Luko\u0161i\u016bt\u0117, Kamil\u0117 and Nguyen, Karina and Cheng, Newton and Joseph, Nicholas and Schiefer, Nicholas and Rausch, Oliver and Larson, Robin and McCandlish, Sam and Kundu, Sandipan and Kadavath, Saurav and Yang, Shannon and Henighan, Thomas and Maxwell, Timothy and Telleen-Lawton, Timothy and Hume, Tristan and Hatfield-Dodds, Zac and Kaplan, Jared and Brauner, Jan and Bowman, Samuel R. and Perez, Ethan",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2307.13702"
+    ]
+  },
+  {
+    "key": "lee2025stepwiseeval",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Lee, Andrew and Hockenmaier, Julia",
+        "correct_value": "Lee, Jinu and Hockenmaier, Julia",
+        "severity": "major"
+      },
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "1789--1814",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/2025.findings-emnlp.94/",
+      "https://arxiv.org/abs/2502.12289"
+    ]
+  },
+  {
+    "key": "lightman2023prm800k",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2305.20050"
+    ]
+  },
+  {
+    "key": "liu2025aiannotorch",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Liu, Conrad and others",
+        "correct_value": "Ahtisham, Bakhtawar and Vanacore, Kirk and Lee, Jinsook and Zhou, Zhuqian and Pietrzak, Doug and Kizilcec, Rene F.",
+        "severity": "critical"
+      },
+      {
+        "field": "title",
+        "bib_says": "{AI} Annotation Orchestration: Evaluating {LLM} Verifiers to Improve the Quality of {LLM} Annotations in Learning Analytics",
+        "correct_value": "{AI} Annotation Orchestration: Evaluating {LLM} verifiers to Improve the Quality of {LLM} Annotations in Learning Analytics (arXiv lowercases 'verifiers')",
+        "severity": "nit"
+      },
+      {
+        "field": "other",
+        "bib_says": "citation key liu2025aiannotorch",
+        "correct_value": "Citation key should reflect first author Ahtisham (e.g., ahtisham2025aiannotorch); current key is misleading but does not affect rendered output",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2511.09785",
+      "https://arxiv.org/html/2511.09785v1",
+      "https://www.researchgate.net/publication/397596331_AI_Annotation_Orchestration_Evaluating_LLM_verifiers_to_Improve_the_Quality_of_LLM_Annotations_in_Learning_Analytics"
+    ]
+  },
+  {
+    "key": "llmguided2025",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "18420--18435",
+        "severity": "minor"
+      },
+      {
+        "field": "doi",
+        "bib_says": "(missing)",
+        "correct_value": "10.18653/v1/2025.acl-long.902",
+        "severity": "minor"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (ACL)",
+        "correct_value": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/2025.acl-long.902/",
+      "https://aclanthology.org/2025.acl-long.902.pdf"
+    ]
+  },
+  {
+    "key": "mcinnes2017hdbscan",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://joss.theoj.org/papers/10.21105/joss.00205",
+      "https://joss.theoj.org/papers/10.21105/joss.00205.pdf",
+      "https://ui.adsabs.harvard.edu/abs/2017JOSS....2..205M/abstract"
+    ]
+  },
+  {
+    "key": "mcinnes2018umap",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/1802.03426"
+    ]
+  },
+  {
+    "key": "pedregosa2011sklearn",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://www.jmlr.org/papers/v12/pedregosa11a.html"
+    ]
+  },
+  {
+    "key": "perez2022discovering",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "venue",
+        "bib_says": "journal = arXiv preprint arXiv:2212.09251 (cited as arXiv preprint, year 2022)",
+        "correct_value": "Published version appears in Findings of the Association for Computational Linguistics: ACL 2023, pages 13387-13434, Toronto, Canada. DOI: 10.18653/v1/2023.findings-acl.847. Consider updating to @inproceedings citing the Findings of ACL 2023 version for camera-ready.",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2212.09251",
+      "https://aclanthology.org/2023.findings-acl.847/"
+    ]
+  },
+  {
+    "key": "pham2024topicgpt",
+    "verdict": "minor-fix-needed",
+    "citations_used": [
+      "https://aclanthology.org/2024.naacl-long.164/",
+      "https://arxiv.org/abs/2311.01449"
+    ],
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "2956--2984",
+        "severity": "minor"
+      }
+    ]
+  },
+  {
+    "key": "pi2025logos",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Pi, Yuxuan and Yang, Diyi and Nguyen, Dong",
+        "correct_value": "Pi, Xinyu and Yang, Qisen and Nguyen, Chuong (per arXiv 2509.24294, NASA ADS, OpenReview ZJn0TMTy8C, Semantic Scholar). Diyi Yang and Dong Nguyen are NOT authors of this paper.",
+        "severity": "critical"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+        "correct_value": "Not verifiable as an EMNLP 2025 paper. The paper does not appear in the EMNLP 2025 accepted main papers list, and Xinyu Pi's ACL Anthology page lists no LOGOS paper. OpenReview lists it as 'Submitted to ICLR 2026'. Safest fix: cite as an arXiv preprint (@misc with eprint=2509.24294) until a peer-reviewed venue is confirmed.",
+        "severity": "major"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2509.24294",
+      "https://openreview.net/forum?id=ZJn0TMTy8C",
+      "https://ui.adsabs.harvard.edu/abs/2025arXiv250924294P/abstract",
+      "https://www.semanticscholar.org/paper/LOGOS:-LLM-driven-End-to-End-Grounded-Theory-and-Pi-Yang/bc80d73cebbd2f30f9fbc5023f15230773d13d61",
+      "https://2025.emnlp.org/program/main_papers/",
+      "https://aclanthology.org/people/x/xinyu-pi/"
+    ]
+  },
+  {
+    "key": "rehurek2010gensim",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "46--50",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://hal.science/hal-05382247",
+      "https://is.muni.cz/publication/884893/?lang=en",
+      "https://radimrehurek.com/gensim/intro.html"
+    ]
+  },
+  {
+    "key": "reimers2019sbert",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "3982--3992",
+        "severity": "minor"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing (EMNLP)",
+        "correct_value": "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/D19-1410/"
+    ]
+  },
+  {
+    "key": "sharma2023sycophancy",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2310.13548"
+    ]
+  },
+  {
+    "key": "shen2026faithcot",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2510.04040",
+      "https://openreview.net/forum?id=lN3yKqqzF1",
+      "https://iclr.cc/virtual/2026/poster/10007686"
+    ]
+  },
+  {
+    "key": "song2025prmbench",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Song, Mingyang and others",
+        "correct_value": "Song, Mingyang and Su, Zhaochen and Qu, Xiaoye and Zhou, Jiawei and Cheng, Yu",
+        "severity": "minor"
+      },
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "25299--25346",
+        "severity": "minor"
+      },
+      {
+        "field": "doi",
+        "bib_says": "(missing)",
+        "correct_value": "10.18653/v1/2025.acl-long.1230",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/2025.acl-long.1230/",
+      "https://arxiv.org/abs/2501.03124v2",
+      "https://prmbench.github.io/",
+      "https://github.com/ssmisya/PRMBench"
+    ]
+  },
+  {
+    "key": "tan2024llmannot",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://aclanthology.org/2024.emnlp-main.54/",
+      "https://arxiv.org/abs/2402.13446"
+    ]
+  },
+  {
+    "key": "taxoadapt2025",
+    "verdict": "confirmed",
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(no pages field)",
+        "correct_value": "29834--29850 (ACL Anthology 2025.acl-long.1442; optional camera-ready addition)",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2506.10737",
+      "https://aclanthology.org/2025.acl-long.1442/",
+      "https://aclanthology.org/2025.acl-long.1442.pdf"
+    ]
+  },
+  {
+    "key": "turpin2023biased",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2305.04388"
+    ]
+  },
+  {
+    "key": "wan2024tntllm",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2403.12173",
+      "https://dl.acm.org/doi/pdf/10.1145/3637528.3671647",
+      "https://www.microsoft.com/en-us/research/publication/tnt-llm-text-mining-at-scale-with-large-language-models/"
+    ]
+  },
+  {
+    "key": "wang2023goalex",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "10626--10649",
+        "severity": "minor"
+      },
+      {
+        "field": "doi",
+        "bib_says": "(missing)",
+        "correct_value": "10.18653/v1/2023.emnlp-main.657",
+        "severity": "minor"
+      },
+      {
+        "field": "url",
+        "bib_says": "(missing)",
+        "correct_value": "https://aclanthology.org/2023.emnlp-main.657/",
+        "severity": "nit"
+      },
+      {
+        "field": "publisher",
+        "bib_says": "(missing)",
+        "correct_value": "Association for Computational Linguistics",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/2023.emnlp-main.657/",
+      "https://openreview.net/forum?id=MLzoMwlxTh",
+      "https://zihanwangki.github.io/publications/"
+    ]
+  },
+  {
+    "key": "yang2025llmitl",
+    "verdict": "minor-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Yang, Xiaohao and Zhao, He and Phung, Dinh and Du, Lan",
+        "correct_value": "Yang, Xiaohao and Zhao, He and Xu, Weijie and Qi, Yuanyuan and Lu, Jueqing and Phung, Dinh and Du, Lan",
+        "severity": "major"
+      },
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "1377--1401",
+        "severity": "minor"
+      },
+      {
+        "field": "doi",
+        "bib_says": "(missing)",
+        "correct_value": "10.18653/v1/2025.acl-long.70",
+        "severity": "minor"
+      },
+      {
+        "field": "venue",
+        "bib_says": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (ACL)",
+        "correct_value": "Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)",
+        "severity": "nit"
+      }
+    ],
+    "citations_used": [
+      "https://aclanthology.org/2025.acl-long.70/",
+      "https://arxiv.org/abs/2411.08534",
+      "https://github.com/Xiaohao-Yang/LLM-ITL"
+    ]
+  },
+  {
+    "key": "yao2022react",
+    "verdict": "confirmed",
+    "issues": [],
+    "citations_used": [
+      "https://arxiv.org/abs/2210.03629"
+    ]
+  },
+  {
+    "key": "zhu2025contextawaretax",
+    "verdict": "major-fix-needed",
+    "issues": [
+      {
+        "field": "authors",
+        "bib_says": "Zhu, Kun and Feng, Xiaocheng and Feng, Xiachong and Wu, Lei and Qin, Bing",
+        "correct_value": "Zhu, Kun and Liao, Lizi and Gu, Yuxuan and Huang, Lei and Feng, Xiaocheng and Qin, Bing",
+        "severity": "major"
+      },
+      {
+        "field": "pages",
+        "bib_says": "(missing)",
+        "correct_value": "15616--15634",
+        "severity": "minor"
+      },
+      {
+        "field": "arxiv",
+        "bib_says": "(missing)",
+        "correct_value": "2509.19125",
+        "severity": "minor"
+      }
+    ],
+    "citations_used": [
+      "https://arxiv.org/abs/2509.19125",
+      "https://aclanthology.org/2025.emnlp-main.788/"
+    ]
+  }
+]

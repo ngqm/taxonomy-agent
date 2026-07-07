@@ -1,0 +1,7 @@
+[generate_topic_lvl1] n=660 model=google/gemini-3.1-flash-lite
+[generate_topic_lvl1] done in 336.3s
+[refine_topics]
+[refine_topics] done in 7.2s
+[assign_topics]
+[assign_topics] done in 782.8s
+Total wall: 1126.3s
