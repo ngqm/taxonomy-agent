@@ -11,6 +11,7 @@ output directory, so closing the browser tab does not kill the run.
 """
 from __future__ import annotations
 
+import html
 import json
 import os
 import re
@@ -1290,44 +1291,58 @@ with results_tab:
                         if t and len(examples_by_cat.setdefault(c, [])) < 3:
                             examples_by_cat[c].append(t)
 
-            def _show_examples(cat_name: str) -> None:
-                exs = examples_by_cat.get(cat_name, [])
-                if not exs:
-                    return
-                st.caption(
-                    "Representative items" if _examples_representative
-                    else "Example items"
-                )
-                for t in exs:
-                    snippet = (t[:220] + "…") if len(t) > 220 else t
-                    st.markdown(f"> {snippet}")
-
             st.subheader("Taxonomy")
-            # Expand the three largest categories by default so the discovered
-            # structure is visible at a glance; smaller ones stay collapsed.
-            tax_list = art.get("taxonomy", []) or []
-            top3 = {
-                name
-                for name, _ in sorted(
-                    counts.items(), key=lambda kv: -kv[1]
-                )[:3]
-            }
-            for cat in tax_list:
+            st.caption(
+                "Each discovered category, its definition, and a representative "
+                "item from the corpus."
+            )
+            # Compact gallery: one bordered card per category (largest first),
+            # laid out in a grid so the whole taxonomy is visible at a glance.
+            tax_sorted = sorted(
+                art.get("taxonomy", []) or [],
+                key=lambda c: -counts.get(c.get("name", ""), 0),
+            )
+            _ncol = 3 if len(tax_sorted) > 4 else 2
+            _cols = st.columns(_ncol)
+            for _i, cat in enumerate(tax_sorted):
                 name = cat.get("name", "?")
-                desc = cat.get("description", "")
-                with st.expander(
-                    f"**{name}**  ·  {counts.get(name, 0)} items",
-                    expanded=name in top3,
-                ):
-                    st.write(desc)
-                    _show_examples(name)
+                desc = (cat.get("description") or "").strip()
+                # The category colour is the card's left accent border, so it
+                # matches the distribution chart and corpus map seamlessly.
+                accent = cmap.get(name, "#888888")
+                exs = examples_by_cat.get(name, [])
+                item = ""
+                if exs:
+                    item = (exs[0][:160] + "…") if len(exs[0]) > 160 else exs[0]
+                card = (
+                    f'<div style="border:1px solid #e7e6df;'
+                    f'border-left:5px solid {accent};border-radius:8px;'
+                    f'padding:11px 14px;margin-bottom:14px;background:#fff;">'
+                    f'<div style="font-weight:600;color:#232b27">'
+                    f'{html.escape(name)}'
+                    f'<span style="font-weight:400;color:#9a9a8f"> · '
+                    f'{counts.get(name, 0)} items</span></div>'
+                )
+                if desc:
+                    card += (
+                        f'<div style="color:#5c6b60;font-size:0.85rem;'
+                        f'margin-top:5px;line-height:1.35">'
+                        f'{html.escape(desc)}</div>'
+                    )
+                if item:
+                    card += (
+                        f'<div style="color:#70706a;font-style:italic;'
+                        f'font-size:0.82rem;margin-top:9px;padding-top:7px;'
+                        f'border-top:1px solid #f1f0ea;line-height:1.35">'
+                        f'“{html.escape(item)}”</div>'
+                    )
+                card += "</div>"
+                _cols[_i % _ncol].markdown(card, unsafe_allow_html=True)
             if counts.get("other"):
-                with st.expander(
-                    f"**other**  ·  {counts['other']} items",
-                    expanded=False,
-                ):
-                    st.write("Items that did not fit any discovered category.")
-                    _show_examples("other")
+                st.caption(
+                    f"**other** · {counts['other']} items — did not fit any "
+                    f"discovered category."
+                )
 
             if counts:
                 st.subheader("Distribution")
