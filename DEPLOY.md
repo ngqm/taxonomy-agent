@@ -41,12 +41,12 @@ ephemeral URL, use `modal serve modal_app.py`.
 
 ## API keys
 
-Reviewers paste their **own** OpenRouter key in the sidebar — nothing is baked
+Reviewers paste their **own** OpenRouter key in the sidebar; nothing is baked
 into the image, and no key means only the bundled examples work (which is the
 safe default for a public URL).
 
 To let visitors run without their own key (they will spend **your** OpenRouter
-credits — use with care), attach a Modal secret:
+credits, use with care), attach a Modal secret:
 
 ```bash
 modal secret create openrouter-key OPENROUTER_API_KEY=sk-or-...
@@ -80,7 +80,7 @@ then add `secrets=[modal.Secret.from_name("openrouter-key")]` to the
   account **spending limit** and a **max container count** in the Modal
   dashboard so a burst of traffic can't drain credits.
 - **If a key was ever exposed** (e.g. an early build that baked `.env`), rotate
-  it in the OpenRouter dashboard — treat it as compromised.
+  it in the OpenRouter dashboard; treat it as compromised.
 
 ## Notes
 

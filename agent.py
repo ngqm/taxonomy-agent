@@ -59,7 +59,7 @@ def run(
     instruction: str,
     output_dir: Union[str, Path],
     *,
-    orchestrator_model: str = "anthropic/claude-sonnet-4.6",
+    orchestrator_model: str = "deepseek/deepseek-v4-flash",
     judge_model: str = "deepseek/deepseek-v4-flash",
     max_iterations: int = 10,
     min_iterations: int = 3,
