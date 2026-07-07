@@ -621,18 +621,33 @@ def _render_run_card(container, run_dir: str, title: str) -> None:
     container.markdown(f"**{n_items} items · {n_cats} categories · {cost_str}**")
     container.caption(f"`{d.name}`")
 
+    cmap = _category_colors(list(counts.keys())) if counts else {}
+
+    def _swatch(cat_name: str) -> str:
+        c = cmap.get(cat_name, "#888888")
+        return (
+            f'<span style="display:inline-block;width:9px;height:9px;'
+            f'border-radius:2px;background:{c};margin-right:7px;'
+            f'vertical-align:middle"></span>'
+        )
+
     container.markdown("**Taxonomy**")
     for cat in sorted(
         art.get("taxonomy", []),
         key=lambda c: -counts.get(c.get("name", ""), 0),
     ):
         name = cat.get("name", "?")
-        container.markdown(f"- **{name}** · {counts.get(name, 0)}")
+        container.markdown(
+            f"{_swatch(name)}**{name}** · {counts.get(name, 0)}",
+            unsafe_allow_html=True,
+        )
     if counts.get("other"):
-        container.markdown(f"- *other* · {counts['other']}")
+        container.markdown(
+            f"{_swatch('other')}*other* · {counts['other']}",
+            unsafe_allow_html=True,
+        )
 
     if counts:
-        cmap = _category_colors(list(counts.keys()))
         df_c = (
             pd.DataFrame([{"category": k, "count": v} for k, v in counts.items()])
             .sort_values("count", ascending=False)
