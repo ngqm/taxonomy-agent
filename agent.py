@@ -113,7 +113,10 @@ def run(
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
         artifact contents.
     """
-    load_dotenv(override=True)
+    # override=False so an explicitly-passed / environment key always wins over
+    # a stray .env — important on a hosted deploy where reviewers bring their own
+    # key and no .env should ever take precedence.
+    load_dotenv(override=False)
     api_key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY missing. Pass api_key= or set the env var.")

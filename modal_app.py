@@ -24,6 +24,9 @@ APP_DIR = "/root/app"
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install_from_requirements("requirements.txt")
+    # Marks this as the hosted demo so app.py caps per-run corpus size and
+    # iterations (bounds abuse and runaway compute on the public URL).
+    .env({"TAXONOMY_DEMO_HOSTED": "1"})
     # Bake the repo (code + bundled example_runs) into the image. Skip large or
     # irrelevant dirs so the image stays small and builds fast.
     .add_local_dir(
@@ -31,6 +34,9 @@ image = (
         remote_path=APP_DIR,
         copy=True,
         ignore=[
+            # Never bake secrets into the public image.
+            ".env", "*.env", ".modal.toml", "*.pem", "*.key", "secrets*",
+            # Large / irrelevant dirs.
             "eval_runs", "taxonomy_runs", ".git", "paper", "slides",
             "scripts", "__pycache__", "*.pyc", "*.egg-info", ".venv",
         ],
