@@ -45,8 +45,19 @@ image = (
 
 app = modal.App("taxonomy-agent-demo", image=image)
 
+# Shared OpenRouter key so reviewers can run without their own key. Create the
+# secret once (use a DEDICATED key with a low balance + an OpenRouter spending
+# limit, since anyone with the URL can spend it), then flip _secrets on and
+# redeploy:
+#     modal secret create openrouter-demo-key OPENROUTER_API_KEY=sk-or-...
+#     _secrets = [modal.Secret.from_name("openrouter-demo-key")]
+# The app reads OPENROUTER_API_KEY from the environment and never displays it;
+# per-run caps (TAXONOMY_DEMO_HOSTED) bound each run. Leave empty for BYO-key.
+_secrets: list = []  # -> [modal.Secret.from_name("openrouter-demo-key")]
+
 
 @app.function(
+    secrets=_secrets,
     cpu=2.0,
     memory=4096,
     # min_containers=1 keeps a warm container (no cold start) but bills credits

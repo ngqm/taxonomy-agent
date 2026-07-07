@@ -149,7 +149,7 @@ if _EXAMPLE_RUN.exists():
         "**Just exploring?** The **Inspect** and **Compare** tabs have finished "
         "DarkBench and 20 Newsgroups runs loaded — discovered taxonomy, corpus "
         "map, and cost, no API key needed. To run your own corpus, use the "
-        "**Run** tab (needs an OpenRouter key).",
+        "**Run** tab.",
         icon="👀",
     )
 
@@ -476,16 +476,28 @@ with st.sidebar:
 
     with st.expander("API & models", expanded=True):
         env_key = os.getenv("OPENROUTER_API_KEY", "")
-        api_key = st.text_input(
-            "OpenRouter API key",
+        # On the hosted demo a shared key may be supplied via a Modal secret.
+        # Never prefill it into the (revealable) field — fall back to it only at
+        # run time so reviewers cannot read it out of the widget.
+        _shared_key = bool(env_key) and bool(os.environ.get("TAXONOMY_DEMO_HOSTED"))
+        api_key_input = st.text_input(
+            "OpenRouter API key" + (" (optional)" if _shared_key else ""),
             type="password",
-            value=env_key,
-            help="Defaults to the OPENROUTER_API_KEY env var.",
+            value="" if _shared_key else env_key,
+            help="Your OpenRouter key. On the hosted demo, runs fall back to a "
+                 "shared key if you leave this blank.",
         )
-        if api_key and api_key == env_key:
+        # Effective key: your own if provided, else the environment fallback.
+        api_key = api_key_input or env_key
+        if api_key_input:
+            st.caption("✓ Using your key.")
+        elif _shared_key:
+            st.caption(
+                "✓ Using the shared demo key — paste your own above to use it "
+                "instead."
+            )
+        elif env_key:
             st.caption("✓ Loaded from `OPENROUTER_API_KEY` env var.")
-        elif api_key:
-            st.caption("✓ Set (overrides env var).")
         else:
             st.caption("⚠ Not set — runs will fail until you provide a key.")
         orch_choice = st.selectbox(
