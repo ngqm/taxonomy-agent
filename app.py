@@ -174,8 +174,9 @@ def _scan_runs(roots: list[Path], max_depth: int = 3) -> list[dict]:
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
 st.title("Taxonomy Agent")
 st.caption(
-    "Discover a labelled taxonomy over an unlabelled text corpus, then "
-    "classify every item against it."
+    "Give it a corpus of texts and a one-sentence goal — e.g. “group these "
+    "prompts by the type of manipulation they attempt” — and it **discovers "
+    "the categories** and **labels every item**. No predefined label set needed."
 )
 
 # A finished example run to preload, so the Inspect/Compare tabs show real
@@ -184,10 +185,11 @@ _EXAMPLE_RUN = PACKAGE_DIR / "example_runs" / "darkbench_manipulation"
 
 if _EXAMPLE_RUN.exists():
     st.info(
-        "**Just exploring?** The **Inspect** and **Compare** tabs have finished "
-        "DarkBench and 20 Newsgroups runs loaded — discovered taxonomy, corpus "
-        "map, and cost, no API key needed. To run your own corpus, use the "
-        "**Run** tab.",
+        "**New here?** The **Inspect** and **Compare** tabs already show finished "
+        "runs (DarkBench, 20 Newsgroups) — the discovered taxonomy, a corpus "
+        "map, and cost — with no key needed. **To run your own corpus,** open "
+        "the **Run** tab and hit Start: it uses a shared demo key by default, "
+        "or paste your own OpenRouter key in the sidebar.",
         icon="👀",
     )
 
@@ -775,16 +777,16 @@ with run_tab:
         "🚀 Run the demo (~2 min, under \\$0.05)",
         type="primary",
         disabled=ss.running,
-        help="Runs the agent on a 20-item slice of the bundled rhetorical-"
-             "strategies example with DeepSeek-v4-Flash as both orchestrator "
-             "and judge. Total spend under \\$0.05. Watch the loop converge "
-             "in the trace pane below.",
+        help="Runs the agent on the small bundled example (rhetorical "
+             "strategies) with DeepSeek-v4-Flash as both orchestrator and "
+             "judge. Total spend under \\$0.05. Watch the loop converge in "
+             "the trace pane below.",
     )
     st.caption(
-        "Want to try your own data? Pick **Paste JSONL** below to drop in up "
-        "to 100 items, set a goal instruction, and hit Start. The cheap "
-        "config (DeepSeek both roles, set as the sidebar default) finishes a "
-        "150-item run in about 3 minutes for under \\$0.10."
+        "Runs use a **shared demo key** by default — just set an instruction "
+        "and hit Start (or paste your own OpenRouter key in the sidebar). Use "
+        "**Paste JSONL** or **Upload** to bring your own texts (up to 2,000 "
+        "rows); the bundled example works with one click."
     )
 
     st.markdown("##### 1. Task")
