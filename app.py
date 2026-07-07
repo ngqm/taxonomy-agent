@@ -34,28 +34,6 @@ EXAMPLE_DIR = PACKAGE_DIR / "example"
 DEFAULT_RUNS_ROOT = PACKAGE_DIR / "taxonomy_runs"
 
 
-def _pkg_root_for_subprocess() -> str:
-    """Return a directory to use as the subprocess working dir so that
-    ``python -m taxonomy_agent`` resolves regardless of what the checkout
-    directory is named. The GitHub repo is ``taxonomy-agent`` (hyphen) but the
-    package is ``taxonomy_agent`` (underscore), so on a hosted deploy the clone
-    directory does not match the module name. When they differ we expose the
-    package under the right name via a symlink shim in a temp dir."""
-    if PACKAGE_DIR.name == "taxonomy_agent":
-        return str(PACKAGE_DIR.parent)
-    shim = Path(tempfile.gettempdir()) / "taxa_pkg_shim"
-    try:
-        shim.mkdir(exist_ok=True)
-        link = shim / "taxonomy_agent"
-        if link.is_symlink() and link.resolve() != PACKAGE_DIR.resolve():
-            link.unlink()
-        if not link.exists():
-            link.symlink_to(PACKAGE_DIR, target_is_directory=True)
-        return str(shim)
-    except OSError:
-        return str(PACKAGE_DIR.parent)
-
-
 # Hosted-demo limits.
 HOSTED_MAX_ROWS = 2000          # largest corpus a reviewer may load
 HOSTED_MAX_INSTRUCTION = 500    # instruction is a short grouping directive
@@ -1092,7 +1070,7 @@ with run_tab:
                         stderr=subprocess.STDOUT,
                         text=True,
                         env=env,
-                        cwd=_pkg_root_for_subprocess(),
+                        cwd=str(PACKAGE_DIR),
                         start_new_session=True,  # detach: outlive Streamlit
                     )
                     pid_path = out_path / "run.pid"
