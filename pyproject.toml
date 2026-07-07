@@ -30,15 +30,7 @@ dev = ["pytest>=7.0"]
 # `taxonomy --config ...` become available on PATH.
 taxonomy = "taxonomy_agent.__main__:main"
 
-# The package source IS this directory — there's no parent project wrapping it.
-# `package-dir = {"taxonomy_agent" = "."}` tells setuptools to treat the
-# contents of this folder as the contents of the `taxonomy_agent` package,
-# so `pip install -e .` can be run from inside `taxonomy_agent/` itself.
-[tool.setuptools]
-packages = ["taxonomy_agent"]
-
-[tool.setuptools.package-dir]
-taxonomy_agent = "."
-
-[tool.setuptools.package-data]
-taxonomy_agent = ["example/*", "example/**/*"]
+# The library lives in the taxonomy_agent/ package directory. app.py, modal_app.py,
+# example/, and example_runs/ sit at the repo root (the demo and its data).
+[tool.setuptools.packages.find]
+include = ["taxonomy_agent*"]
