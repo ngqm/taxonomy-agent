@@ -36,16 +36,19 @@ itself has no automated tests yet (see backlog).
 - `tests/`: backend unit tests (ops, cost, metrics, judge, parsing, tools).
 
 **Demo (where most inspection/improvement will happen):**
-- `app.py` (~1150 lines): the Streamlit UI. It does `from demo import *`, then
-  the page bootstrap (`set_page_config`, title, banner, `st.session_state` init),
-  the sidebar, and the four tab bodies. Section banners mark the parts:
-  `# ── Sidebar`, `# ── Run tab`, `# ── Runs tab` (History), `# ── Inspect tab`,
-  `# ── Compare tab`. NB: page bootstrap and session-state init must stay in
-  app.py (module-level code in demo/ runs once per process, not per rerun).
-- `demo/`: support package imported by app.py. `helpers.py` (paths, run
-  discovery/scanning, cost estimate, trace/cost renderers, model lists),
-  `guards.py` (hosted caps + content filter), `viz.py` (category colours,
-  embeddings/UMAP, run-card renderer). Re-exported via `__all__`.
+- `app.py` (~80 lines): thin entry point. Page bootstrap (`set_page_config`,
+  title, banner, `st.session_state` init — these MUST stay here; module-level
+  code in demo/ runs once per process, not per Streamlit rerun), then
+  `settings = render_sidebar()`, then `st.tabs(...)` dispatching to the tab
+  renderers.
+- `demo/`: the app, as a package (names re-exported via `from demo import *`).
+  - `sidebar.py`: `render_sidebar()` renders the config sidebar and returns a
+    `Settings` NamedTuple.
+  - `tabs/{run,history,inspect,compare}.py`: one `render(...)` per tab. `run`
+    and `inspect` take the `Settings`; `history`/`compare` take nothing.
+  - `helpers.py` (paths, run discovery/scanning, cost estimate, trace/cost
+    renderers, presets, model lists), `guards.py` (hosted caps + content
+    filter), `viz.py` (category colours, embeddings/UMAP, run-card renderer).
 - `modal_app.py`: the Modal deployment (serves `app.py` in one container).
 - `scripts/precompute_example_viz.py`: regenerates the bundled runs' map/example
   JSON.
@@ -117,11 +120,11 @@ Roughly prioritized; each is a real place to improve the demo.
    smoke test (load, open Inspect, one keyless run, and a *second* session to
    catch session-state init bugs) in CI would catch regressions. This session
    found several only by screenshotting.
-6. **Finish splitting app.py.** Helpers/guards/viz are now a `demo/` package,
-   but the sidebar and the four tab bodies still live in app.py (~1150 lines).
-   The tabs could move to `demo/tabs/` with the sidebar returning a settings
-   object. Do this carefully: the Run tab's subprocess/streaming loop is tightly
-   coupled to session state, and page bootstrap must stay in app.py.
+6. **Run-tab loop robustness.** `demo/tabs/run.py` streams a detached
+   subprocess by tailing its log/trace files in a `while proc.poll()` loop.
+   It works, but it is the most fragile piece (state, streaming, Stop button).
+   Any change here should be checked with a real run in a *second* session,
+   not just a first-load render.
 6. **Cold start + keep-warm.** Scale-to-zero saves money but the first visitor
    waits. A keep-warm during demo windows (`min_containers=1`) or a scheduled
    ping is a cheap fix.
