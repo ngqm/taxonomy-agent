@@ -69,10 +69,11 @@ then add `secrets=[modal.Secret.from_name("openrouter-key")]` to the
   `*.pem`, `*.key` from the build, and `agent.py` uses `load_dotenv(override=False)`
   so a stray `.env` can never override a reviewer's key. Verify with a throwaway
   `modal run` that checks `/root/app/.env` is absent.
-- **Per-run caps.** The image sets `TAXONOMY_DEMO_HOSTED=1`, which makes the app
-  cap a hosted run at **150 items and 8 iterations** (and pool ≤ 50), so no
-  single public run can run away on cost or container time. Local installs are
-  uncapped.
+- **Input + per-run caps.** The image sets `TAXONOMY_DEMO_HOSTED=1`, which makes
+  the app reject corpora over **2,000 rows**, cap a run at **8 iterations**
+  (pool ≤ 100), and run a lightweight **content filter** on the goal instruction
+  (length limit, prompt-injection and inappropriate-content blocklist). Local
+  installs are uncapped and unfiltered.
 - **BYO-key.** Runs use the reviewer's own OpenRouter key; no shared key unless
   you explicitly attach one (above).
 - **Bound the blast radius on Modal:** keep `min_containers=0`, and set an

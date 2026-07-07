@@ -56,6 +56,44 @@ def _pkg_root_for_subprocess() -> str:
         return str(PACKAGE_DIR.parent)
 
 
+# Hosted-demo limits.
+HOSTED_MAX_ROWS = 2000          # largest corpus a reviewer may load
+HOSTED_MAX_INSTRUCTION = 500    # instruction is a short grouping directive
+
+# Lightweight content guard for the hosted goal instruction. It should be a
+# short text-grouping directive; reject over-long input, obvious prompt
+# injection, and clearly inappropriate content. Heuristic, not exhaustive.
+_INJECTION_RE = re.compile(
+    r"\b(ignore|disregard|forget|override)\b.{0,40}"
+    r"\b(previous|above|prior|all|these|your)\b.{0,25}"
+    r"\b(instruction|prompt|rule|system)",
+    re.I,
+)
+_UNSAFE_RE = re.compile(
+    r"\bn[i1]gg(er|a)\b|\bf[a4]gg?(ot)?\b|\bk[i1]ke\b|\bch[i1]nk\b|\bret[a4]rd\b"
+    r"|child\s*(porn|sexual|abuse)|\bcsam\b|underage\b.{0,15}\bsex"
+    r"|how\s+to\s+(make|build|synthes[iy]ze)\b.{0,30}"
+    r"(bomb|explosive|meth|nerve\s*agent|bioweapon)"
+    r"|\bkill\s+(yourself|myself)\b|suicide\s+method",
+    re.I,
+)
+
+
+def _instruction_block_reason(text: str) -> "str | None":
+    """Return a reason to block a hosted instruction, or None if it is fine."""
+    t = (text or "").strip()
+    if len(t) > HOSTED_MAX_INSTRUCTION:
+        return (
+            f"Keep the instruction under {HOSTED_MAX_INSTRUCTION} characters — "
+            "it is a short grouping instruction, not a document."
+        )
+    if _INJECTION_RE.search(t):
+        return "That reads as a prompt-injection attempt, not a grouping instruction."
+    if _UNSAFE_RE.search(t):
+        return "That instruction was blocked by the demo content filter."
+    return None
+
+
 def _discover_runs_roots() -> list[Path]:
     """Return every `*_runs/` directory under the project root *or* the
     package directory that actually exists. UI-launched runs land in
@@ -804,6 +842,17 @@ with run_tab:
         items_path = str(EXAMPLE_DIR / "items.jsonl")
         st.info(f"Using example items at `{items_path}`")
 
+    # Hosted demo: hard cap the corpus size a reviewer can load.
+    if items_path and os.environ.get("TAXONOMY_DEMO_HOSTED"):
+        _rows = _count_items(items_path)
+        if _rows and _rows > HOSTED_MAX_ROWS:
+            st.error(
+                f"This demo accepts up to {HOSTED_MAX_ROWS:,} rows; your input "
+                f"has {_rows:,}. Trim it, or clone and run locally for larger "
+                f"corpora."
+            )
+            items_path = None
+
     st.markdown("##### 3. Instruction")
     instruction = st.text_area(
         "What should the agent classify? (natural language)",
@@ -961,6 +1010,9 @@ with run_tab:
             )
         elif custom_model_err:
             st.error(custom_model_err)
+        elif (os.environ.get("TAXONOMY_DEMO_HOSTED")
+              and _instruction_block_reason(instruction)):
+            st.error(_instruction_block_reason(instruction))
         else:
             ss.log_lines = []
             ss.running = True
@@ -968,12 +1020,12 @@ with run_tab:
             # Hosted demo: cap corpus size and iterations so no single public
             # run can run away on cost or container time.
             if os.environ.get("TAXONOMY_DEMO_HOSTED"):
-                CAP_ITEMS, CAP_ITERS, CAP_POOL = 150, 8, 50
+                CAP_ITEMS, CAP_ITERS, CAP_POOL = HOSTED_MAX_ROWS, 8, 100
                 max_iters = min(int(max_iters), CAP_ITERS)
                 if not pool_limit or int(pool_limit) > CAP_POOL:
                     pool_limit = CAP_POOL
                 _n = _count_items(items_path)
-                if _n and _n > CAP_ITEMS:
+                if _n and _n > CAP_ITEMS:  # belt-and-suspenders for the load cap
                     capped = Path(tempfile.gettempdir()) / "hosted_capped.jsonl"
                     with open(items_path) as _f, open(capped, "w") as _g:
                         for _i, _line in enumerate(_f):
@@ -982,7 +1034,7 @@ with run_tab:
                             _g.write(_line)
                     items_path = str(capped)
                 st.info(
-                    f"Hosted demo limits: up to {CAP_ITEMS} items and "
+                    f"Hosted demo limits: up to {CAP_ITEMS:,} items and "
                     f"{CAP_ITERS} iterations per run. Clone and run locally to "
                     f"lift the caps."
                 )
