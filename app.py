@@ -84,8 +84,8 @@ def _instruction_block_reason(text: str) -> "str | None":
     t = (text or "").strip()
     if len(t) > HOSTED_MAX_INSTRUCTION:
         return (
-            f"Keep the instruction under {HOSTED_MAX_INSTRUCTION} characters — "
-            "it is a short grouping instruction, not a document."
+            f"Keep the instruction under {HOSTED_MAX_INSTRUCTION} characters. "
+            "It is a short grouping instruction, not a document."
         )
     if _INJECTION_RE.search(t):
         return "That reads as a prompt-injection attempt, not a grouping instruction."
@@ -174,9 +174,9 @@ def _scan_runs(roots: list[Path], max_depth: int = 3) -> list[dict]:
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
 st.title("Taxonomy Agent")
 st.caption(
-    "Give it a corpus of texts and a one-sentence goal — e.g. “group these "
-    "prompts by the type of manipulation they attempt” — and it **discovers "
-    "the categories** and **labels every item**. No predefined label set needed."
+    "Give it a set of texts and a one-line goal, like “group these prompts by "
+    "the type of manipulation they attempt.” It works out the categories on "
+    "its own and labels every item, so you never define the label set up front."
 )
 
 # A finished example run to preload, so the Inspect/Compare tabs show real
@@ -185,12 +185,13 @@ _EXAMPLE_RUN = PACKAGE_DIR / "example_runs" / "darkbench_manipulation"
 
 if _EXAMPLE_RUN.exists():
     st.info(
-        "**New here?** The **Inspect** and **Compare** tabs already show finished "
-        "runs (DarkBench, 20 Newsgroups) — the discovered taxonomy, a corpus "
-        "map, and cost — with no key needed. **To run your own corpus,** open "
-        "the **Run** tab and hit Start: it uses a shared demo key by default, "
-        "or paste your own OpenRouter key in the sidebar.",
-        icon="👀",
+        "**New here?** Open **Inspect** or **Compare** to browse finished runs "
+        "on DarkBench and 20 Newsgroups: the taxonomy the agent found, a map of "
+        "the corpus, and what it cost. Want to run your own texts? Go to the "
+        "**Run** tab and press Start. **You don't need your own API key; the "
+        "run uses ours.** If you'd rather use your own, add an OpenRouter key "
+        "in the sidebar.",
+        icon="👋",
     )
 
 ss = st.session_state
@@ -272,7 +273,7 @@ def _render_taxonomy_preview(box, state_path: "Path") -> None:
     n_calls = body.get("n_classify_calls", 0)
     with box.container():
         st.caption(
-            f"Working taxonomy after round {n_calls} — {len(tax)} categories"
+            f"Working taxonomy after round {n_calls}: {len(tax)} categories"
         )
         if not tax:
             return
@@ -378,7 +379,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
                 proposed = e.get("proposed", []) or []
                 if not proposed:
                     st.markdown(
-                        f"`{i:02d}` · **novelties** — judge found no new "
+                        f"`{i:02d}` · **novelties**: judge found no new "
                         f"categories to propose."
                     )
                     continue
@@ -386,7 +387,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
                 names_md = " ".join(f"`{n}`" for n in names[:8])
                 more = f" (+{len(names) - 8} more)" if len(names) > 8 else ""
                 st.markdown(
-                    f"`{i:02d}` · **novelties** — judge proposed "
+                    f"`{i:02d}` · **novelties**: judge proposed "
                     f"{len(proposed)} candidate name(s): {names_md}{more}"
                 )
             elif kind == "revise":
@@ -405,7 +406,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
                     1 for a in applied if a.get("result") == "ok"
                 )
                 st.markdown(
-                    f"`{i:02d}` · **revise** — {ok_count}/{len(ops)} ops "
+                    f"`{i:02d}` · **revise**: {ok_count}/{len(ops)} ops "
                     f"applied → {len(tax_after)} categories: "
                     f"{ops_md}{more}"
                 )
@@ -415,7 +416,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
                 bar = "█" * int(round((rate or 0) * 20))
                 pad = "░" * (20 - len(bar))
                 st.markdown(
-                    f"`{i:02d}` · **classify** probe — don't-fit "
+                    f"`{i:02d}` · **classify** probe: don't-fit "
                     f"{rate_str}  `{bar}{pad}`"
                 )
             else:
@@ -524,8 +525,8 @@ with st.sidebar:
             "OpenRouter API key" + (" (optional)" if _shared_key else ""),
             type="password",
             value="" if _shared_key else env_key,
-            help="Your OpenRouter key. On the hosted demo, runs fall back to a "
-                 "shared key if you leave this blank.",
+            help="Leave blank to use the key we provide. Add your own key here "
+                 "to run on your own account instead.",
         )
         # Effective key: your own if provided, else the environment fallback.
         api_key = api_key_input or env_key
@@ -533,13 +534,13 @@ with st.sidebar:
             st.caption("✓ Using your key.")
         elif _shared_key:
             st.caption(
-                "✓ Using the shared demo key — paste your own above to use it "
-                "instead."
+                "✓ No key needed. Runs use the key we provide. Add your own "
+                "above to run on your own account instead."
             )
         elif env_key:
-            st.caption("✓ Loaded from `OPENROUTER_API_KEY` env var.")
+            st.caption("✓ Loaded from your `OPENROUTER_API_KEY`.")
         else:
-            st.caption("⚠ Not set — runs will fail until you provide a key.")
+            st.caption("⚠ Not set. Runs will fail until you add a key.")
         orch_choice = st.selectbox(
             "Orchestrator model",
             ORCHESTRATOR_OPTIONS,
@@ -783,10 +784,11 @@ with run_tab:
              "the trace pane below.",
     )
     st.caption(
-        "Runs use a **shared demo key** by default — just set an instruction "
-        "and hit Start (or paste your own OpenRouter key in the sidebar). Use "
-        "**Paste JSONL** or **Upload** to bring your own texts (up to 2,000 "
-        "rows); the bundled example works with one click."
+        "**You don't need your own API key.** Set an instruction and press "
+        "Start; the run uses ours. If you'd rather use your own, add an "
+        "OpenRouter key in the sidebar. Bring your own texts with **Upload** or "
+        "**Paste JSONL** (up to 2,000 rows), or try the bundled example in one "
+        "click."
     )
 
     st.markdown("##### 1. Task")
@@ -876,7 +878,7 @@ with run_tab:
             "Size hint",
             key="size_hint_text",
             help="Target taxonomy size (e.g. '4–10', 'around 6'). Blank = no "
-                 "target — the orchestrator chooses.",
+                 "target. The orchestrator chooses.",
         )
 
     st.markdown("##### 4. Output")
@@ -959,7 +961,7 @@ with run_tab:
             except Exception:
                 alive = False
             if not alive:
-                if st.button("Reset", help="Tracked process is gone — clear stuck state."):
+                if st.button("Reset", help="Tracked process is gone. Clear stuck state."):
                     ss.running = False
                     st.rerun()
 
@@ -1007,7 +1009,7 @@ with run_tab:
         elif int(min_iters) > int(max_iters):
             st.error(
                 f"Min iterations ({int(min_iters)}) cannot exceed "
-                f"max iterations ({int(max_iters)}) — the floor would be "
+                f"max iterations ({int(max_iters)}); the floor would be "
                 f"unreachable."
             )
         elif custom_model_err:
