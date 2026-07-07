@@ -16,14 +16,34 @@ LLMs exhibit
 sycophancy~\citep{sharma2023sycophancy} and reward-tampering
 behaviour~\citep{denison2024subterfuge, perez2022discovering}.
 \citet{lee2025stepwiseeval} survey the broader literature on
-stepwise reasoning evaluation. These tools evaluate models against
-categories chosen in advance. \textsc{TaxonomyAgent} inverts the
-workflow: given an unlabelled corpus of CoT traces and a goal
-instruction, it discovers the categories themselves, which makes it
-complementary to FaithCoT-Bench-style evaluation. The five failure
-modes in our CoT-Pattern corpus (sycophantic capitulation, post-hoc
-rationalisation, unfaithful paraphrase, reward-hack verbalisation,
-hallucinated premise) are sourced from this lineage.
+stepwise reasoning evaluation. These benchmarks evaluate models
+against categories fixed in advance and assume the category set is
+given.
+
+\paragraph{Analysing populations of reasoning traces.}
+A separate line studies not a single chain of thought but a whole
+collection of them, and every method we are aware of either imposes a
+fixed category set or builds a bespoke one for each prompt. Thought
+Anchors~\citep{bogdan2025thoughtanchors} classifies each sentence of a
+trace into eight predefined step types (problem setup, plan
+generation, fact retrieval, active computation, uncertainty
+management, result consolidation, self-checking, and final-answer
+emission), then measures which sentences drive the answer through
+counterfactual resampling and attention analysis.
+\citet{li2026schoenfeld} map model reasoning onto a four-part taxonomy
+imported from Schoenfeld's theory of human mathematical
+problem-solving (knowledge, strategies, monitoring, and beliefs).
+\citet{li2026performative} study step-level faithfulness and argue
+that many reasoning steps are formatted for an evaluator instead of
+driving the computation, so a chain of thought is an incomplete
+oversight signal. Closest to our setting,
+\citet{tyagi2026globalcot} cluster around a thousand traces per prompt
+into strategy graphs, but their algorithmic clustering has a language
+model write a keyword dictionary for each new prompt that a substring
+matcher then applies. \textsc{TaxonomyAgent} instead induces the
+category set from an unlabelled corpus and one goal instruction, so
+the analyst chooses the axis of variation without importing a fixed
+schema or writing a per-prompt keyword dictionary.
 
 \paragraph{Multi-agent annotation and codebook construction.}
 Co-DETECT~\citep{codetect2025} is last year's EMNLP demonstration on
@@ -67,6 +87,4 @@ clustering~\citep{llmguided2025} target different input contracts;
 \citet{tan2024llmannot} survey the broader landscape. None of these
 systems expose a goal-instruction mechanism that allows the analyst
 to direct discovery toward a non-topical axis of variation, which is
-the gap \textsc{TaxonomyAgent} addresses; on our synthetic CoT
-corpus, TopicGPT recovers the surface mathematics topic rather than
-the gold failure modes.
+the gap \textsc{TaxonomyAgent} addresses.

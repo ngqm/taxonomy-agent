@@ -61,6 +61,19 @@ TOPICGPT_DIR = Path("/tmp/topicGPT")
 PROMPT_DIR = TOPICGPT_DIR / "prompt"
 
 
+def _resolve_prompt(name: str) -> str:
+    """Prefer an axis-specific prompt override in PROMPT_DIR_OVERRIDE, else the
+    stock TopicGPT prompt."""
+    if PROMPT_DIR_OVERRIDE is not None:
+        cand = PROMPT_DIR_OVERRIDE / name
+        if cand.exists():
+            return str(cand)
+    return str(PROMPT_DIR / name)
+
+
+PROMPT_DIR_OVERRIDE: Path | None = None
+
+
 def _seed_topic_file(out: Path, n_topics_hint: int) -> Path:
     """Write a seed-topic file in TopicGPT's expected format."""
     out.write_text(f"[1] Initial topic seed (will be replaced).\n")
@@ -155,7 +168,7 @@ def run_corpus(items: list[dict], out_dir: Path, model: str, seed_label: str,
         api=api,
         model=model,
         data=str(data_file),
-        prompt_file=str(PROMPT_DIR / "generation_1.txt"),
+        prompt_file=_resolve_prompt("generation_1.txt"),
         seed_file=str(seed_file),
         out_file=str(gen_file),
         topic_file=str(topics_file),
@@ -169,7 +182,7 @@ def run_corpus(items: list[dict], out_dir: Path, model: str, seed_label: str,
     refine_topics(
         api=api,
         model=model,
-        prompt_file=str(PROMPT_DIR / "refinement.txt"),
+        prompt_file=_resolve_prompt("refinement.txt"),
         generation_file=str(gen_file),
         topic_file=str(topics_file),
         out_file=str(refined_topics_file),
@@ -187,7 +200,7 @@ def run_corpus(items: list[dict], out_dir: Path, model: str, seed_label: str,
         api=api,
         model=model,
         data=str(data_file),
-        prompt_file=str(PROMPT_DIR / "assignment.txt"),
+        prompt_file=_resolve_prompt("assignment.txt"),
         out_file=str(assign_file),
         topic_file=str(refined_topics_file),
         verbose=False,
@@ -228,20 +241,32 @@ def score(items: list[dict], topics_file: Path, assignments_file: Path) -> dict:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--corpus", choices=["20ng", "cot"], required=True)
+    ap.add_argument("--corpus", choices=["20ng", "cot", "darkbench"],
+                    required=True)
     ap.add_argument("--seed", type=int, required=True)
     ap.add_argument("--n_per_class", type=int, default=25)
     ap.add_argument("--out_dir", default="paper/data/topicgpt_out")
     ap.add_argument("--model", default="deepseek/deepseek-v4-flash")
+    ap.add_argument("--prompt-dir", default=None,
+                    help="override TopicGPT prompt directory (axis-specific)")
+    ap.add_argument("--path", default=None,
+                    help="override CoT-corpus JSONL path (for cot corpus)")
     args = ap.parse_args()
+    global PROMPT_DIR_OVERRIDE
+    if args.prompt_dir:
+        PROMPT_DIR_OVERRIDE = Path(args.prompt_dir)
 
     out = Path(args.out_dir) / f"{args.corpus}_seed{args.seed}"
 
     if args.corpus == "20ng":
         items = load_20newsgroups(n_per_class=args.n_per_class, seed=args.seed)
         max_topics = 25
+    elif args.corpus == "darkbench":
+        from taxonomy_agent.eval.corpora import load_darkbench
+        items = load_darkbench(seed=args.seed)
+        max_topics = 10
     else:
-        items = load_synth_reasoning()
+        items = load_synth_reasoning(path=args.path)
         max_topics = 8
 
     print(f"Loaded {len(items)} items for corpus={args.corpus} seed={args.seed}")

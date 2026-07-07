@@ -1,20 +1,25 @@
-We present \textsc{TaxonomyAgent}, an open-source Python package and
-Streamlit interface for discovering structured taxonomies in unstructured
-text. Given a corpus and a one-sentence goal instruction,
-\textsc{TaxonomyAgent} discovers a labelled taxonomy and assigns every
-item to a named category; a single command launches the run, and the UI
-streams the agent's trace, the evolving taxonomy, and partial state as
-items are labelled. The goal-instruction mechanism makes discovery
-steerable toward a chosen axis of variation, which lets us target an
-underserved task in LLM alignment research: surfacing failure modes
-and reasoning strategies in chain-of-thought traces. On a 149-item
-synthetic corpus of CoT failure patterns, \textsc{TaxonomyAgent}
-reaches NMI 0.944 and labels 95\% of items at perfect accuracy, while
-the published TopicGPT pipeline collapses to a single surface topic.
-On 20~Newsgroups, \textsc{TaxonomyAgent} also handles classical
-topic modeling, reaching NMI 0.740 and beating TopicGPT by
-$1.22\times$. Internally, two LLM roles are separated by a structured
-contract: an orchestrator proposes typed taxonomy edits while a
-stateless judge labels each item from item text alone, keeping
+Turning a large collection of unlabelled text into a useful set of
+categories is a recurring bottleneck, from safety researchers auditing
+model interactions to analysts building annotation schemas. The
+categories are not known in advance and depend on what the analyst
+wants to group by, which existing tools do not let them choose:
+topic-modeling pipelines surface the dominant topic and cannot
+be steered, and evaluation benchmarks score models against a fixed
+category set. We present \textsc{TaxonomyAgent}, an open-source
+system that discovers a labelled taxonomy over an unlabelled corpus
+along a user-specified axis of variation. The analyst supplies the
+corpus and one sentence naming the axis (for example, ``group these
+prompts by the type of manipulation they attempt''); the system
+returns a labelled taxonomy, a per-item classification, and a
+replayable trace. On DarkBench, a benchmark of prompts that elicit six
+manipulative dark patterns from AI assistants,
+\textsc{TaxonomyAgent} recovers the six-category expert taxonomy at
+NMI 0.927 with no hint about the number of categories, ahead of
+topic-modeling and LLM-clustering baselines even when each is asked to
+group by the same manipulation type.
+On 20~Newsgroups it reaches NMI 0.740 and beats a published
+topic-discovery pipeline. Internally, two LLM roles are separated by a
+structured contract: an orchestrator proposes typed taxonomy edits
+while a stateless judge labels each item from item text alone, keeping
 per-item inference cost linear in corpus size. Code, reproduction
-scripts, and corpora are at \repourl.
+scripts, and configuration are at \repourl.

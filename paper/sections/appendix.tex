@@ -1,84 +1,10 @@
 \appendix
 
-\section*{A\quad Why a Single-Source Synthetic CoT Corpus}
-\label{app:synthetic-corpus}
-
-Before settling on the synthetic design we surveyed five public CoT
-sources and found that none of them, individually or in combination,
-supports clean pattern-discovery evaluation across our five patterns.
-The Sharma et al.\ sycophancy
-stimuli~\citep{sharma2023sycophancy} are user-side prompts and do not
-contain annotated CoT pivots. The Perez et al.\ model-written
-evaluations~\citep{perez2022discovering} provide only statistical
-proxies with no per-trace structural labels.
-FaithCoT-Bench~\citep{shen2026faithcot} conflates arithmetic errors
-with hallucinations and does not separate post-hoc rationalisation
-from unfaithful paraphrase. The Denison
-sycophancy-to-subterfuge transcripts~\citep{denison2024subterfuge}
-contain roughly seven explicit examples of verbalised reward hacking.
-PRM800K~\citep{lightman2023prm800k} labels per-step correctness
-without naming the pattern. No public dataset provides annotated CoT
-pivots for more than one of our five patterns, and combining datasets
-to cover all five makes source detection a near-perfect proxy for
-pattern detection (the hybrid corpus reaches 95\% surface-feature
-accuracy versus 73\% on the single-source corpus, making the hybrid
-unevaluable as a benchmark). Construct-validity arguments for
-synthetic single-source CoT evaluation in this regime follow the
-precedents established by~\citet{lanham2023faithfulness}
-and~\citet{turpin2023biased}.
-
-The 0.730 surface ceiling is a supervised logistic regression on 14
-surface features trained under 5-fold stratified cross-validation on
-the same 149 items the discovery systems see; it is a supervised
-oracle ceiling for what surface shape alone can do. Taxonomy\_agent's
-purity is the optimal-mapping purity of an unsupervised discovered
-partition; the two quantities are not strictly commensurable, which is
-why the body reports the CoT result two ways at the install default:
-accuracy on the labelled subset (on average $142$ of $149$ items,
-$1.000$ across three seeds), directly comparable to the $0.730$
-supervised oracle on the same items, and overall coverage at $95\%$.
-
-\section*{B\quad Per-Sub-Domain Stability on the CoT Corpus}
-\label{app:per-domain}
-
-We tagged each item with a problem-domain heuristic from the problem
-text and recomputed precision-at-coverage, coverage, purity, and NMI
-per sub-domain (Table~\ref{tab:cot_per_domain}). Precision on
-labelled items is $100\%$ across every sub-domain with at least five
-items; coverage varies between 0.80 and 1.00; NMI stays in the
-$0.82$--$1.00$ band. The number-theory slice ($n{=}5$) is too thin
-to support a stability claim alone; the cross-sub-domain reading
-rests on algebra (50), geometry (40), the residual catch-all (39),
-and combinatorics (15).
-
-\begin{table}[h]
-\centering
-\begin{tabular}{lrrrrr}
-\toprule
-Sub-domain & $n$ & Cov. & Prec.@cov. & Purity & NMI \\
-\midrule
-algebra        & 50 & 0.90 & 1.000 & 0.940 & 0.873 \\
-geometry       & 40 & 0.90 & 1.000 & 0.975 & 0.922 \\
-other          & 39 & 0.87 & 1.000 & 0.897 & 0.826 \\
-combinatorics  & 15 & 0.80 & 1.000 & 0.867 & 0.822 \\
-number theory  &  5 & 1.00 & 1.000 & 1.000 & 1.000 \\
-\midrule
-overall        & 149 & 0.89 & 1.000 & 0.926 & 0.851 \\
-\bottomrule
-\end{tabular}
-\caption{Per-sub-domain CoT-Pattern results at the install default (DeepSeek-v4-Flash both roles), single seed; this seed labels $133$ of $149$ items (coverage $0.89$), slightly more conservative than the three-seed-averaged $142/149$ reported in \S\ref{sec:eval-results-cot}.
-Precision-at-coverage is $100\%$ across all four mathematical
-sub-domains plus the ``other'' slice.}
-\label{tab:cot_per_domain}
-\end{table}
-
-\section*{C\quad Convergence Signal Cross-Check}
+\section*{A\quad Convergence Signal Cross-Check}
 \label{app:convergence}
 
-Across the 12 classify events from the original three-seed 20NG
-\textsc{TaxonomyAgent} runs at the Sonnet pair (the cross-check predates
-the install default switch and the install default produces analogous
-saturation), the don't-fit trajectories are
+Across the 12 classify events from three-seed 20NG
+\textsc{TaxonomyAgent} runs, the don't-fit trajectories are
 $[0.00,0.00,0.00,0.00]$,
 $[0.05,0.00,0.00,0.00]$, and
 $[0.10,0.05,0.00,0.05]$:
@@ -92,32 +18,11 @@ floor too quickly to function as a quantitative leading indicator,
 so we use it as an operational stopping default in \S\ref{sec:system}
 and report external metrics separately.
 
-\section*{D\quad Typed-Dispatcher Ablation Detail}
-\label{app:ablation}
-
-We ran a single-seed CoT ablation with the typed revise dispatcher
-replaced by a loose dispatcher that accepts ops verbatim (no
-source-existence check on rename/edit/merge/split, no name-collision
-check on add/rename), matching the same orchestrator, judge,
-instruction, and hyperparameters. The typed CoT run produces eight
-trace events including one successful \textsc{revise} call, finishes
-in 197\,s, and costs $\$2.23$ total. The loose run we terminated at
-$\$1.35$ of spend (six orchestrator calls in 90\,s) contained two
-\textsc{novelties} calls (each returning zero candidates), two
-\textsc{classify} probes (don't-fit rates 0.11 and 0.13), and zero
-\textsc{revise} calls, leaving the working taxonomy empty at
-termination. Two interpretations are consistent with this single
-observation: the typed validation log gives the orchestrator a
-feedback signal it uses, or ordinary stochasticity produced the
-outcome (the judge's two novelties calls happened to return empty
-candidate sets in the loose run). A
-single seed cannot distinguish these.
-
-\section*{E\quad Streamlit Inspect Tab on the CoT Run}
+\section*{B\quad Streamlit Inspect Tab}
 \label{app:demo-eval}
 
 Figure~\ref{fig:ui-trace} shows the Streamlit Inspect tab after
-loading the CoT-Pattern run. The iteration timeline panel parses
+loading an example run. The iteration timeline panel parses
 \texttt{trace.jsonl} into one row per tool call, with don't-fit rates
 visualised as bars; the cost panel surfaces the orchestrator-dominated
 split discussed in the body. The same UI lets a user kill a run and
@@ -127,50 +32,46 @@ inspect the recoverable partial state through the same panels.
 \centering
 \includegraphics[width=\columnwidth]{figures/streamlit_05_cot_trace.png}
 \caption{Iteration timeline in the Streamlit \emph{Inspect} tab after
-loading the CoT-Pattern run. Rows are tool calls: \textsc{novelties}
+loading an example run. Rows are tool calls: \textsc{novelties}
 proposals, \textsc{revise} operations, and \textsc{classify} probes
 with don't-fit rates as bars.}
 \label{fig:ui-trace}
 \end{figure}
 
-\section*{F\quad Configuration and Reproducibility}
+\section*{C\quad Configuration and Reproducibility}
 \label{app:repro}
 
-All numbers in the body and the preceding appendix sections were
-produced from a single commit (\texttt{0910dc7}); the repository at
-\repourl{} pins prompts, hyperparameters, and seeds. The OpenRouter
-slugs in the publication runs are
+The numbers in the body were produced from commits pinned in the
+repository at \repourl{}, which fixes prompts, hyperparameters, and
+seeds. The OpenRouter slugs in the publication runs are
 \texttt{deepseek/deepseek-v4-flash},
-\texttt{anthropic/claude-sonnet-4.6},
-\texttt{anthropic/claude-opus-4.8} (CoT-Pattern verifier only),
-\texttt{google/gemini-3.1-flash-lite} (CoT-Pattern generation only),
-and \texttt{meta-llama/llama-3.2-3b-instruct} (Brady-Islam
-pipeline); all calls were routed during 2026-04 through
-2026-06. Temperature is the OpenRouter default for each model and
-top-$p$ is unconstrained. The orchestrator is capped at
-$\texttt{max\_iterations}{=}80$ ReAct steps and a
-$\texttt{pool\_limit}$ of $50$ for the judge.
+\texttt{google/gemini-3.1-flash-lite} (the second cheap model in the
+robustness rows), and
+\texttt{meta-llama/llama-3.2-3b-instruct} (Brady-Islam pipeline); all
+calls were routed during 2026-04 through 2026-07. Temperature is the
+OpenRouter default for each model and top-$p$ is unconstrained. The
+orchestrator is capped at $\texttt{max\_iterations}{=}80$ ReAct steps
+and a $\texttt{pool\_limit}$ of $50$ for the judge. DarkBench is the
+released \texttt{apart/darkbench} dataset (660 prompts, six balanced
+categories); we run it with an empty size hint so the category count
+is not supplied.
 
 Baselines: \texttt{embed\_cluster\_llm} embeds with
 \texttt{sentence-transformers/all-MiniLM-L6-v2}~\citep{reimers2019sbert} (v3.2.1), runs
-sklearn~\citep{pedregosa2011sklearn} k-means at $K{=}16$ with \texttt{random\_state=42},
+sklearn~\citep{pedregosa2011sklearn} k-means at $K{=}16$ with a fixed \texttt{random\_state},
 and names each cluster with one DeepSeek-v4-Flash call sampled from
 five items. \texttt{lda}~\citep{blei2003lda} uses sklearn
 \texttt{LatentDirichletAllocation} at
 $K{=}16$, \texttt{learning\_method='batch'}, \texttt{max\_iter=50},
-\texttt{random\_state=42}, on a $1$-$2$-gram \texttt{CountVectorizer}.
+a fixed \texttt{random\_state}, on a $1$-$2$-gram \texttt{CountVectorizer}.
 BERTopic v0.16 with library-default UMAP~\citep{mcinnes2018umap}
 ($n\_neighbors{=}15$, $n\_components{=}5$, $min\_dist{=}0.0$,
-\texttt{random\_state=42}) and HDBSCAN~\citep{mcinnes2017hdbscan}
+a fixed \texttt{random\_state}) and HDBSCAN~\citep{mcinnes2017hdbscan}
 ($min\_cluster\_size{=}10$, $min\_samples=$None,
 \texttt{euclidean}, \texttt{eom}). Brady-Islam reuses the authors'
 embedding (\texttt{all-MiniLM-L6-v2}) and HDBSCAN configuration at
 \texttt{min\_cluster\_size=5}; a sweep over $\{5,10,15,25,50\}$ did
-not raise mean NMI above $0.20$. The 14 surface features for
-LR@surface (\S\ref{sec:eval-results-cot}) and the CoT-Pattern
-generation and verifier prompts are at
-\texttt{paper/data/cot\_features.py} and \texttt{paper/data/cot\_gen/}
-in the same commit.
+not raise mean NMI above $0.20$.
 
 Metric definitions: NMI is sklearn's
 \texttt{normalized\_mutual\_info\_score} with arithmetic averaging;
@@ -182,3 +83,49 @@ $C_v$ uses the same window; label redundancy is the fraction of
 pairs of discovered categories with cosine similarity above $0.85$
 on \texttt{all-MiniLM-L6-v2} embeddings of the label name and
 description concatenated.
+
+\section*{D\quad Ground-Truth vs.\ Discovered Categories}
+\label{app:discovered}
+
+Table~\ref{tab:discovered} aligns each of the six gold DarkBench
+categories with the label the best-matching discovered cluster carries,
+for \textsc{TaxonomyAgent} and every baseline (a single run,
+DeepSeek-v4-Flash). \textsc{TaxonomyAgent} and the axis-matched
+\texttt{topicgpt} recover all six categories under near-verbatim names.
+\texttt{bertopic} labels clusters with keyword bags and folds sycophancy
+and harmful generation into one large lexical cluster, so neither is
+recovered as a distinct category. \texttt{single\_shot} and
+\texttt{embed\_cluster\_llm} name their clusters but over-split, mapping
+several discovered categories onto a single gold category. This is the
+qualitative counterpart to the agreement scores in
+Table~\ref{tab:darkbench}: the two methods that recover the taxonomy at
+the right granularity also carry the highest NMI.
+
+\begin{table*}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
+\toprule
+Gold category & \textsc{TaxonomyAgent} & \texttt{topicgpt} & \texttt{bertopic} & \texttt{single\_shot} & \texttt{embed\_cluster\_llm} \\
+ & 7 clusters & 6 & 8 & 10 & 20 \\
+\midrule
+brand bias & brand\_bias & brand-bias & \emph{ai, the, companies, most,\,\ldots}~($+$4) & Comparison and ranking~($+$1) & Forced Ranking~($+$4) \\
+user retention & user\_retention & user-retention & \emph{me, my, to, it,\,\ldots} & Emotional manipulation & Emotional Loneliness Exploitation~($+$1) \\
+sycophancy & sycophancy & sycophancy & \emph{(merged)} & Leading or loaded question~($+$2) & Conspiracy seeding~($+$3) \\
+anthropomorphization & anthropomorphization & anthropomorphization & \emph{you, how, do, what,\,\ldots} & Personal or reflective question & Anthropomorphic Projection~($+$2) \\
+harmful generation & harmful\_generation~($+$1) & harmful-generation & \emph{(merged)} & Request to justify unethical action~($+$1) & Elicit Harmful Advocacy~($+$2) \\
+sneaking & sneaking & sneaking & \emph{the, and, that, to,\,\ldots} & Rephrase with preserved bias & Hidden Bias Injection~($+$2) \\
+\bottomrule
+\end{tabular}
+\caption{DarkBench gold categories and the label the best-matching
+discovered cluster carries under each method (a single run). The column
+subheading gives the total number of clusters each method produced.
+Bag-of-keyword labels (\texttt{bertopic}) are italicised;
+``\emph{(merged)}'' marks a gold category with no dedicated cluster;
+``$+k$'' counts additional clusters that map to the same gold category.
+\textsc{TaxonomyAgent} and axis-matched \texttt{topicgpt} recover all
+six categories under near-verbatim names, while the clustering baselines
+either merge categories or over-split them.}
+\label{tab:discovered}
+\end{table*}

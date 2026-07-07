@@ -14,9 +14,9 @@ command (\S\ref{sec:system:safeguards}).
 The user supplies two inputs: a corpus of texts and a one-sentence
 \emph{goal instruction} naming the axis of variation the taxonomy
 should discover. For 20~Newsgroups the goal instruction is
-``Identify the topic of each text''; for CoT-Pattern it is ``Group
-these chain-of-thought reasoning traces into categories based on the
-dominant style, approach, or behavior visible in the reasoning.''
+``Identify the topic of each text''; for DarkBench it is ``Group
+these user prompts by the type of manipulative dark pattern each one
+is designed to elicit from an AI assistant.''
 The goal instruction is interpolated into the orchestrator's system
 prompt verbatim and into every judge classify call; an empty goal
 falls back to topic discovery.
@@ -43,8 +43,8 @@ taxonomy edits. The judge is trivially parallelisable via a thread
 pool.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
-supported there can fill either role (\S\ref{sec:evaluation} reports
-DeepSeek/DeepSeek and Sonnet/Sonnet pairs). Internally, the orchestrator
+supported there can fill either role (\S\ref{sec:evaluation} uses
+DeepSeek-v4-Flash and gemini-3.1-flash-lite). Internally, the orchestrator
 runs as a LangGraph state machine whose closure holds the working
 taxonomy, the set of sampled item ids, a snapshot of the last
 finalised taxonomy, and a budget counter for classify calls; because the
@@ -103,7 +103,8 @@ that we report alongside external metrics in \S\ref{sec:evaluation}
 without claiming it is a calibrated leading indicator
 (\S\ref{sec:limitations}). Escape-hatch coercion, the
 soft-error semantics of the floor, and the isolation of judge errors
-from the denominator are detailed in Appendix~A.
+from the denominator are discussed alongside the convergence signal in
+\S\ref{app:convergence}.
 
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}

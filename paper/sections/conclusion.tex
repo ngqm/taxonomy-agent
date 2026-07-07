@@ -6,16 +6,16 @@ orchestrator--judge framework for discovering structured taxonomies
 in unstructured text, designed for analyst workflows where the
 categories are not known a priori. A one-sentence goal instruction
 steers discovery toward a chosen axis of variation, which makes the
-system applicable both to underserved tasks in LLM alignment
-research (surfacing CoT failure modes, reasoning strategies, error
-types) and to classical taxonomy-induction tasks. At the install
+system applicable both to safety-relevant auditing (such as
+cataloguing the manipulation patterns in a corpus of model
+interactions) and to classical taxonomy induction. At the install
 default (DeepSeek-v4-Flash for both roles), \textsc{TaxonomyAgent}
-reaches NMI $0.944 \pm 0.081$ on a synthetic CoT-failure corpus
-where the published TopicGPT pipeline collapses to a single surface
-topic, and NMI $0.740 \pm 0.055$ on 20~Newsgroups, beating TopicGPT
-by $1.22\times$ on the classical benchmark. A Sonnet 4.6 orchestrator
-at $11\times$ the cost does not improve over the cheap pair on
-20NG, so orchestrator quality is not the bottleneck at this scale.
+recovers the six-category expert taxonomy of
+DarkBench~\citep{kran2025darkbench} at NMI $0.927 \pm 0.018$, ahead of
+every baseline asked to group by the same manipulation type, and
+reaches NMI
+$0.740 \pm 0.055$ on 20~Newsgroups, beating a published
+topic-discovery pipeline by $1.22\times$ on the classical benchmark.
 We release the framework with a one-line \texttt{pip install} path
 and a Streamlit Inspect tab that streams the trace, partial
 taxonomies, and cost split of any run; code and reproduction

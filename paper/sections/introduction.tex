@@ -19,10 +19,9 @@ much of this labour, but the available systems target one of two
 narrow operating points. Topic-modeling pipelines such as
 TopicGPT~\citep{pham2024topicgpt} and TnT-LLM~\citep{wan2024tntllm}
 discover topics from unlabelled text but offer no mechanism for an
-analyst to direct discovery toward a particular axis of variation;
-given mathematics-domain reasoning traces with injected failure
-modes, they surface the dominant surface topic (``Mathematics'')
-rather than the failure modes the analyst wants. Tools for
+analyst to direct discovery toward a particular axis of variation, so
+on a corpus whose useful structure is not its surface topic they
+recover the topic instead. Tools for
 LLM-output evaluation such as
 FaithCoT-Bench~\citep{shen2026faithcot}, the hint taxonomy
 in~\citet{chen2025reasoningmodels}, and the CoT monitorability
@@ -39,8 +38,7 @@ To address this gap, we present \textsc{TaxonomyAgent}, an
 open-source orchestrator--judge pipeline that discovers a labelled
 taxonomy along a user-specified axis. The user supplies the corpus
 and a one-sentence goal instruction (for example, ``Group these
-chain-of-thought reasoning traces into categories based on the
-dominant failure mode visible in the reasoning'', or ``Identify the
+prompts by the type of manipulation they attempt'', or ``Identify the
 topic of each text''). An orchestrator LLM proposes typed edits to a
 working taxonomy through a dispatcher that validates every
 precondition before mutating state and that records per-operation
@@ -51,24 +49,23 @@ or prior label assignments. The judge runs on the cheap model and is
 called once per item, so per-item inference cost is linear in corpus
 size and the orchestrator cannot force a label past the judge.
 
-Empirically, at the install default (DeepSeek-v4-Flash for both
-orchestrator and judge), on a 149-item synthetic corpus of CoT
-failure patterns we constructed (sycophantic capitulation, post-hoc
-rationalisation, unfaithful paraphrase, reward-hack verbalisation,
-hallucinated premise), \textsc{TaxonomyAgent} reaches NMI $0.944 \pm
-0.081$ across three seeds and labels on average $142$ of $149$ items
-at $100\%$ accuracy on the labelled subset
-(\S\ref{sec:eval-results-cot}). On the same corpus, the published
-TopicGPT pipeline collapses to a single ``Mathematics'' surface
-topic in $2$ of $3$ seeds, recovering no gold failure pattern. On
-20~Newsgroups as a classical topic-modeling sanity check,
+Empirically, with DeepSeek-v4-Flash for both the orchestrator and the
+judge, on DarkBench~\citep{kran2025darkbench}, a
+benchmark of 660 prompts that each elicit one of six manipulative
+dark patterns from an AI assistant, \textsc{TaxonomyAgent} recovers
+the six-category expert taxonomy at NMI $0.927 \pm 0.018$ across three
+seeds, with no hint about the number of categories, and names all six
+patterns on two of three seeds
+(\S\ref{sec:eval-results-darkbench}). Against baselines each asked to group by the same
+manipulation type through their own interface (a prompt for TopicGPT,
+an instruction-tuned embedding for BERTopic), it leads the strongest
+by $1.24\times$ on NMI. On
+20~Newsgroups as a classical topic-modeling benchmark,
 \textsc{TaxonomyAgent} reaches NMI $0.740 \pm 0.055$ and ARI $0.489
 \pm 0.085$, beating a one-shot LLM baseline by $2.1\times$ on NMI
-and the published TopicGPT pipeline by $1.22\times$ on NMI and
-$1.65\times$ on ARI (\S\ref{sec:eval-results-20ng}). A Sonnet 4.6
-orchestrator pair at eleven times the cost reaches NMI $0.656 \pm
-0.012$ on 20NG and does not improve over the cheap pair, so we make
-the cheap pair the publication and install default.
+and the published TopicGPT pipeline by $1.22\times$
+(\S\ref{sec:eval-results-20ng}). The result holds under a second
+cheap model (gemini-3.1-flash-lite, NMI $0.884$ on DarkBench).
 
 Our contributions are fourfold. First, we describe a tool for
 discovering taxonomies of unstructured patterns in LLM outputs,
@@ -79,12 +76,13 @@ jailbreak patterns). Second, we describe a goal-instruction
 mechanism through which the user steers discovery toward that axis,
 differentiating our system from topic-modeling pipelines that
 surface only the dominant variation. Third, we empirically
-demonstrate the system on (a) a synthetic CoT failure-mode
-benchmark, on which \textsc{TaxonomyAgent} labels nearly every item
-at perfect accuracy while existing pipelines collapse to a surface
-topic, and (b) a classical 20~Newsgroups benchmark, where it matches
-or exceeds published baselines at a fraction of the cost. Fourth, we
+demonstrate the system on (a) DarkBench, a real safety benchmark on
+which \textsc{TaxonomyAgent} recovers the six-category expert taxonomy
+and leads every baseline asked to group by the same manipulation type
+through its own interface, and (b) a classical 20~Newsgroups benchmark,
+where it matches or exceeds published baselines at a fraction of the
+cost. Fourth, we
 release an open-source artefact at \repourl{} with a \texttt{pip
-install} path, the install-default configuration used in the paper,
+install} path, the default configuration used in the paper,
 and a Streamlit Inspect tab that replays the trace, partial
 taxonomies, and cost split of any run.
