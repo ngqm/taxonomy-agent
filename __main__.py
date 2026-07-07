@@ -282,7 +282,7 @@ def _cmd_legacy(argv: list[str]) -> None:
                    help="Directory for outputs.")
 
     p.add_argument("--orchestrator",
-                   default=cfg.get("orchestrator", DEFAULT_ORCHESTRATOR_QUALITY))
+                   default=cfg.get("orchestrator", DEFAULT_ORCHESTRATOR_CHEAP))
     p.add_argument("--judge",
                    default=cfg.get("judge", DEFAULT_JUDGE))
     p.add_argument("--max-iters", type=int,

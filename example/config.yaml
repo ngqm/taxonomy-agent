@@ -13,7 +13,7 @@ output_dir: example/out
 #   (e.g. topic switching, whataboutism, dismissal as old news), not topic.
 
 # ── MODELS ──────────────────────────────────────────────────────────────────
-orchestrator: anthropic/claude-sonnet-4.6
+orchestrator: deepseek/deepseek-v4-flash
 judge: deepseek/deepseek-v4-flash
 
 # ── DISCOVERY LOOP ──────────────────────────────────────────────────────────
