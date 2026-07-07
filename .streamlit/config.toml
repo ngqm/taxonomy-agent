@@ -1,0 +1,9 @@
+# TaxonomyAgent Streamlit theme.
+# A deep pine-green primary on warm paper neutrals — editorial and calm,
+# deliberately away from the default red and the indigo/violet "AI" cliche.
+[theme]
+primaryColor = "#2F6B4F"              # deep pine green — buttons, active tab, slider, links
+backgroundColor = "#FFFFFF"           # clean white main canvas
+secondaryBackgroundColor = "#F3F2EC"  # warm paper/greige for sidebar + inputs
+textColor = "#232B27"                 # warm near-black
+font = "sans serif"

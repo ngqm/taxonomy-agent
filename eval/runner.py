@@ -15,6 +15,9 @@ def _load_corpus(name: str, n_per_class: int, seed: int,
     if name in ("20ng", "20newsgroups"):
         from .corpora import load_20newsgroups
         return load_20newsgroups(n_per_class=n_per_class, seed=seed)
+    if name == "darkbench":
+        from .corpora import load_darkbench
+        return load_darkbench(seed=seed)
     if name in ("reasoning", "synth_reasoning"):
         from .synth_reasoning import load_synth_reasoning
         path = kwargs.get("synth_path")
@@ -104,7 +107,7 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
         passthrough = {k: v for k, v in kw.items()
                        if k in ("max_iterations", "min_iterations",
                                 "converge_below", "probe_size", "pool_limit",
-                                "concurrency", "recursion_limit")}
+                                "concurrency", "recursion_limit", "size_hint")}
         if prose:
             passthrough["prose_revise"] = True
         rrun = taxagent_run(

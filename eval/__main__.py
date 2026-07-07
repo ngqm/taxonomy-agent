@@ -26,6 +26,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--reasoning-path", default=None,
                    help="path to reasoning-strategies JSONL "
                         "(only used when --corpus reasoning)")
+    p.add_argument("--size-hint", default=None,
+                   help="taxonomy size hint for taxonomy_agent; pass '' for no "
+                        "hint (let it discover the category count freely)")
     p.add_argument("--dry-run", action="store_true",
                    help="skip LLM/heavy calls, use canned predictions")
     args = p.parse_args(argv)
@@ -38,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     extra: dict = {}
     if args.reasoning_path:
         extra["synth_path"] = args.reasoning_path
+    if args.size_hint is not None:
+        extra["size_hint"] = args.size_hint
 
     res = benchmark(
         corpus_name=args.corpus,

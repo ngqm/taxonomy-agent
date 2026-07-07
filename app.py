@@ -205,6 +205,52 @@ def _render_taxonomy_preview(box, state_path: "Path") -> None:
         st.markdown("\n".join(md))
 
 
+def _render_progress(box, trace_path: "Path", max_iters, start_ts: float,
+                     done: bool = False) -> None:
+    """A one-line live progress bar for an in-flight run: how many orchestrator
+    iterations (revise calls) have happened out of the budget, how many
+    categories exist so far, the latest don't-fit rate, and elapsed time.
+    Reads trace.jsonl, which the agent appends to as it goes."""
+    import time as _time
+    n_rev = 0
+    n_cats = None
+    last_df = None
+    if trace_path.exists():
+        try:
+            for line in trace_path.read_text().splitlines():
+                if not line.strip():
+                    continue
+                e = json.loads(line)
+                kind = e.get("kind")
+                if kind == "revise":
+                    n_rev += 1
+                    ta = e.get("taxonomy_after")
+                    if ta is not None:
+                        n_cats = len(ta)
+                elif kind == "classify":
+                    dfr = e.get("dont_fit_rate")
+                    if dfr is not None:
+                        last_df = dfr
+        except Exception:
+            pass
+    try:
+        budget = int(max_iters)
+    except Exception:
+        budget = 0
+    frac = 1.0 if done else (min(0.95, n_rev / budget) if budget else 0.0)
+    elapsed = max(0, int(_time.time() - start_ts))
+    mm, ss_ = divmod(elapsed, 60)
+    head = "Converged" if done else "Iteration " + str(n_rev) + (
+        f"/{budget}" if budget else "")
+    parts = [head]
+    if n_cats is not None:
+        parts.append(f"{n_cats} categories")
+    if last_df is not None:
+        parts.append(f"don't-fit {last_df:.0%}")
+    parts.append(f"elapsed {mm:d}:{ss_:02d}")
+    box.progress(frac, text="  ·  ".join(parts))
+
+
 def _render_iteration_trace(box, trace_path: "Path") -> None:
     """Render the per-round iteration timeline from trace.jsonl.
 
@@ -477,7 +523,143 @@ with st.sidebar:
         )
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
-run_tab, runs_tab, results_tab = st.tabs(["Run", "History", "Inspect"])
+# Colourblind-friendly palette (Tableau-10 style). One stable colour per
+# category, shared by the distribution chart and the corpus map so the same
+# category reads as the same colour across both views.
+_CAT_PALETTE = [
+    "#4C78A8", "#F58518", "#54A24B", "#E45756", "#72B7B2",
+    "#B279A2", "#EECA3B", "#FF9DA6", "#9D755D", "#8CD17D",
+    "#499894", "#D37295", "#FABFD2", "#79706E", "#86BCB6",
+]
+
+
+def _category_colors(categories) -> dict:
+    """Deterministic category -> hex map. 'other' is always neutral grey."""
+    ordered = sorted(c for c in set(categories) if c and c != "other")
+    cmap = {c: _CAT_PALETTE[i % len(_CAT_PALETTE)] for i, c in enumerate(ordered)}
+    cmap["other"] = "#BAB0AC"
+    return cmap
+
+
+@st.cache_resource(show_spinner=False)
+def _map_embedder():
+    """MiniLM sentence encoder for the corpus map (loaded once, no API cost)."""
+    from sentence_transformers import SentenceTransformer
+    return SentenceTransformer("all-MiniLM-L6-v2")
+
+
+@st.cache_data(show_spinner=False)
+def _item_embeddings(run_key: str, texts: tuple):
+    """MiniLM embeddings for every item, cached per run and shared by the
+    corpus map and the representative-example picker so the corpus is embedded
+    only once. run_key makes the cache run-specific."""
+    return _map_embedder().encode(
+        list(texts), normalize_embeddings=True, show_progress_bar=False
+    )
+
+
+@st.cache_data(show_spinner=False)
+def _corpus_umap(run_key: str, texts: tuple, seed: int = 42):
+    """Project item embeddings to 2D with UMAP. Cached per run."""
+    import umap
+    emb = _item_embeddings(run_key, texts)
+    n = len(texts)
+    nn = max(2, min(15, n - 1))
+    xy = umap.UMAP(
+        n_neighbors=nn, n_components=2, min_dist=0.1,
+        metric="cosine", random_state=int(seed),
+    ).fit_transform(emb)
+    return xy[:, 0].tolist(), xy[:, 1].tolist()
+
+
+@st.cache_data(show_spinner=False)
+def _representative_examples(run_key: str, texts: tuple, cats: tuple, k: int = 3):
+    """Per category, indices of the k items nearest the category centroid in
+    embedding space — the most typical examples. Returns {category: [idx, ...]}."""
+    import numpy as np
+    emb = _item_embeddings(run_key, texts)
+    cats_arr = np.array(cats)
+    out: dict = {}
+    for c in set(cats):
+        idx = np.where(cats_arr == c)[0]
+        if len(idx) == 0:
+            continue
+        centroid = emb[idx].mean(axis=0)
+        sims = emb[idx] @ centroid  # emb is L2-normalised → cosine similarity
+        out[c] = idx[np.argsort(-sims)][:k].tolist()
+    return out
+
+
+def _render_run_card(container, run_dir: str, title: str) -> None:
+    """One run's summary for the Compare tab: headline metrics, its taxonomy
+    (largest categories first), and a distribution chart with the shared
+    per-category colours. Kept flat (no nested columns) so two cards sit
+    cleanly side by side."""
+    d = Path(run_dir)
+    tax_path = d / "taxonomy.json"
+    container.markdown(f"#### {title}")
+    if not tax_path.exists():
+        container.warning(f"No `taxonomy.json` in `{d.name}`.")
+        return
+    try:
+        art = json.loads(tax_path.read_text())
+    except Exception as e:
+        container.error(f"Could not read taxonomy.json: {e}")
+        return
+    counts = art.get("category_counts", {}) or {}
+    n_items = art.get("n_items", "?")
+    n_cats = len(art.get("taxonomy", []))
+    cost = None
+    cost_path = d / "cost.json"
+    if cost_path.exists():
+        try:
+            cost = json.loads(cost_path.read_text()).get("total_usd")
+        except Exception:
+            cost = None
+    cost_str = f"\\${cost:.2f}" if cost is not None else "cost n/a"
+    container.markdown(f"**{n_items} items · {n_cats} categories · {cost_str}**")
+    container.caption(f"`{d.name}`")
+
+    container.markdown("**Taxonomy**")
+    for cat in sorted(
+        art.get("taxonomy", []),
+        key=lambda c: -counts.get(c.get("name", ""), 0),
+    ):
+        name = cat.get("name", "?")
+        container.markdown(f"- **{name}** · {counts.get(name, 0)}")
+    if counts.get("other"):
+        container.markdown(f"- *other* · {counts['other']}")
+
+    if counts:
+        cmap = _category_colors(list(counts.keys()))
+        df_c = (
+            pd.DataFrame([{"category": k, "count": v} for k, v in counts.items()])
+            .sort_values("count", ascending=False)
+        )
+        try:
+            import altair as alt
+            ch = (
+                alt.Chart(df_c).mark_bar().encode(
+                    x=alt.X("count:Q", title="items"),
+                    y=alt.Y("category:N", sort="-x", title=None),
+                    color=alt.Color(
+                        "category:N",
+                        scale=alt.Scale(domain=list(cmap.keys()),
+                                        range=list(cmap.values())),
+                        legend=None,
+                    ),
+                    tooltip=["category", "count"],
+                )
+                .properties(height=max(160, 26 * len(df_c)))
+            )
+            container.altair_chart(ch, use_container_width=True)
+        except Exception:
+            container.bar_chart(df_c.set_index("category"))
+
+
+run_tab, runs_tab, results_tab, compare_tab = st.tabs(
+    ["Run", "History", "Inspect", "Compare"]
+)
 
 # ── Run tab ─────────────────────────────────────────────────────────────────
 with run_tab:
@@ -485,19 +667,19 @@ with run_tab:
     # Sets a small pool + low iter budget, picks the bundled example preset,
     # then falls through into the regular Start-run code path via `start=True`.
     quick_demo_clicked = st.button(
-        "🚀 Try the cheap-config demo (about 2 minutes)",
+        "🚀 Run the demo (~2 min, under \\$0.05)",
         type="primary",
         disabled=ss.running,
         help="Runs the agent on a 20-item slice of the bundled rhetorical-"
              "strategies example with DeepSeek-v4-Flash as both orchestrator "
-             "and judge. Total spend under USD 0.05. Watch the loop converge "
+             "and judge. Total spend under \\$0.05. Watch the loop converge "
              "in the trace pane below.",
     )
     st.caption(
         "Want to try your own data? Pick **Paste JSONL** below to drop in up "
         "to 100 items, set a goal instruction, and hit Start. The cheap "
         "config (DeepSeek both roles, set as the sidebar default) finishes a "
-        "150-item run in about 3 minutes for under USD 0.10."
+        "150-item run in about 3 minutes for under \\$0.10."
     )
 
     st.markdown("##### 1. Task")
@@ -598,11 +780,11 @@ with run_tab:
             "Sonnet 4.6 orchestrator + DeepSeek-v4-Flash judge"
             if ("sonnet" in (orchestrator or "").lower()
                 or "opus" in (orchestrator or "").lower())
-            else "DeepSeek-v4-Flash both roles (install default)"
+            else "DeepSeek-v4-Flash for both roles"
         )
         st.info(
-            f"**Estimated upper bound:** ~**USD {est['total']:.2f}** "
-            f"(orchestrator ~USD {est['orchestrator']:.2f} + judge ~USD {est['judge']:.2f}), "
+            f"**Estimated upper bound:** ~**\\${est['total']:.2f}** "
+            f"(orchestrator ~\\${est['orchestrator']:.2f} + judge ~\\${est['judge']:.2f}), "
             f"up to ~**{est['minutes']} min** wall time on **{effective_n} items**. "
             f"Both can be much lower if the orchestrator converges before "
             f"`max_iters={int(max_iters)}` iterations. "
@@ -611,7 +793,7 @@ with run_tab:
     else:
         st.caption(
             "Cost estimate appears once items are loaded. Rule of thumb: "
-            "~USD 0.10 per orchestrator iteration plus ~USD 0.0003 per judge call "
+            "~\\$0.10 per orchestrator iteration plus ~\\$0.0003 per judge call "
             "(probes + finalize)."
         )
 
@@ -640,7 +822,7 @@ with run_tab:
     # right after Popen, so the run-in-another-tab case still works.
     if ss.running:
         pid_path_str = ss.get("pid_path")
-        stop = st.button("■ Stop run", type="primary", width="stretch")
+        stop = st.button("■ Stop run", type="secondary", width="stretch")
         if stop and pid_path_str:
             try:
                 pid = int(Path(pid_path_str).read_text().strip())
@@ -663,6 +845,7 @@ with run_tab:
                     ss.running = False
                     st.rerun()
 
+    progress_box = st.empty()
     taxonomy_preview_box = st.empty()
     cost_box = st.empty()
     trace_box = st.empty()
@@ -778,6 +961,7 @@ with run_tab:
                     cost_path = out_path / "cost.json"
                     state_path = out_path / "taxonomy_state.json"
                     trace_path = out_path / "trace.jsonl"
+                    run_started_ts = time.time()
 
                     def _render_trace_box():
                         """Render the iteration timeline if any events exist;
@@ -795,10 +979,14 @@ with run_tab:
                             log_box.code(
                                 "\n".join(ss.log_lines[-400:]), language="text",
                             )
+                            _render_progress(progress_box, trace_path,
+                                              max_iters, run_started_ts)
                             _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
                             _render_trace_box()
                         else:
+                            _render_progress(progress_box, trace_path,
+                                              max_iters, run_started_ts)
                             _render_taxonomy_preview(taxonomy_preview_box, state_path)
                             _render_cost_panel(cost_box, cost_path)
                             _render_trace_box()
@@ -807,6 +995,8 @@ with run_tab:
                     for line in log_r.read().splitlines():
                         ss.log_lines.append(line)
                     log_box.code("\n".join(ss.log_lines[-400:]), language="text")
+                    _render_progress(progress_box, trace_path,
+                                     max_iters, run_started_ts, done=True)
                     _render_taxonomy_preview(taxonomy_preview_box, state_path)
                     _render_cost_panel(cost_box, cost_path)
                     _render_trace_box()
@@ -890,7 +1080,10 @@ with runs_tab:
                 instr_short = (r.get("instruction") or "")[:80]
                 if len(r.get("instruction") or "") > 80:
                     instr_short += "…"
-                header = f"**{r['name']}** — {badge} — {started}"
+                # Lead with the distinguishing tail (dataset dir + run leaf);
+                # the full path lives inside the card.
+                short_name = "/".join(Path(r["name"]).parts[-2:])
+                header = f"**{short_name}** — {badge} — {started}"
                 if instr_short:
                     header += f"  ·  {instr_short}"
                 with st.expander(header):
@@ -926,6 +1119,10 @@ with runs_tab:
 # ── Inspect tab ─────────────────────────────────────────────────────────────
 with results_tab:
     st.subheader("Pick a run to inspect")
+    st.caption(
+        "See a completed run's discovered taxonomy, cost breakdown, "
+        "iteration trace, and per-item classifications."
+    )
 
     # Recent-runs picker is the primary entry path. If nothing is loaded yet
     # we surface it first; the directory text input lives behind an "Advanced"
@@ -970,8 +1167,8 @@ with results_tab:
             candidate = chosen
     else:
         st.caption(
-            "No completed runs found yet. Click **Quick demo** on the "
-            "**Run** tab to generate one in about a minute."
+            "No completed runs found yet. Click **Run the demo** on the "
+            "**Run** tab to generate one in about two minutes."
         )
 
     with st.expander("Or type a run directory path", expanded=False):
@@ -1033,61 +1230,77 @@ with results_tab:
             with open(artifact_path) as f:
                 art = json.load(f)
 
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Items", art.get("n_items", "?"))
-            m2.metric("Categories", len(art.get("taxonomy", [])))
-            m3.metric("Coerced → other", art.get("n_coerced", 0))
-            m4.metric("Run ID", art.get("run_id", "?"))
-
+            # Load cost up front so the headline total sits in the metric row
+            # (consistent with the History tab); the full breakdown appears
+            # lower down, below the taxonomy itself.
             cost_path = cand_path / "cost.json"
+            cost_body: dict = {}
             if cost_path.exists():
                 try:
                     cost_body = json.loads(cost_path.read_text())
-                    orch = cost_body.get("orchestrator", {}) or {}
-                    judge = cost_body.get("judge", {}) or {}
-                    total_usd = cost_body.get("total_usd")
-                    source = cost_body.get("price_source")
-                    st.subheader("Cost")
-                    if source:
-                        st.caption(
-                            f"Price source: **"
-                            f"{_PRICE_SOURCE_LABEL.get(source, source)}**"
-                        )
-                    c1, c2, c3 = st.columns(3)
-                    c1.metric(
-                        "Total",
-                        f"${total_usd:.2f}" if total_usd is not None else "—",
-                    )
-                    c2.metric(
-                        "Orchestrator",
-                        f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
-                        help=f"{orch.get('n_calls', 0)} calls · "
-                             f"{orch.get('input_tokens', 0):,}/"
-                             f"{orch.get('output_tokens', 0):,} tokens",
-                    )
-                    c3.metric(
-                        "Judge",
-                        f"${judge.get('usd'):.2f}" if judge.get("usd") is not None else "—",
-                        help=f"{judge.get('n_calls', 0)} calls · "
-                             f"{judge.get('input_tokens', 0):,}/"
-                             f"{judge.get('output_tokens', 0):,} tokens",
-                    )
                 except Exception:
-                    pass
+                    cost_body = {}
+            total_usd = cost_body.get("total_usd")
 
-            # Iteration timeline — read trace.jsonl and walk the reader
-            # through each round (novelties / revise / classify).
-            trace_path = cand_path / "trace.jsonl"
-            if trace_path.exists():
-                st.subheader("Iteration timeline")
-                st.caption(
-                    "Every tool call the orchestrator and judge made on the "
-                    "way to the final taxonomy, in order. Auditable trace "
-                    "evidence for the discovered codebook."
-                )
-                _render_iteration_trace(st.container(), trace_path)
+            m1, m2, m3, m4 = st.columns(4)
+            m1.metric("Items", art.get("n_items", "?"))
+            m2.metric("Categories", len(art.get("taxonomy", [])))
+            m3.metric(
+                "Cost",
+                f"${total_usd:.2f}" if total_usd is not None else "—",
+            )
+            m4.metric(
+                "Uncategorized", art.get("n_coerced", 0),
+                help="Items the judge could not fit any discovered category "
+                     "(placed in 'other').",
+            )
+            st.caption(f"Run `{art.get('run_id', '?')}`")
 
             counts: dict = art.get("category_counts", {}) or {}
+            # One stable colour per category, reused by the distribution chart
+            # and the corpus map below (consistency across both views).
+            cmap = _category_colors(list(counts.keys()))
+
+            # Representative example items per category (the three closest to
+            # the category centroid in embedding space), to ground each label
+            # in the actual corpus. Falls back to first-seen items if the
+            # embedding model is unavailable.
+            _all_rows = art.get("classifications", []) or []
+            _ex_texts = [(r.get("text") or "").strip() for r in _all_rows]
+            _ex_cats = [r.get("category") or "other" for r in _all_rows]
+            examples_by_cat: dict = {}
+            _examples_representative = False
+            if _all_rows and any(_ex_texts):
+                try:
+                    with st.spinner("Finding representative example items…"):
+                        rep = _representative_examples(
+                            str(artifact_path),
+                            tuple(t[:2000] for t in _ex_texts),
+                            tuple(_ex_cats),
+                        )
+                    examples_by_cat = {
+                        c: [_ex_texts[i] for i in idxs if _ex_texts[i]]
+                        for c, idxs in rep.items()
+                    }
+                    _examples_representative = bool(examples_by_cat)
+                except Exception:
+                    examples_by_cat = {}
+                if not examples_by_cat:  # fallback: first-seen items
+                    for t, c in zip(_ex_texts, _ex_cats):
+                        if t and len(examples_by_cat.setdefault(c, [])) < 3:
+                            examples_by_cat[c].append(t)
+
+            def _show_examples(cat_name: str) -> None:
+                exs = examples_by_cat.get(cat_name, [])
+                if not exs:
+                    return
+                st.caption(
+                    "Representative items" if _examples_representative
+                    else "Example items"
+                )
+                for t in exs:
+                    snippet = (t[:220] + "…") if len(t) > 220 else t
+                    st.markdown(f"> {snippet}")
 
             st.subheader("Taxonomy")
             # Expand the three largest categories by default so the discovered
@@ -1107,12 +1320,14 @@ with results_tab:
                     expanded=name in top3,
                 ):
                     st.write(desc)
+                    _show_examples(name)
             if counts.get("other"):
                 with st.expander(
                     f"**other**  ·  {counts['other']} items",
                     expanded=False,
                 ):
                     st.write("Items that did not fit any discovered category.")
+                    _show_examples("other")
 
             if counts:
                 st.subheader("Distribution")
@@ -1136,6 +1351,14 @@ with results_tab:
                                 sort="-x",
                                 title=None,
                             ),
+                            color=alt.Color(
+                                "category:N",
+                                scale=alt.Scale(
+                                    domain=list(cmap.keys()),
+                                    range=list(cmap.values()),
+                                ),
+                                legend=None,
+                            ),
                             tooltip=["category", "count"],
                         )
                         .properties(height=max(180, 28 * len(df_counts)))
@@ -1145,6 +1368,105 @@ with results_tab:
                     st.bar_chart(df_counts.set_index("category"))
 
             rows = art.get("classifications", []) or []
+
+            # ── Corpus map: 2D projection of every item, coloured by its
+            # discovered category. Well-separated colours = clean taxonomy.
+            if rows and len(rows) >= 5 and any((r.get("text") or "").strip() for r in rows):
+                st.subheader("Corpus map")
+                st.caption(
+                    "Each point is one item, placed by semantic similarity "
+                    "(MiniLM embedding projected to 2D) and coloured by its "
+                    "discovered category. Tight, well-separated colours mean the "
+                    "taxonomy carves clean clusters. Runs locally, no API cost."
+                )
+                if st.checkbox(
+                    "Show 2D map",
+                    key="corpus_map_on",
+                    help="Embeds every item and projects to 2D — a few seconds "
+                         "for a few hundred items.",
+                ):
+                    cap = 1500
+                    sub = rows[:cap]
+                    texts_t = tuple((r.get("text") or "")[:2000] for r in sub)
+                    cats_t = [r.get("category") or "other" for r in sub]
+                    with st.spinner("Embedding and projecting…"):
+                        try:
+                            xs, ys = _corpus_umap(str(artifact_path), texts_t)
+                            import plotly.express as px
+                            map_df = pd.DataFrame({
+                                "x": xs, "y": ys, "category": cats_t,
+                                "item": [
+                                    (t[:180] + "…") if len(t) > 180 else t
+                                    for t in texts_t
+                                ],
+                            })
+                            fig = px.scatter(
+                                map_df, x="x", y="y", color="category",
+                                color_discrete_map=cmap,
+                                hover_data={"item": True, "category": True,
+                                            "x": False, "y": False},
+                                height=560,
+                                category_orders={"category": sorted(set(cats_t))},
+                            )
+                            fig.update_traces(marker=dict(size=6, opacity=0.78,
+                                                          line=dict(width=0)))
+                            fig.update_layout(
+                                legend_title_text="category",
+                                xaxis=dict(visible=False),
+                                yaxis=dict(visible=False),
+                                margin=dict(l=0, r=0, t=8, b=0),
+                            )
+                            st.plotly_chart(fig, use_container_width=True)
+                            if len(rows) > cap:
+                                st.caption(
+                                    f"Showing the first {cap:,} of "
+                                    f"{len(rows):,} items."
+                                )
+                        except Exception as e:
+                            st.warning(f"Could not build the corpus map: {e}")
+
+            # ── Supporting detail below the headline result: the cost
+            # breakdown and the auditable iteration trace.
+            if cost_body:
+                orch = cost_body.get("orchestrator", {}) or {}
+                judge = cost_body.get("judge", {}) or {}
+                source = cost_body.get("price_source")
+                st.subheader("Cost")
+                if source:
+                    st.caption(
+                        f"Price source: **"
+                        f"{_PRICE_SOURCE_LABEL.get(source, source)}**"
+                    )
+                c1, c2, c3 = st.columns(3)
+                c1.metric(
+                    "Total",
+                    f"${total_usd:.2f}" if total_usd is not None else "—",
+                )
+                c2.metric(
+                    "Orchestrator",
+                    f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
+                    help=f"{orch.get('n_calls', 0)} calls · "
+                         f"{orch.get('input_tokens', 0):,}/"
+                         f"{orch.get('output_tokens', 0):,} tokens",
+                )
+                c3.metric(
+                    "Judge",
+                    f"${judge.get('usd'):.2f}" if judge.get("usd") is not None else "—",
+                    help=f"{judge.get('n_calls', 0)} calls · "
+                         f"{judge.get('input_tokens', 0):,}/"
+                         f"{judge.get('output_tokens', 0):,} tokens",
+                )
+
+            trace_path = cand_path / "trace.jsonl"
+            if trace_path.exists():
+                st.subheader("Iteration timeline")
+                st.caption(
+                    "Every tool call the orchestrator and judge made on the "
+                    "way to the final taxonomy, in order. Auditable trace "
+                    "evidence for the discovered codebook."
+                )
+                _render_iteration_trace(st.container(), trace_path)
+
             if rows:
                 st.subheader("Classifications")
                 df = pd.DataFrame(rows)
@@ -1161,18 +1483,83 @@ with results_tab:
                 st.dataframe(view, height=420, width="stretch")
 
             st.subheader("Downloads")
-            d1, d2 = st.columns(2)
-            d1.download_button(
+            dl = st.columns(4)
+            dl[0].download_button(
                 "taxonomy.json", artifact_path.read_bytes(),
                 file_name="taxonomy.json", mime="application/json",
+                help="The discovered taxonomy: category names, descriptions, "
+                     "and per-category counts.",
             )
+            if rows:
+                csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
+                dl[1].download_button(
+                    "classifications.csv", csv_bytes,
+                    file_name="classifications.csv", mime="text/csv",
+                    help="One row per item: id, assigned category, and text.",
+                )
+            clf_path = cand_path / "classifications.jsonl"
+            if clf_path.exists():
+                dl[2].download_button(
+                    "classifications.jsonl", clf_path.read_bytes(),
+                    file_name="classifications.jsonl", mime="application/x-ndjson",
+                )
+            elif rows:
+                jsonl_bytes = "\n".join(json.dumps(r) for r in rows).encode("utf-8")
+                dl[2].download_button(
+                    "classifications.jsonl", jsonl_bytes,
+                    file_name="classifications.jsonl", mime="application/x-ndjson",
+                )
             trace = cand_path / "trace.jsonl"
             if trace.exists():
-                d2.download_button(
+                dl[3].download_button(
                     "trace.jsonl", trace.read_bytes(),
                     file_name="trace.jsonl", mime="application/x-ndjson",
+                    help="The full agent trace: every orchestrator edit and "
+                         "judge probe, in order.",
                 )
 
             if art.get("final_prompt"):
                 with st.expander("Final classification prompt"):
                     st.code(art["final_prompt"], language="text")
+
+
+# ── Compare tab ──────────────────────────────────────────────────────────────
+with compare_tab:
+    st.subheader("Compare two runs")
+    st.caption(
+        "Put two completed runs side by side — headline metrics, the taxonomy "
+        "each discovered, and their category distributions. Useful for seeing "
+        "how the taxonomy shifts across seeds, models, or goal instructions."
+    )
+    _cmp_runs = [
+        r for r in _scan_runs(_discover_runs_roots())
+        if r.get("status") == "ok"
+    ]
+    if len(_cmp_runs) < 2:
+        st.info(
+            "Need at least two completed runs to compare. Generate more on the "
+            "**Run** tab."
+        )
+    else:
+        def _cmp_label(r: dict) -> str:
+            bits = [r["name"]]
+            if r.get("n_categories") is not None:
+                bits.append(f"{r['n_categories']} cats")
+            cost = (r.get("cost") or {}).get("total_usd")
+            if cost is not None:
+                bits.append(f"${cost:.2f}")
+            return "  ·  ".join(bits)
+
+        idxs = list(range(len(_cmp_runs)))
+        pL, pR = st.columns(2)
+        li = pL.selectbox(
+            "Run 1", idxs, index=0,
+            format_func=lambda i: _cmp_label(_cmp_runs[i]), key="cmp_left",
+        )
+        ri = pR.selectbox(
+            "Run 2", idxs, index=min(1, len(_cmp_runs) - 1),
+            format_func=lambda i: _cmp_label(_cmp_runs[i]), key="cmp_right",
+        )
+        colL, colR = st.columns(2, gap="large")
+        _render_run_card(colL, _cmp_runs[li]["dir"], "Run 1")
+        _render_run_card(colR, _cmp_runs[ri]["dir"], "Run 2")
