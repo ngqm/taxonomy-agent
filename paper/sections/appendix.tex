@@ -32,10 +32,14 @@ inspect the recoverable partial state through the same panels.
 \centering
 \includegraphics[width=\textwidth]{figures/streamlit_timeline.png}
 \caption{Iteration timeline in the Streamlit \emph{Inspect} tab for an
-example DarkBench run. Each row is one tool call in order:
-\textsc{novelties} proposals, a \textsc{revise} batch, and
-\textsc{classify} probes whose don't-fit rate (green bars) falls to zero
-as the taxonomy converges.}
+example DarkBench run. Each row is one tool call in order: two
+\textsc{novelties} proposals, a \textsc{revise} batch that adds the six
+categories, then four \textsc{classify} probes. Each probe labels a fresh
+20-item sample and reports its don't-fit rate (green bars); the loop runs
+at least three such probes (the \texttt{min\_iterations} floor) on
+different samples to confirm the taxonomy covers the corpus before
+finalizing, which is why the don't-fit rate stays low across probes
+rather than falling from a high value.}
 \label{fig:ui-trace}
 \end{figure*}
 
@@ -107,9 +111,9 @@ the right granularity also carry the highest NMI.
 \footnotesize
 \setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.1}
-\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.8cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm}@{}}
 \toprule
- & \textsc{Taxonomy\-Agent} & \textsc{TopicGPT} & \textsc{BERTopic} & \textsc{Single-Shot} & \textsc{Embed-\hspace{0pt}Cluster-\hspace{0pt}Label} \\
+ & \textsc{TaxonomyAgent} & \textsc{TopicGPT} & \textsc{BERTopic} & \textsc{Single-Shot} & \textsc{Embed-Cluster-Label} \\
 \# cluster & 7 & 6 & 8 & 10 & 20 \\
 Gold category & & & & & \\
 \midrule
