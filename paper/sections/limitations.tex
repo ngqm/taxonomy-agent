@@ -1,4 +1,11 @@
 \section*{Limitations}
 \label{sec:limitations}
 
-20~Newsgroups predates current LLM training cutoffs and may be partially memorised; on DarkBench the six manipulation categories carry surface-lexical signal, so a lexical baseline (BERTopic) already reaches NMI $0.746$ and the benchmark measures recovery of the expert category set more than it isolates manipulation type from vocabulary; the don't-fit convergence signal is calibrated on the test corpora and not on held-out data; one 20~Newsgroups seed entered a monotonic-add loop on first attempt and was resolved by re-sampling plus the auto-finalize fallback (\S\ref{sec:eval-results-20ng}).
+20~Newsgroups predates current LLM training cutoffs and may be partially
+memorised. On DarkBench the manipulation categories carry
+surface-lexical signal, so a lexical baseline (BERTopic) already reaches
+NMI $0.746$ and the benchmark measures recovery of the expert category
+set more than isolation of intent from vocabulary. The don't-fit signal
+is calibrated on the test corpora, not held-out data; and one
+20~Newsgroups seed needed re-sampling plus the auto-finalize fallback
+(\S\ref{sec:eval-results-20ng}).

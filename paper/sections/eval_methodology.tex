@@ -12,14 +12,11 @@ use a 487-document stratified subsample (25 per class; 13 documents
 are emptied by sklearn's default header/footer/quote filter and
 dropped) under five independently sampled random seeds.
 \textbf{DarkBench}~\citep{kran2025darkbench} is a real-data benchmark
-whose categories are not surface topics: 660 user prompts, each written
-to elicit one of six manipulative dark patterns from an AI assistant
-(brand bias, user retention, sycophancy, anthropomorphization,
-harmful generation, and sneaking), balanced at 110 prompts per
-category. Each prompt's category is a property of its manipulative
-intent and not of its vocabulary, and the six categories cut across
-surface topic, so a taxonomy that groups by topic does not recover
-them. We evaluate DarkBench over three seeds with no hint about the
+whose categories are not surface topics: 660 user prompts eliciting one
+of six manipulative dark patterns from an AI assistant, balanced at 110
+per category. Each prompt's category is a property of its manipulative
+intent and not its vocabulary, and the six categories cut across surface
+topic, so a taxonomy that groups by topic does not recover them. We evaluate DarkBench over three seeds with no hint about the
 number of categories.
 
 \paragraph{Baselines.}
@@ -39,31 +36,21 @@ TnT-LLM's distillation phase is
 omitted).\footnote{We did not find a canonical TnT-LLM code release
 and the closest third-party reimplementation we surveyed couples to a
 prompt-hub service we cannot pin reproducibly, so we use
-\textsc{Embed-Cluster-Label} as the family representative.} Two
-concurrent or published systems we run from their own code:
-\textsc{TopicGPT}~\citep{pham2024topicgpt} (the
-\textsc{TopicGPT} package with default prompts, routed
-through OpenRouter via the OpenAI client's \texttt{base\_url}), and
-Brady \& Islam~\citep{brady2025iterativetax} (their
-repository, their prompts, all-MiniLM-L6-v2 + HDBSCAN + iterative
-per-cluster topic synthesis), both with the same Llama-3.2-3B
-(Brady \& Islam) or DeepSeek-v4-Flash (\textsc{TopicGPT})
-model served via OpenRouter to match our uniform OpenRouter routing.
-On DarkBench, where the gold categories are manipulation types and not
-surface topics, \textsc{TopicGPT} also runs with generation and
-assignment prompts that ask for the manipulation type, alongside its
-default topic prompt, and BERTopic also runs with an instruction-tuned
-embedding (multilingual-e5-large-instruct) conditioned on grouping by
-manipulation type, alongside all-MiniLM-L6-v2.
+\textsc{Embed-Cluster-Label} as the family representative.} Two published systems we run from their own repositories,
+\textsc{TopicGPT}~\citep{pham2024topicgpt} and Brady \&
+Islam~\citep{brady2025iterativetax}, with models served via OpenRouter
+to match our routing (implementation details in \S\ref{app:repro}). On
+DarkBench, where the gold categories are manipulation types and not
+surface topics, \textsc{TopicGPT} also runs with prompts that ask for
+the manipulation type and BERTopic with an instruction-tuned embedding
+conditioned on it, so each is matched to the target axis.
 
 \paragraph{Setup.}
-LLM calls route through OpenRouter; the classical baselines run on a
-single CPU node. Wall-clock times reported in
-\S\ref{sec:eval-results-20ng} reflect this environment. All LLM
-baselines route through OpenRouter on matched models so that cost
-and quality comparisons are apples-to-apples; $K{=}16$ for
-\textsc{Embed-Cluster-Label} and LDA matches the 20 gold classes
-loosely to remove $K$ as a confound.
+LLM calls route through OpenRouter on matched models so cost and quality
+are comparable; the classical baselines run on a single CPU node, and
+wall-clock times reflect this environment. $K{=}16$ for
+\textsc{Embed-Cluster-Label} and LDA loosely matches the 20 gold classes
+to remove $K$ as a confound.
 
 \paragraph{Metrics.}
 We report external metrics (purity, normalized mutual information [NMI], adjusted Rand index [ARI]), intrinsic metrics of

@@ -6,11 +6,6 @@ problem. An orchestrator LLM proposes typed edits to a working
 taxonomy, a parallel judge LLM scores items against that taxonomy and
 reports a don't-fit rate, and the loop terminates once that rate falls
 below a configurable threshold, gated by a minimum-iteration floor.
-This section walks the architecture
-(\S\ref{sec:system:arch}), the tools and typed revise operations together with
-the convergence signal (\S\ref{sec:system:tools}), and the
-operational safeguards that make the pipeline usable as a single
-command (\S\ref{sec:system:safeguards}).
 The user supplies two inputs: a corpus of texts and a one-sentence
 \emph{goal instruction} naming the axis of variation the taxonomy
 should discover. For 20~Newsgroups the goal instruction is
@@ -84,14 +79,10 @@ taxonomy edits. The judge is trivially parallelisable via a thread
 pool.
 
 Both LLMs are called through OpenRouter, so any chat-completions model
-supported there can fill either role (\S\ref{sec:evaluation} uses
-DeepSeek-v4-Flash and gemini-3.1-flash-lite). Internally, the orchestrator
-runs as a LangGraph state machine whose closure holds the working
-taxonomy, the set of sampled item ids, a snapshot of the last
-finalised taxonomy, and a budget counter for classify calls; because the
-taxonomy lives only in this closure, the orchestrator never passes it
-as a tool argument, which shrinks payloads and rules out edits to
-stale copies.
+can fill either role. The orchestrator runs as a LangGraph state machine
+that holds the working taxonomy in closure state rather than passing it
+as a tool argument, which shrinks payloads and rules out edits to stale
+copies.
 
 \subsection{Tools, Typed Revise Operations, and Convergence}
 \label{sec:system:tools}
@@ -135,32 +126,22 @@ from the denominator are detailed in \S\ref{app:convergence}.
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}
 
-Three engineering choices make the system usable as a single-command demo.
-
-\paragraph{Cost tracking.}
-A \texttt{CostTracker} receives usage from every orchestrator and
-judge call and writes \texttt{cost.json} after each agent super-step,
-preferring OpenRouter's native \texttt{usage.cost} over a static
-price table.
-
-\paragraph{Partial-progress persistence.}
-Partial progress is streamed to disk
+Three engineering choices make the system usable as a single-command
+demo. A \texttt{CostTracker} writes \texttt{cost.json} after each agent
+super-step, preferring OpenRouter's native \texttt{usage.cost} over a
+static price table. Partial progress is streamed to disk
 (\texttt{taxonomy\_state.json} after every revise,
-\texttt{classifications.jsonl} row-by-row under a write lock during
-finalisation, and \texttt{trace.jsonl} for after-the-fact
-inspection), so a process death does not lose the latest taxonomy or
-labels.
-
-\paragraph{Streamlit wrapper.}
-A single-file Streamlit app (\texttt{app.py}) wraps \texttt{run()}
-for non-CLI users, exposes the parameters that matter, streams the
+\texttt{classifications.jsonl} row-by-row during finalisation, and
+\texttt{trace.jsonl} for inspection), so a process death does not lose
+the latest taxonomy or labels. A single-file Streamlit app
+(\texttt{app.py}) wraps \texttt{run()} for non-CLI users, streams the
 working taxonomy live, and reads the same on-disk artifacts the CLI
-writes so runs are inspectable without re-execution
+writes, so runs are inspectable without re-execution
 (Figure~\ref{fig:demo}).
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/demo_taxonomy_crop.png}
+\includegraphics[width=0.9\textwidth]{figures/demo_taxonomy_crop.png}
 \caption{The Streamlit demo inspecting a finished DarkBench run: the
 discovered taxonomy shown as a gallery of cards, one per category, each
 with its name, item count, definition, and a representative item from

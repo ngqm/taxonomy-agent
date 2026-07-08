@@ -81,14 +81,11 @@ noise), the same small-cluster shape as BERTopic at library defaults; a
 
 \paragraph{Coherence trades off against supervised quality.}
 Coherence is not uniformly in \textsc{TaxonomyAgent}'s favour:
-\textsc{Iterative-Proposal} wins NPMI by emitting 16 lexically focused
-categories, and LDA and \textsc{Embed-Cluster-Label} lead $C_v$ by about
-$0.04$ by keeping $K{=}16$ fixed. BERTopic at library defaults wins $C_v$ at
-$0.767$ but with a degenerate two-cluster solution that loses every
-supervised metric. Under a sweep of \texttt{min\_topic\_size}
-in the released data, the most aggressive setting emits roughly 60
-micro-clusters and closes the purity gap, but ARI then sits at
-$0.127 \pm .038$ against our $0.489 \pm .085$, a $3.85\times$ lead.
+\textsc{Iterative-Proposal} wins NPMI with 16 lexically focused
+categories, and LDA and \textsc{Embed-Cluster-Label} lead $C_v$ by
+keeping $K{=}16$ fixed. A \texttt{min\_topic\_size} sweep that emits
+roughly 60 micro-clusters closes the purity gap but sits at ARI $0.127$
+against our $0.489$, a $3.85\times$ lead.
 
 \paragraph{Absolute spend stays under \$0.20 per 20NG run.}
 A \textsc{TaxonomyAgent} run on 20NG costs $\$0.17$ on average ($8\times$

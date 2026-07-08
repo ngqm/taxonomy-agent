@@ -14,25 +14,18 @@ difficult to reproduce, and the resulting taxonomy is often a brittle
 artefact that nobody is incentivised to revisit when the underlying
 corpus drifts.
 
-Recent work has shown that large language models (LLMs) can replace
-much of this labour, but the available systems target one of two
-narrow operating points. Topic-modeling pipelines such as
-TopicGPT~\citep{pham2024topicgpt} and TnT-LLM~\citep{wan2024tntllm}
-discover topics from unlabelled text but offer no mechanism for an
-analyst to direct discovery toward a particular axis of variation, so
-on a corpus whose useful structure is not its surface topic they
-recover the topic instead. Tools for
-LLM-output evaluation such as
-FaithCoT-Bench~\citep{shen2026faithcot}, the hint taxonomy
-in~\citet{chen2025reasoningmodels}, and the CoT monitorability
-framework of~\citet{korbak2025cotmonitor} evaluate models against
-\emph{known} failure categories; they assume the categories are
-given. Multi-agent codebook tools such as
-Co-DETECT~\citep{codetect2025} and
-Thematic-LM~\citep{qiao2025thematiclm} target collaborative codebook
-construction with a human in the loop and a seed sketch. None target
-automated discovery of taxonomies along a chosen axis of variation
-in unstructured LLM outputs.
+Recent work shows large language models (LLMs) can replace much of this
+labour, but available systems target one of two narrow operating points.
+Topic-modeling pipelines~\citep{pham2024topicgpt, wan2024tntllm} discover
+topics from unlabelled text but give the analyst no way to direct
+discovery toward a particular axis of variation, so on a corpus whose
+useful structure is not its surface topic they recover the topic
+instead. LLM-output evaluation and multi-agent codebook
+tools~\citep{shen2026faithcot, chen2025reasoningmodels,
+korbak2025cotmonitor, codetect2025, qiao2025thematiclm} instead assume
+the category set is given, or build one from a human seed sketch. None
+target automated discovery of a taxonomy along a chosen axis of
+variation in unstructured LLM outputs.
 
 To address this gap, we present \textsc{TaxonomyAgent}, an
 open-source orchestrator--judge pipeline that discovers a labelled
@@ -49,40 +42,24 @@ or prior label assignments. The judge runs on the cheap model and is
 called once per item, so per-item inference cost is linear in corpus
 size and the orchestrator cannot force a label past the judge.
 
-Empirically, with DeepSeek-v4-Flash for both the orchestrator and the
-judge, on DarkBench~\citep{kran2025darkbench}, a
-benchmark of 660 prompts that each elicit one of six manipulative
-dark patterns from an AI assistant, \textsc{TaxonomyAgent} recovers
-the six-category expert taxonomy at NMI $0.927 \pm 0.018$ across three
-seeds, with no hint about the number of categories, and names all six
-patterns on two of three seeds
-(\S\ref{sec:eval-results-darkbench}). Against baselines each asked to group by the same
-manipulation type through their own interface (a prompt for TopicGPT,
-an instruction-tuned embedding for BERTopic), it leads the strongest
-by $1.24\times$ on NMI. On
-20~Newsgroups as a classical topic-modeling benchmark,
-\textsc{TaxonomyAgent} reaches NMI $0.740 \pm 0.055$ and ARI $0.489
-\pm 0.085$, beating a one-shot LLM baseline by $2.1\times$ on NMI
-and the published TopicGPT pipeline by $1.22\times$
-(\S\ref{sec:eval-results-20ng}). The result holds under a second
-cheap model (gemini-3.1-flash-lite, NMI $0.884$ on DarkBench).
+Empirically (\S\ref{sec:evaluation}), with DeepSeek-v4-Flash for both
+roles, \textsc{TaxonomyAgent} recovers the six-category expert taxonomy
+of DarkBench~\citep{kran2025darkbench} at NMI $0.927 \pm 0.018$ with no
+hint about the number of categories, leading every baseline asked to
+group by the same manipulation type through its own interface by
+$1.24\times$; on 20~Newsgroups it reaches NMI $0.740 \pm 0.055$, beating
+a published topic-discovery pipeline by $1.22\times$. The result holds
+under a second cheap model (gemini-3.1-flash-lite, NMI $0.884$).
 
-Our contributions are fourfold. First, we describe a tool for
-discovering taxonomies of unstructured patterns in LLM outputs,
-designed for analyst workflows where the categories are not known a
-priori and where the analyst wants to direct discovery toward a
-particular axis (failure modes, reasoning strategies, error types,
-jailbreak patterns). Second, we describe a goal-instruction
-mechanism through which the user steers discovery toward that axis,
-differentiating our system from topic-modeling pipelines that
-surface only the dominant variation. Third, we empirically
-demonstrate the system on (a) DarkBench, a real safety benchmark on
-which \textsc{TaxonomyAgent} recovers the six-category expert taxonomy
-and leads every baseline asked to group by the same manipulation type
-through its own interface, and (b) a classical 20~Newsgroups benchmark,
-where it matches or exceeds published baselines at a fraction of the
-cost. Fourth, we
-release an open-source artefact at \repourl{} with a \texttt{pip
-install} path, the default configuration used in the paper,
-and a Streamlit Inspect tab that replays the trace, partial
-taxonomies, and cost split of any run.
+Our contributions are fourfold. First, a tool for discovering
+taxonomies of unstructured patterns in LLM outputs where the categories
+are not known a priori (failure modes, reasoning strategies, error
+types, jailbreak patterns). Second, a goal-instruction mechanism through
+which the analyst steers discovery toward a chosen axis, differentiating
+the system from topic-modeling pipelines that surface only the dominant
+variation. Third, an evaluation on a real safety benchmark (DarkBench)
+and a classical one (20~Newsgroups), where it matches or exceeds
+published baselines at a fraction of the cost. Fourth, an open-source
+artefact at \repourl{} with a \texttt{pip install} path, the paper's
+default configuration, and a Streamlit Inspect tab that replays the
+trace, partial taxonomies, and cost of any run.

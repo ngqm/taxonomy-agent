@@ -9,14 +9,9 @@ steers discovery toward a chosen axis of variation, which makes the
 system applicable both to safety-relevant auditing (such as
 cataloguing the manipulation patterns in a corpus of model
 interactions) and to classical taxonomy induction. At the install
-default (DeepSeek-v4-Flash for both roles), \textsc{TaxonomyAgent}
-recovers the six-category expert taxonomy of
-DarkBench~\citep{kran2025darkbench} at NMI $0.927 \pm 0.018$, ahead of
-every baseline asked to group by the same manipulation type, and
-reaches NMI
-$0.740 \pm 0.055$ on 20~Newsgroups, beating a published
-topic-discovery pipeline by $1.22\times$ on the classical benchmark.
-We release the framework with a one-line \texttt{pip install} path
-and a Streamlit Inspect tab that streams the trace, partial
-taxonomies, and cost split of any run; code and reproduction
-scripts are at \repourl.
+default (DeepSeek-v4-Flash for both roles) it recovers the six-category
+expert taxonomy of DarkBench~\citep{kran2025darkbench} ahead of every
+baseline asked to group by the same manipulation type, and matches or
+exceeds published baselines on 20~Newsgroups at a fraction of the cost.
+Code, the paper's default configuration, and reproduction scripts are
+at \repourl.
