@@ -4,10 +4,10 @@ and the judge on both benchmarks; the \textsc{Single-Shot} and
 \textsc{Iterative-Proposal} baselines also use DeepSeek-v4-Flash, and
 BERTopic uses no LLM. For 20~Newsgroups we report mean $\pm$ standard
 deviation over five independently sampled random seeds on a
-487-document stratified subsample (sampled at 25 items per gold class;
-13 documents are dropped after sklearn's default header/footer/quote
-stripping). All four methods see the same documents under the same
-seed. BERTopic appears at its library default \texttt{min\_topic\_size=10}
+487-document stratified subsample (25 per gold class, minus 13 that
+become empty once headers, footers, and quotes are removed, as is
+standard for 20~Newsgroups). All four methods see the same documents
+under the same seed. BERTopic appears at its library default \texttt{min\_topic\_size=10}
 in the main table; a sweep over $\{2,5,10,15,25\}$ is summarised below
 and in the released sweep data.
 

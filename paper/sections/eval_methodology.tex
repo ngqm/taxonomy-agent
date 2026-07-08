@@ -8,9 +8,11 @@ remaining cheap to run, we run experiments on two benchmarks.
 \paragraph{Datasets.}
 \textbf{20~Newsgroups}~\citep{lang1995newsgroups} is our classical
 benchmark with established gold structure over 20 topic classes. We
-use a 487-document stratified subsample (25 per class; 13 documents
-are emptied by sklearn's default header/footer/quote filter and
-dropped) under five independently sampled random seeds.
+use a 487-document stratified subsample: 25 per class, minus 13
+documents that are only headers, footers, or quoted text and become
+empty once those are removed (standard practice for 20~Newsgroups, since
+headers leak the class label). We use five independently sampled random
+seeds.
 \textbf{DarkBench}~\citep{kran2025darkbench} is a real-data benchmark
 whose categories are not surface topics: 660 user prompts eliciting one
 of six manipulative dark patterns from an AI assistant, balanced at 110
