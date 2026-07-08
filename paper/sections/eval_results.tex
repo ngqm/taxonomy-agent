@@ -68,29 +68,15 @@ are in \S\ref{sec:evaluation}.}
 \end{table*}
 
 \paragraph{\textsc{TaxonomyAgent} leads supervised metrics.}
-\textsc{TaxonomyAgent} leads every LLM and
-clustering baseline on the three supervised metrics: purity $0.569$
-against \textsc{TopicGPT}'s $0.542$ (the strongest LLM comparator on
-purity is in turn the published \citet{pham2024topicgpt} TopicGPT
-code routed through OpenRouter), NMI $0.740$ against TopicGPT's
-$0.606$ (a $1.22\times$ lead over the strongest LLM-driven
-comparator), and ARI $0.489$ against $0.297$ (a $1.65\times$ lead).
-The lead over \textsc{Single-Shot} is $2.1\times$ on NMI and $4.8\times$ on
-ARI; \textsc{Iterative-Proposal} loses to \textsc{Single-Shot} on every
-supervised metric, suggesting that iterative label refinement
-without a separate judge does not help on this corpus.%
-\footnote{The discovered taxonomy varies between $8$ and $16$
-categories across the five seeds. One seed entered a monotonic-add
-loop on first attempt (\S\ref{sec:limitations}) and was re-sampled at
-a different sampling temperature; we added an auto-finalize fallback
-that labels the corpus against the on-disk taxonomy when the
-orchestrator ends without an artifact, and the re-sampled seed
-finished without invoking it. The fallback was applied uniformly to
-all five seeds reported in Table~\ref{tab:20ng}.}
-The concurrent \citet{brady2025iterativetax} pipeline at default
-produces a degenerate $3$-cluster solution
-(NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN noise), with the same
-small-cluster, high-noise shape as BERTopic at library defaults; a
+On the three supervised metrics \textsc{TaxonomyAgent} leads every LLM
+and clustering baseline (Table~\ref{tab:20ng}): a $1.22\times$ NMI lead
+over the strongest comparator, \textsc{TopicGPT}, and $2.1\times$ over
+\textsc{Single-Shot}. \textsc{Iterative-Proposal} loses to
+\textsc{Single-Shot} on every supervised metric, suggesting iterative
+label refinement without a separate judge does not help on this corpus.
+The concurrent \citet{brady2025iterativetax} pipeline produces a
+degenerate three-cluster solution (NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN
+noise), the same small-cluster shape as BERTopic at library defaults; a
 \texttt{min\_cluster\_size} sweep does not raise mean NMI.
 
 \paragraph{Coherence trades off against supervised quality.}
@@ -105,11 +91,9 @@ micro-clusters and closes the purity gap, but ARI then sits at
 $0.127 \pm .038$ against our $0.489 \pm .085$, a $3.85\times$ lead.
 
 \paragraph{Absolute spend stays under \$0.20 per 20NG run.}
-A \textsc{TaxonomyAgent} run on 20NG costs $\$0.17$ on average, about
-$8\times$ the cost of \textsc{Embed-Cluster-Label} at the same labeller.
-Wall-clock time of $713\,$s is $4\times$ the LLM baselines and
-$48\times$ BERTopic; absolute spend remains below $\$0.20$ on the
-487-document corpus.
+A \textsc{TaxonomyAgent} run on 20NG costs $\$0.17$ on average ($8\times$
+\textsc{Embed-Cluster-Label} at the same labeller) in $713\,$s of wall
+time, still under $\$0.20$ on the 487-document corpus.
 
 \subsection{DarkBench Results}
 \label{sec:eval-results-darkbench}
@@ -167,25 +151,18 @@ in a second cheap model. Best per column in bold.}
 \end{table*}
 
 \paragraph{\textsc{TaxonomyAgent} leads every baseline on DarkBench.}
-\textsc{TaxonomyAgent} reaches NMI $0.927 \pm
-0.018$ and ARI $0.930 \pm 0.026$ with no hint about the number of
-categories, and recovers all six DarkBench patterns, naming them after
-the gold categories (anthropomorphization, brand bias, harmful
-generation, sneaking, sycophancy, user retention) on two of three
-seeds. The baselines that are also asked to group by manipulation type
-(\S\ref{sec:eval-method}) cluster between NMI $0.66$ and $0.75$.
-BERTopic reaches $0.746$, and an embedding conditioned on manipulation
-type leaves it at $0.749$, so its ceiling follows from the
-embed-then-cluster design and not the embedder. TopicGPT with the
-manipulation-type prompt reaches $0.706$ and recovers roughly six
-categories, up from $0.458$ with its default topic prompt.
-\textsc{Single-Shot} and \textsc{Embed-Cluster-Label} over-split into
-ten and twenty categories at NMI $0.445$ and $0.663$.
-\textsc{TaxonomyAgent}'s $0.927$ sits above this band, $1.24\times$ the
-strongest baseline. The margin is smaller than on 20~Newsgroups
-because the DarkBench categories carry surface-lexical signal that a
-lexical method recovers in part, and it holds on a second cheap model
-(gemini-3.1-flash-lite, NMI $0.884$).
+\textsc{TaxonomyAgent} reaches NMI $0.927$ and ARI $0.930$ with no hint
+about the number of categories, recovering all six DarkBench patterns
+under near-gold names on two of three seeds. Baselines asked to group by
+manipulation type cluster at NMI $0.66$--$0.75$: BERTopic reaches
+$0.746$, and an embedding conditioned on manipulation type only $0.749$,
+so its ceiling follows from the embed-then-cluster design and not the
+embedder; \textsc{TopicGPT} with the manipulation-type prompt reaches
+$0.706$, up from $0.458$ with its default topic prompt.
+\textsc{TaxonomyAgent} sits $1.24\times$ above this band. The margin is
+smaller than on 20~Newsgroups because DarkBench categories carry
+surface-lexical signal a lexical method partly recovers, and it holds on
+a second cheap model (gemini-3.1-flash-lite, NMI $0.884$).
 
 \paragraph{The orchestrator occasionally enters a monotonic-add loop.}
 On one 20~Newsgroups seed the orchestrator was tripped by a
@@ -194,4 +171,5 @@ growing the taxonomy from $10$ to $21$ categories without converging.
 \texttt{trace.jsonl} surfaces the failure (no
 \textsc{merge}/\textsc{drop}/\textsc{edit}) within seconds; we added an
 auto-finalize fallback that labels the corpus against the on-disk
-taxonomy, and a re-run converged.
+taxonomy, and a re-run converged. The fallback is applied uniformly to
+all five 20NG seeds.
