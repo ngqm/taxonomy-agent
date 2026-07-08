@@ -14,7 +14,9 @@ taxonomy, propose new categories for misfits, revise via structured ops
 (`add` / `rename` / `edit` / `merge` / `split` / `drop`), and finalize once the
 "don't-fit" rate on a fresh probe falls below a threshold.
 
-The package is fully self-contained; copy this folder into any project.
+The `taxonomy_agent/` package is self-contained; copy that folder into any
+project to reuse the pipeline. The Streamlit demo (`app.py` + the `demo/`
+package) and the live URL above are optional extras built on top of it.
 
 ---
 
