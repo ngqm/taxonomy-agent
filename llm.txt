@@ -1,0 +1,93 @@
+# TaxonomyAgent — guide for AI agents
+
+TaxonomyAgent discovers a labelled taxonomy over an unlabelled text corpus
+along a user-chosen axis, then classifies every item. Two LLM roles run through
+OpenRouter: an **orchestrator** proposes typed edits to a working taxonomy, and
+a stateless **judge** labels one item at a time. Default model for both roles is
+`deepseek/deepseek-v4-flash` (cheap). A run on ~500 items costs well under $0.20.
+
+## Setup
+
+```bash
+pip install -e .                         # registers the `taxonomy` console script
+echo 'OPENROUTER_API_KEY=sk-or-v1-...' > .env   # required for any real run
+```
+
+`OPENROUTER_API_KEY` is read from the environment or a `.env` in the working
+directory. No key is needed for `--dry-run` eval or for `taxonomy inspect`.
+
+## Commands
+
+```bash
+# Bundled 5-item demo (~30s, needs a key). Good first call to confirm wiring.
+taxonomy demo
+
+# Discover a taxonomy in your own JSONL corpus.
+taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation they attempt"
+#   -o DIR            output dir (default ./taxonomy_run_<timestamp>/)
+#   --size 4-10       target taxonomy size; '' to let it discover freely
+#   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
+#   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
+#   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
+
+# Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
+taxonomy inspect ./taxonomy_run_XXXX [--full]
+
+# Launch the Streamlit demo UI (Run / History / Inspect / Compare tabs).
+taxonomy ui                              # extra args forward to streamlit
+
+# Config-file run (same flags as `python -m taxonomy_agent`):
+taxonomy --config my.yaml                # keys: input, instruction, output_dir, orchestrator, judge, ...
+```
+
+## Input format
+
+JSONL, one object per line, with at least a `text` field (an `id` is recommended):
+
+```json
+{"id": "ex-001", "text": "the document text to be grouped"}
+```
+
+## Output artifacts (written to the output dir, streamed during the run)
+
+- `taxonomy.json`         — final taxonomy (categories with name + definition)
+- `classifications.jsonl` — per-item label, written row-by-row during finalisation
+- `taxonomy_state.json`   — working taxonomy, rewritten after every revise (partial-progress safe)
+- `trace.jsonl`           — one row per tool call (novelties / revise / classify), with don't-fit rates
+- `cost.json`             — running spend, from OpenRouter's native usage.cost
+
+## Programmatic API
+
+```python
+from taxonomy_agent import run
+result = run(
+    items="corpus.jsonl",                # path or an iterable of {"text": ...} dicts
+    instruction="Group by manipulation type",
+    output_dir="out/",
+    orchestrator_model="deepseek/deepseek-v4-flash",
+    judge_model="deepseek/deepseek-v4-flash",
+    min_iterations=3, converge_below=0.10, probe_size=20, size_hint="4-10",
+)
+```
+
+The loop stops when the judge's don't-fit rate on a fresh probe falls below
+`converge_below`, after at least `min_iterations` probes.
+
+## Evaluation harness
+
+```bash
+python -m taxonomy_agent.eval --corpus 20ng \
+    --methods taxonomy_agent,single_shot,embed_cluster_llm,topicgpt_style,bertopic,lda \
+    --seeds 42,43,44 --output-dir eval_runs/my_eval \
+    --instruction "Identify the topic of each text." --model deepseek/deepseek-v4-flash
+#   --corpus {20ng,darkbench,reasoning}   --dry-run for a no-LLM smoke test
+```
+Writes `results.json` (+ `results.tex`) with purity, NMI, ARI, and cost per method/seed.
+
+## Where things live
+
+- `taxonomy_agent/`            — the library (agent loop, tools, judge, eval harness)
+- `taxonomy_agent/eval/`       — benchmark driver, corpora loaders, baselines
+- `app.py` + `demo/`          — Streamlit app at repo root
+- `example_runs/`             — sample finished runs (load these in `taxonomy inspect`)
+- `README.md`, `DEPLOY.md`    — human docs and deployment
