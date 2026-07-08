@@ -2,89 +2,57 @@
 \label{sec:related}
 
 \paragraph{Chain-of-thought analysis and LLM-output evaluation.}
-A growing body of work analyses chain-of-thought (CoT) reasoning
-traces for safety-relevant patterns.
-FaithCoT-Bench~\citep{shen2026faithcot} and
-PRMBench~\citep{song2025prmbench} provide instance- and step-level
-benchmarks of CoT faithfulness against known failure categories. The
-hint taxonomy in~\citet{chen2025reasoningmodels} catalogues
-hint-utilisation patterns in reasoning models, and
-\citet{korbak2025cotmonitor} discuss CoT monitorability as a safety
-opportunity. Earlier work establishes that LLM CoT is often
-unfaithful~\citep{turpin2023biased, lanham2023faithfulness} and that
-LLMs exhibit
-sycophancy~\citep{sharma2023sycophancy} and reward-tampering
-behaviour~\citep{denison2024subterfuge, perez2022discovering}.
-\citet{lee2025stepwiseeval} survey the broader literature on
-stepwise reasoning evaluation. These benchmarks evaluate models
-against categories fixed in advance and assume the category set is
-given.
+A growing body of work analyses chain-of-thought (CoT) reasoning traces
+for safety-relevant patterns: faithfulness
+benchmarks~\citep{shen2026faithcot, song2025prmbench}, hint-utilisation
+taxonomies~\citep{chen2025reasoningmodels}, and monitorability
+arguments~\citep{korbak2025cotmonitor}, building on evidence that CoT is
+often unfaithful~\citep{turpin2023biased, lanham2023faithfulness} and
+that LLMs exhibit sycophancy~\citep{sharma2023sycophancy} and
+reward-tampering behaviour~\citep{denison2024subterfuge,
+perez2022discovering}; \citet{lee2025stepwiseeval} survey the area. All
+evaluate models against a category set fixed in advance.
 
 \paragraph{Analysing populations of reasoning traces.}
-A separate line studies not a single chain of thought but a whole
-collection of them, and every method we are aware of either imposes a
-fixed category set or builds a bespoke one for each prompt. Thought
-Anchors~\citep{bogdan2025thoughtanchors} classifies each sentence of a
-trace into eight predefined step types (problem setup, plan
-generation, fact retrieval, active computation, uncertainty
-management, result consolidation, self-checking, and final-answer
-emission), then measures which sentences drive the answer through
-counterfactual resampling and attention analysis.
-\citet{li2026schoenfeld} map model reasoning onto a four-part taxonomy
-imported from Schoenfeld's theory of human mathematical
-problem-solving (knowledge, strategies, monitoring, and beliefs).
-\citet{li2026performative} study step-level faithfulness and argue
-that many reasoning steps are formatted for an evaluator instead of
-driving the computation, so a chain of thought is an incomplete
-oversight signal. Closest to our setting,
-\citet{tyagi2026globalcot} cluster around a thousand traces per prompt
-into strategy graphs, but their algorithmic clustering has a language
-model write a keyword dictionary for each new prompt that a substring
-matcher then applies. \textsc{TaxonomyAgent} instead induces the
-category set from an unlabelled corpus and one goal instruction, so
-the analyst chooses the axis of variation without importing a fixed
-schema or writing a per-prompt keyword dictionary.
+A separate line studies whole collections of traces but still imposes a
+fixed or per-prompt schema. Thought
+Anchors~\citep{bogdan2025thoughtanchors} classifies sentences into eight
+predefined step types; \citet{li2026schoenfeld} import a four-part
+taxonomy from Schoenfeld's problem-solving theory; and
+\citet{li2026performative} argue many reasoning steps are formatted for
+an evaluator instead of driving computation. Closest to us,
+\citet{tyagi2026globalcot} cluster traces into strategy graphs, but have
+a language model write a per-prompt keyword dictionary that a substring
+matcher then applies. \textsc{TaxonomyAgent} instead induces the category
+set from an unlabelled corpus and one goal instruction, with no fixed
+schema and no per-prompt dictionary.
 
 \paragraph{Multi-agent annotation and codebook construction.}
-Co-DETECT~\citep{codetect2025} is last year's EMNLP demonstration on
-collaborative codebook construction from a sketch codebook and a
-human in the loop. Recent multi-agent systems decompose the
-proposer-verifier roles further:
+Multi-agent systems build codebooks collaboratively:
+Co-DETECT~\citep{codetect2025}, last year's EMNLP demonstration, refines
+a seed codebook with a human in the loop;
 Thematic-LM~\citep{qiao2025thematiclm} runs coder, aggregator, and
-reviewer agents in parallel; TAMA~\citep{xu2025tama} adds expert
-oversight on clinical interviews; and \citet{liu2025aiannotorch}
-evaluate LLM verifiers as a quality layer on LLM annotators.
-\textsc{TaxonomyAgent} sits at an orthogonal operating point: we
-discover a candidate taxonomy from scratch over an unlabelled corpus
-with a single goal instruction, no seed sketch and no human in the
-loop, then hand off the trace, working taxonomy, and per-item
-classifications for downstream review or Co-DETECT-style refinement.
-The orchestrator-and-judge separation reduces multi-agent
-coordination to a single ReAct loop.
+reviewer agents; TAMA~\citep{xu2025tama} adds expert oversight; and
+\citet{liu2025aiannotorch} use LLM verifiers as a quality layer over LLM
+annotators. \textsc{TaxonomyAgent} sits at an orthogonal operating point:
+it discovers a candidate taxonomy from scratch with a single goal
+instruction, no seed sketch and no human in the loop, then hands off the
+trace, working taxonomy, and per-item classifications for downstream
+review. The orchestrator-and-judge separation reduces the multi-agent
+pattern to a single ReAct loop.
 
 \paragraph{LLM topic discovery and taxonomy induction.}
-TopicGPT~\citep{pham2024topicgpt} prompts an LLM to generate topic
-labels from sampled documents with a refinement pass.
-TnT-LLM~\citep{wan2024tntllm} stages a summarise-then-distil
-pipeline that anticipates our generator-and-labeller split, though
-its refine step is a single batched summarisation.
-BERTopic~\citep{grootendorst2022bertopic} remains the strongest
-non-LLM baseline. Three concurrent 2025 systems sit closest to ours
-on the topic-modeling axis: \citet{brady2025iterativetax} iteratively
-prompt an LLM to reuse or generate a label per embedding cluster;
-LOGOS~\citep{pi2025logos} runs a grounded-theory pipeline with LLM
-coding, semantic clustering, and iterative codebook refinement; and
-\citet{zhu2025contextawaretax} build LLM-guided hierarchical
-taxonomies of scientific papers. \citet{yang2025llmitl} put an LLM
-inside a neural topic-model training loop, and
-\citet{huang2025clustasclass} reframe clustering as direct
-classification through an LLM (close to our \textsc{Single-Shot}
-baseline). Adjacent threads on goal-driven
-clustering~\citep{wang2023goalex}, concept
-induction~\citep{lam2024lloom}, taxonomy
-adaptation~\citep{taxoadapt2025}, and LLM-guided semantic
-clustering~\citep{llmguided2025} target different input contracts;
-\citet{tan2024llmannot} survey the broader landscape. None of these
-systems expose a goal-instruction mechanism that allows the analyst
-to direct discovery toward a non-topical axis of variation, which is
-the gap \textsc{TaxonomyAgent} addresses.
+On topic discovery, TopicGPT~\citep{pham2024topicgpt} prompts an LLM to
+generate topic labels, TnT-LLM~\citep{wan2024tntllm} stages a
+summarise-then-distil pipeline that anticipates our
+generator-and-labeller split, and
+BERTopic~\citep{grootendorst2022bertopic} remains the strongest non-LLM
+baseline. Concurrent 2025 systems induce taxonomies through LLM
+clustering, grounded-theory coding, or hierarchy
+construction~\citep{brady2025iterativetax, pi2025logos,
+zhu2025contextawaretax, yang2025llmitl, huang2025clustasclass}, and
+adjacent threads target goal-driven clustering, concept induction, and
+taxonomy adaptation~\citep{wang2023goalex, lam2024lloom, taxoadapt2025,
+llmguided2025}; \citet{tan2024llmannot} survey the landscape. None expose
+a goal-instruction mechanism that lets the analyst steer discovery toward
+a non-topical axis of variation, the gap \textsc{TaxonomyAgent} addresses.
