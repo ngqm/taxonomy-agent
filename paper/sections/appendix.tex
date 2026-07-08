@@ -60,7 +60,7 @@ released \texttt{apart/darkbench} dataset (660 prompts, six balanced
 categories); we run it with an empty size hint so the category count
 is not supplied.
 
-Baselines: \textsc{Embed-Cluster-Label} embeds with
+Baselines: \textsc{Embed Cluster Label} embeds with
 \texttt{sentence-transformers/all-MiniLM-L6-v2}~\citep{reimers2019sbert} (v3.2.1), runs
 sklearn~\citep{pedregosa2011sklearn} k-means at $K{=}16$ with a fixed \texttt{random\_state},
 and names each cluster with one DeepSeek-v4-Flash call sampled from
@@ -98,8 +98,8 @@ DeepSeek-v4-Flash). \textsc{TaxonomyAgent} and the axis-matched
 \textsc{TopicGPT} recover all six categories under near-verbatim names.
 \textsc{BERTopic} labels clusters with keyword bags and folds sycophancy
 and harmful generation into one large lexical cluster, so neither is
-recovered as a distinct category. \mbox{\textsc{Single-Shot}} and
-\mbox{\textsc{Embed-Cluster-Label}} name their clusters but over-split, mapping
+recovered as a distinct category. \textsc{Single Shot} and
+\textsc{Embed Cluster Label} name their clusters but over-split, mapping
 several discovered categories onto a single gold category. This is the
 qualitative counterpart to the agreement scores in
 Table~\ref{tab:darkbench}: the two methods that recover the taxonomy at
@@ -112,7 +112,7 @@ the right granularity also carry the highest NMI.
 \renewcommand{\arraystretch}{1.1}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.8cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm} >{\raggedright\arraybackslash}p{2.5cm}@{}}
 \toprule
- & \textsc{TaxonomyAgent} & \textsc{TopicGPT} & \textsc{BERTopic} & \textsc{Single-Shot} & \textsc{Embed-Cluster-Label} \\
+ & \textsc{TaxonomyAgent} & \textsc{TopicGPT} & \textsc{BERTopic} & \textsc{Single Shot} & \textsc{Embed Cluster Label} \\
 \# cluster & 7 & 6 & 8 & 10 & 20 \\
 Gold category & & & & & \\
 \midrule

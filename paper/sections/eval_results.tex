@@ -1,7 +1,7 @@
 \paragraph{Run configuration.}
 \textsc{TaxonomyAgent} uses DeepSeek-v4-Flash for both the orchestrator
-and the judge on both benchmarks; the \mbox{\textsc{Single-Shot}} and
-\mbox{\textsc{Iterative-Proposal}} baselines also use DeepSeek-v4-Flash, and
+and the judge on both benchmarks; the \textsc{Single Shot} and
+\textsc{Iterative Proposal} baselines also use DeepSeek-v4-Flash, and
 BERTopic uses no LLM. For 20~Newsgroups we report mean $\pm$ standard
 deviation over five independently sampled random seeds on a
 487-document stratified subsample (25 per gold class, minus 13 that
@@ -25,16 +25,16 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
 \textsc{TaxonomyAgent} (ours)
   & \textbf{0.569}$_{\pm.117}$ & \textbf{0.740}$_{\pm.055}$ & \textbf{0.489}$_{\pm.085}$
   & 13.0$_{\pm3.4}$ & 0.17$_{\pm.03}$ \\
-\mbox{\textsc{Single-Shot}}
+\textsc{Single Shot}
   & 0.253$_{\pm.026}$ & 0.345$_{\pm.056}$ & 0.101$_{\pm.041}$
   & 10.0$_{\pm0.0}$ & 0.024$_{\pm.000}$ \\
-\mbox{\textsc{Iterative-Proposal}}
+\textsc{Iterative Proposal}
   & 0.185$_{\pm.094}$ & 0.222$_{\pm.128}$ & 0.043$_{\pm.043}$
   & 16.0$_{\pm5.2}$ & 0.030$_{\pm.012}$ \\
 \textsc{TopicGPT}~\citep{pham2024topicgpt}
   & 0.542$_{\pm.056}$ & 0.606$_{\pm.026}$ & 0.297$_{\pm.047}$
   & 59.0$_{\pm16.9}$ & 0.12$_{\pm.02}$ \\
-\mbox{\textsc{Embed-Cluster-Label}}
+\textsc{Embed Cluster Label}
   & 0.434$_{\pm.005}$ & 0.488$_{\pm.013}$ & 0.243$_{\pm.010}$
   & 16.0$_{\pm0.0}$ & 0.021$_{\pm.003}$ \\
 Brady \& Islam~\citep{brady2025iterativetax}
@@ -63,8 +63,8 @@ are in \S\ref{sec:evaluation}.}
 On the three supervised metrics \textsc{TaxonomyAgent} leads every LLM
 and clustering baseline (Table~\ref{tab:20ng}): a $1.22\times$ NMI lead
 over the strongest comparator, \textsc{TopicGPT}, and $2.1\times$ over
-\mbox{\textsc{Single-Shot}}. \mbox{\textsc{Iterative-Proposal}} loses to
-\mbox{\textsc{Single-Shot}} on every supervised metric, suggesting iterative
+\textsc{Single Shot}. \textsc{Iterative Proposal} loses to
+\textsc{Single Shot} on every supervised metric, suggesting iterative
 label refinement without a separate judge does not help on this corpus.
 The concurrent \citet{brady2025iterativetax} pipeline produces a
 degenerate three-cluster solution (NMI $0.164 \pm 0.092$, $58\%$ HDBSCAN
@@ -73,16 +73,16 @@ noise), the same small-cluster shape as BERTopic at library defaults; a
 
 \paragraph{Coherence trades off against supervised quality.}
 Coherence is not uniformly in \textsc{TaxonomyAgent}'s favour (full
-intrinsic metrics in the released data): \mbox{\textsc{Iterative-Proposal}}
+intrinsic metrics in the released data): \textsc{Iterative Proposal}
 wins NPMI with 16 lexically focused categories, and LDA and
-\mbox{\textsc{Embed-Cluster-Label}} lead $C_v$ by keeping $K{=}16$ fixed. A
+\textsc{Embed Cluster Label} lead $C_v$ by keeping $K{=}16$ fixed. A
 \texttt{min\_topic\_size} sweep that emits roughly 60 micro-clusters
 closes the purity gap but sits at ARI $0.127$ against our $0.489$, a
 $3.85\times$ lead.
 
 \paragraph{Absolute spend stays under \$0.20 per 20NG run.}
 A \textsc{TaxonomyAgent} run on 20NG costs $\$0.17$ on average ($8\times$
-\mbox{\textsc{Embed-Cluster-Label}} at the same labeller) in $713\,$s of wall
+\textsc{Embed Cluster Label} at the same labeller) in $713\,$s of wall
 time, still under $\$0.20$ on the 487-document corpus.
 
 \subsection{DarkBench Results}
@@ -111,13 +111,13 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
 \textsc{TaxonomyAgent} (Gemini)
   & 0.951$_{\pm.013}$ & 0.884$_{\pm.025}$ & 0.864$_{\pm.034}$
   & 6.3$_{\pm0.6}$ & 0.12 \\
-\mbox{\textsc{Single-Shot}}
+\textsc{Single Shot}
   & 0.620$_{\pm.339}$ & 0.445$_{\pm.335}$ & 0.351$_{\pm.301}$
   & 10.0$_{\pm0.0}$ & 0.032 \\
 \textsc{TopicGPT}~\citep{pham2024topicgpt}
   & 0.719 & 0.706 & 0.603
   & 5.7 & 0.13 \\
-\mbox{\textsc{Embed-Cluster-Label}}
+\textsc{Embed Cluster Label}
   & 0.897$_{\pm.045}$ & 0.663$_{\pm.018}$ & 0.427$_{\pm.061}$
   & 20.0$_{\pm0.0}$ & 0.057 \\
 \textsc{BERTopic}
