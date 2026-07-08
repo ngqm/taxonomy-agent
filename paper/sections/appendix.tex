@@ -32,14 +32,13 @@ inspect the recoverable partial state through the same panels.
 \centering
 \includegraphics[width=\textwidth]{figures/streamlit_timeline.png}
 \caption{Iteration timeline in the Streamlit \emph{Inspect} tab for an
-example DarkBench run. Each row is one tool call in order: two
-\textsc{novelties} proposals, a \textsc{revise} batch that adds the six
-categories, then four \textsc{classify} probes. Each probe labels a fresh
-20-item sample and reports its don't-fit rate (green bars); the loop runs
-at least three such probes (the \texttt{min\_iterations} floor) on
-different samples to confirm the taxonomy covers the corpus before
-finalizing, which is why the don't-fit rate stays low across probes
-rather than falling from a high value.}
+example 20~Newsgroups run, showing the agentic loop. Each row is one
+tool call. The orchestrator proposes categories (\textsc{novelties}),
+applies them (\textsc{revise}), and probes coverage on a fresh sample
+(\textsc{classify}, don't-fit rate as green bars). When a probe shows a
+high don't-fit rate (20\% at steps~02 and~06) it proposes and adds more
+categories, growing the taxonomy from six to ten and converging once the
+rate reaches zero.}
 \label{fig:ui-trace}
 \end{figure*}
 
@@ -99,8 +98,8 @@ DeepSeek-v4-Flash). \textsc{TaxonomyAgent} and the axis-matched
 \textsc{TopicGPT} recover all six categories under near-verbatim names.
 \textsc{BERTopic} labels clusters with keyword bags and folds sycophancy
 and harmful generation into one large lexical cluster, so neither is
-recovered as a distinct category. \textsc{Single-Shot} and
-\textsc{Embed-Cluster-Label} name their clusters but over-split, mapping
+recovered as a distinct category. \mbox{\textsc{Single-Shot}} and
+\mbox{\textsc{Embed-Cluster-Label}} name their clusters but over-split, mapping
 several discovered categories onto a single gold category. This is the
 qualitative counterpart to the agreement scores in
 Table~\ref{tab:darkbench}: the two methods that recover the taxonomy at

@@ -28,9 +28,9 @@ baselines. Two non-LLM classical baselines:
 BERTopic~\citep{grootendorst2022bertopic} at library defaults with a
 \texttt{min\_topic\_size} sweep, and LDA~\citep{blei2003lda} at
 $K{=}16$. Three LLM baselines we wrote to occupy standard design
-families: \textsc{Single-Shot} prompts one LLM call to both propose
-and label, \textsc{Iterative-Proposal} runs an iterative LLM
-proposer with label refinement, and \textsc{Embed-Cluster-Label}
+families: \mbox{\textsc{Single-Shot}} prompts one LLM call to both propose
+and label, \mbox{\textsc{Iterative-Proposal}} runs an iterative LLM
+proposer with label refinement, and \mbox{\textsc{Embed-Cluster-Label}}
 embeds with all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each
 cluster with one LLM call, then assigns every item with the cheap
 judge (the family popularised by TnT-LLM~\citep{wan2024tntllm};
@@ -38,7 +38,7 @@ TnT-LLM's distillation phase is
 omitted).\footnote{We did not find a canonical TnT-LLM code release
 and the closest third-party reimplementation we surveyed couples to a
 prompt-hub service we cannot pin reproducibly, so we use
-\textsc{Embed-Cluster-Label} as the family representative.} Two published systems we run from their own repositories,
+\mbox{\textsc{Embed-Cluster-Label}} as the family representative.} Two published systems we run from their own repositories,
 \textsc{TopicGPT}~\citep{pham2024topicgpt} and Brady \&
 Islam~\citep{brady2025iterativetax}, with models served via OpenRouter
 to match our routing (implementation details in \S\ref{app:repro}). On
@@ -51,7 +51,7 @@ conditioned on it, so each is matched to the target axis.
 LLM calls route through OpenRouter on matched models so cost and quality
 are comparable; the classical baselines run on a single CPU node, and
 wall-clock times reflect this environment. $K{=}16$ for
-\textsc{Embed-Cluster-Label} and LDA loosely matches the 20 gold classes
+\mbox{\textsc{Embed-Cluster-Label}} and LDA loosely matches the 20 gold classes
 to remove $K$ as a confound.
 
 \paragraph{Metrics.}
