@@ -129,3 +129,19 @@ six categories under near-verbatim names, while the clustering baselines
 either merge categories or over-split them.}
 \label{tab:discovered}
 \end{table*}
+
+\section*{E\quad Revise Dispatcher Invariants}
+\label{app:dispatcher}
+Every operation passed to \texttt{revise\_taxonomy} runs through a pure
+handler under two invariants. \emph{Validate before mutate}: each
+handler checks every precondition (source category exists, target name
+unused, child set non-empty for \textsc{split}, parents disjoint for
+\textsc{merge}) before constructing the new taxonomy, so a malformed
+\textsc{merge} or \textsc{split} returns the input unchanged with a log
+entry the orchestrator reads on the next step. Two early bugs mutated
+the working taxonomy before all preconditions had been checked, which
+motivated this invariant. \emph{Per-op failure isolation}: the
+dispatcher applies operations left to right, recording failures per
+operation and continuing with the rest of the batch, so a bad
+\textsc{merge} in a three-operation call does not roll back a good
+\textsc{add}, and subsequent operations see the post-prefix state.

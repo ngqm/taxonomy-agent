@@ -112,41 +112,25 @@ accepts an ordered list of six typed operations: \textsc{add} a
 category, \textsc{rename} one, \textsc{edit} its definition,
 \textsc{merge} several into one, \textsc{split} one into several, and
 \textsc{drop} a category. Each is dispatched to a pure handler of
-signature \texttt{(tax, op)$\to$(new\_tax, log)}.
-\emph{Validate before mutate}: each handler checks every
-precondition (source category exists, target name unused, child set
-non-empty for \textsc{split}, parents disjoint for \textsc{merge})
-before constructing the new taxonomy, so a malformed
-\textsc{merge} or \textsc{split} returns the input unchanged with a
-log entry the orchestrator can read on the next step (two early bugs
-mutated the working taxonomy before all preconditions had been
-checked, which motivated this invariant). \emph{Per-op failure
-isolation}: the dispatcher applies ops left-to-right, recording
-failures per op and continuing with the rest of the batch, so a
-bad \textsc{merge} in a three-op call does not roll back a good
-\textsc{add} and subsequent ops see the post-prefix state. The verb set itself is standard taxonomy-edit
-vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the contribution
-here is the typed dispatcher with these two invariants.
+signature \texttt{(tax, op)$\to$(new\_tax, log)} under two invariants,
+\emph{validate before mutate} and \emph{per-op failure isolation},
+detailed in \S\ref{app:dispatcher}. The verb set is standard
+taxonomy-edit vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the
+contribution here is the typed dispatcher with these invariants.
 
 \paragraph{Convergence.}
 Stopping the loop requires a cheap signal that the working taxonomy
 already covers the corpus. After each \texttt{classify\_with\_judge}
-call the system computes the don't-fit rate (the fraction of items
-the judge labelled \texttt{"other"}). The orchestrator is allowed to call
+call the system computes the don't-fit rate (the fraction of items the
+judge labelled \texttt{"other"}). The orchestrator may call
 \texttt{finalize\_classify} once that rate falls below a threshold
 (default $0.10$) and the run has cleared a \texttt{min\_iterations}
-floor (default $3$). Classify prompts carry a fixed suffix
-instructing the judge to reply \texttt{"other"} whenever no listed
-category fits, and the \texttt{classify\_with\_judge} wrapper coerces
-any out-of-taxonomy reply to \texttt{"other"} before returning to the
-orchestrator, so a high don't-fit rate reflects coverage gaps and
-not hallucinated labels. The $0.10$ default is a usability choice
-that we report alongside external metrics in \S\ref{sec:evaluation}
-without claiming it is a calibrated leading indicator
-(\S\ref{sec:limitations}). Escape-hatch coercion, the
+floor (default $3$). The $0.10$ default is a usability choice we report
+alongside external metrics without claiming it is a calibrated leading
+indicator (\S\ref{sec:limitations}). Escape-hatch coercion (so a high
+don't-fit rate reflects coverage gaps, not hallucinated labels), the
 soft-error semantics of the floor, and the isolation of judge errors
-from the denominator are discussed alongside the convergence signal in
-\S\ref{app:convergence}.
+from the denominator are detailed in \S\ref{app:convergence}.
 
 \subsection{Operational Safeguards}
 \label{sec:system:safeguards}
