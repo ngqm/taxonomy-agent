@@ -4,6 +4,35 @@ from __future__ import annotations
 import time
 
 
+def _select_k_coherence(texts, vocab, X, seed, k_range, max_iter=10):
+    """Pick K by maximizing gensim C_v topic coherence over a candidate range.
+
+    Coherence is computed from the corpus only (no gold labels), so this is a
+    label-free, unsupervised choice of topic count. Falls back to the size
+    heuristic if gensim is unavailable.
+    """
+    from sklearn.decomposition import LatentDirichletAllocation
+
+    from ..metrics import c_v_coherence
+
+    n_docs = X.shape[0]
+    best_k, best_c = None, -1e9
+    for k in k_range:
+        kk = max(2, min(k, n_docs, max(2, len(vocab))))
+        lda = LatentDirichletAllocation(n_components=kk, max_iter=max_iter,
+                                        learning_method="batch",
+                                        random_state=seed)
+        lda.fit(X)
+        descs = [" ".join(vocab[i] for i in comp.argsort()[::-1][:10])
+                 for comp in lda.components_]
+        c = c_v_coherence(descs, texts, top_n_words=10)
+        if c is None:  # gensim missing
+            return min(20, max(5, n_docs // 30))
+        if c > best_c:
+            best_c, best_k = c, kk
+    return best_k or 2
+
+
 def run_lda(items: list[dict], seed: int = 42, **kwargs) -> dict:
     """Latent Dirichlet Allocation baseline.
 
@@ -29,7 +58,7 @@ def run_lda(items: list[dict], seed: int = 42, **kwargs) -> dict:
     ids = [it["id"] for it in items]
     n_items = len(items)
 
-    n_topics = int(kwargs.get("n_topics") or min(20, max(5, n_items // 30)))
+    n_topics_arg = kwargs.get("n_topics")
     max_features = int(kwargs.get("max_features", 5000))
     max_iter = int(kwargs.get("max_iter", 20))
 
@@ -50,6 +79,11 @@ def run_lda(items: list[dict], seed: int = 42, **kwargs) -> dict:
 
     # Cap K at #docs and at vocab size to keep LDA well-posed.
     vocab = vectorizer.get_feature_names_out()
+    if isinstance(n_topics_arg, str) and n_topics_arg == "coherence":
+        n_topics = _select_k_coherence(texts, vocab, X, seed, range(2, 31),
+                                       max_iter=max_iter)
+    else:
+        n_topics = int(n_topics_arg) if n_topics_arg else min(20, max(5, n_items // 30))
     n_topics = max(2, min(n_topics, n_items, max(2, len(vocab))))
 
     lda = LatentDirichletAllocation(

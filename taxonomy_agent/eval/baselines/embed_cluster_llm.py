@@ -66,6 +66,30 @@ def _default_k(n_items: int) -> int:
     return min(20, max(5, n_items // 30))
 
 
+def _select_k_silhouette(embeddings, seed: int, k_range) -> int:
+    """Pick K by maximizing the mean silhouette score on the embeddings.
+
+    Uses only the geometry of the points (no gold labels), so it is a
+    label-free, unsupervised choice of cluster count.
+    """
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import silhouette_score
+
+    n = len(embeddings)
+    best_k, best_s = 2, -1.0
+    for k in k_range:
+        if k >= n:
+            break
+        labels = KMeans(n_clusters=k, random_state=seed,
+                        n_init=10).fit_predict(embeddings)
+        if len(set(labels)) < 2:
+            continue
+        s = float(silhouette_score(embeddings, labels))
+        if s > best_s:
+            best_s, best_k = s, k
+    return best_k
+
+
 def run_embed_cluster_llm(items: list[dict], instruction: str,
                           model: str = "deepseek/deepseek-v4-flash",
                           api_key: str | None = None, seed: int = 42,
@@ -123,7 +147,10 @@ def run_embed_cluster_llm(items: list[dict], instruction: str,
 
     # 2. K-means cluster. n_init=10 is the pre-sklearn-1.4 default; keep an
     # explicit value so behavior is stable across versions.
-    k_eff = k if k is not None else _default_k(len(items))
+    if isinstance(k, str) and k == "silhouette":
+        k_eff = _select_k_silhouette(embeddings, seed, range(2, 31))
+    else:
+        k_eff = k if k is not None else _default_k(len(items))
     k_eff = max(2, min(k_eff, len(items)))
     km = KMeans(n_clusters=k_eff, random_state=seed, n_init=10)
     cluster_ids = km.fit_predict(embeddings)
