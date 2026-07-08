@@ -23,7 +23,7 @@ falls back to topic discovery. Figure~\ref{fig:arch} summarises the loop.
 \definecolor{ink}{HTML}{232B27}
 \definecolor{pinetint}{HTML}{E8F1EB}
 \begin{tikzpicture}[
-  font=\sffamily\small, node distance=9mm, text=ink,
+  font=\sffamily\footnotesize, node distance=8mm, text=ink,
   io/.style={draw=pine!30, line width=0.6pt, rounded corners=3pt,
              fill=cream, align=center, inner sep=6pt, minimum width=48mm},
   role/.style={draw=pine!55, line width=0.8pt, rounded corners=3pt,
@@ -63,10 +63,10 @@ the run finalizes.}
 Two roles are kept strictly separate.
 
 \paragraph{Orchestrator.}
-A ReAct-style~\citep{yao2022react} agent built on LangGraph's
-\texttt{create\_react\_agent}~\citep{langgraph}; it holds the working
-taxonomy as closure state and emits tool calls to inspect the corpus,
-edit the taxonomy, or dispatch work to the judge.
+A ReAct-style~\citep{yao2022react} agent built on
+LangGraph~\citep{langgraph}; it holds the working taxonomy as closure
+state and emits tool calls to inspect the corpus, edit the taxonomy, or
+dispatch work to the judge.
 
 \paragraph{Judge.}
 A stateless function that labels one item at a time against the
@@ -87,23 +87,22 @@ copies.
 \subsection{Tools, Typed Revise Operations, and Convergence}
 \label{sec:system:tools}
 
-The orchestrator's action space is six tools:
-\texttt{sample\_items}, \texttt{get\_taxonomy},
-\texttt{revise\_taxonomy}, \texttt{classify\_with\_judge},
-\texttt{propose\_novelties\_with\_judge}, and
-\texttt{finalize\_classify}. Classification and novelty proposal are
-separate verbs because the two judge prompt shapes differ (a single
-category with an \texttt{"other"} escape hatch vs.\ open-ended
-generation), and conflating them hurt judge reliability in early
-prototypes.
+The orchestrator's action space is six tools: it can sample items from
+the corpus, read the current taxonomy, revise it, classify a batch of
+items with the judge, ask the judge to propose categories for unfit
+items, and finalize the classification over the whole corpus.
+Classification and novelty proposal are separate tools because the two
+judge prompts differ (a single category with an ``other'' escape hatch
+versus open-ended generation), and conflating them hurt judge
+reliability in early prototypes.
 
 \paragraph{Typed revise operations.}
-Every taxonomy mutation flows through \texttt{revise\_taxonomy}, which
-accepts an ordered list of six typed operations: \textsc{add} a
-category, \textsc{rename} one, \textsc{edit} its definition,
-\textsc{merge} several into one, \textsc{split} one into several, and
-\textsc{drop} a category. Each is dispatched to a pure handler of
-signature \texttt{(tax, op)$\to$(new\_tax, log)} under two invariants,
+Every taxonomy mutation flows through the revise tool, which accepts an
+ordered list of six typed operations: \textsc{add} a category,
+\textsc{rename} one, \textsc{edit} its definition, \textsc{merge} several
+into one, \textsc{split} one into several, and \textsc{drop} a category.
+Each is dispatched to a pure handler that maps the taxonomy and an
+operation to a new taxonomy and a log, under two invariants,
 \emph{validate before mutate} and \emph{per-op failure isolation},
 detailed in \S\ref{app:dispatcher}. The verb set is standard
 taxonomy-edit vocabulary (cf.\ TaxoAdapt~\citep{taxoadapt2025}); the
@@ -111,12 +110,11 @@ contribution here is the typed dispatcher with these invariants.
 
 \paragraph{Convergence.}
 Stopping the loop requires a cheap signal that the working taxonomy
-already covers the corpus. After each \texttt{classify\_with\_judge}
-call the system computes the don't-fit rate (the fraction of items the
-judge labelled \texttt{"other"}). The orchestrator may call
-\texttt{finalize\_classify} once that rate falls below a threshold
-(default $0.10$) and the run has cleared a \texttt{min\_iterations}
-floor (default $3$). The $0.10$ default is a usability choice we report
+already covers the corpus. After each classify call the system computes
+the don't-fit rate (the fraction of items the judge labelled ``other'').
+The orchestrator may finalize once that rate falls below a threshold
+(default $0.10$) and the run has cleared a minimum-iteration floor
+(default $3$). The $0.10$ default is a usability choice we report
 alongside external metrics without claiming it is a calibrated leading
 indicator (\S\ref{sec:limitations}). Escape-hatch coercion (so a high
 don't-fit rate reflects coverage gaps, not hallucinated labels), the

@@ -16,7 +16,8 @@ and in the released sweep data.
 
 \begin{table*}[t]
 \centering
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccrr}
 \toprule
 Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
@@ -47,7 +48,7 @@ Brady \& Islam~\citep{brady2025iterativetax}
   & 0.134$_{\pm.045}$ & 0.164$_{\pm.092}$ & 0.022$_{\pm.002}$
   & 0.173$_{\pm.068}$ & 0.657$_{\pm.263}$ & 0.000$_{\pm.000}$
   & 3.0$_{\pm1.7}$ & ${<}0.01$ & 19$_{\pm4}$ \\
-lda
+LDA
   & 0.155$_{\pm.011}$ & 0.147$_{\pm.008}$ & 0.012$_{\pm.004}$
   & 0.097$_{\pm.013}$ & 0.383$_{\pm.020}$ & 0.164$_{\pm.005}$
   & 16.0$_{\pm0.0}$ & 0.00 & 1.5$_{\pm0}$ \\
@@ -56,7 +57,7 @@ lda
   & 0.007$_{\pm.000}$ & \textbf{0.767}$_{\pm.000}$ & 0.250$_{\pm.000}$
   & 2.0$_{\pm0.0}$ & 0.00 & 15$_{\pm5}$ \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{20~Newsgroups results, $n=487$. \textsc{TaxonomyAgent} and
 \textsc{TopicGPT} are averaged over five seeds, the other baselines over
 three; best per column in bold, and $|\mathcal{T}|$ is the number of
@@ -106,7 +107,8 @@ under a second cheap model.
 
 \begin{table*}[t]
 \centering
-\setlength{\tabcolsep}{4pt}
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{lcccccccrr}
 \toprule
 Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
@@ -117,7 +119,7 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
   & \textbf{0.970}$_{\pm.011}$ & \textbf{0.927}$_{\pm.018}$ & \textbf{0.930}$_{\pm.026}$
   & 0.030$_{\pm.006}$ & 0.376$_{\pm.015}$ & 0.242$_{\pm.035}$
   & 6.3$_{\pm0.6}$ & 0.08$_{\pm.01}$ & 380$_{\pm59}$ \\
-\textsc{TaxonomyAgent} (gemini-3.1-flash-lite)
+\textsc{TaxonomyAgent} (Gemini)
   & 0.951$_{\pm.013}$ & 0.884$_{\pm.025}$ & 0.864$_{\pm.034}$
   & 0.028 & 0.349 & 0.242
   & 6.3$_{\pm0.6}$ & 0.12 & 75 \\
@@ -135,7 +137,7 @@ Method & Purity $\uparrow$ & NMI $\uparrow$ & ARI $\uparrow$
   & 0.011 & 0.237 & 0.037
   & 6.0$_{\pm1.7}$ & 0.00 & 10 \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{DarkBench, $n=660$, six balanced gold categories; all methods
 use DeepSeek-v4-Flash unless noted, are asked to group by manipulation
 type, and are averaged over three seeds (mean $\pm$ standard deviation).
