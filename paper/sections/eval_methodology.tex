@@ -29,9 +29,9 @@ baselines. Two non-LLM classical baselines:
 BERTopic~\citep{grootendorst2022bertopic} at library defaults with a
 \texttt{min\_topic\_size} sweep, and LDA~\citep{blei2003lda} at
 $K{=}16$. Three LLM baselines we wrote to occupy standard design
-families: \texttt{single\_shot} prompts one LLM call to both propose
-and label, \texttt{iterative\_proposal} runs an iterative LLM
-proposer with label refinement, and \texttt{embed\_cluster\_llm}
+families: \textsc{Single-Shot} prompts one LLM call to both propose
+and label, \textsc{Iterative-Proposal} runs an iterative LLM
+proposer with label refinement, and \textsc{Embed-Cluster-Label}
 embeds with all-MiniLM-L6-v2, runs k-means at $K{=}16$, names each
 cluster with one LLM call, then assigns every item with the cheap
 judge (the family popularised by TnT-LLM~\citep{wan2024tntllm};
@@ -39,18 +39,18 @@ TnT-LLM's distillation phase is
 omitted).\footnote{We did not find a canonical TnT-LLM code release
 and the closest third-party reimplementation we surveyed couples to a
 prompt-hub service we cannot pin reproducibly, so we use
-\texttt{embed\_cluster\_llm} as the family representative.} Two
+\textsc{Embed-Cluster-Label} as the family representative.} Two
 concurrent or published systems we run from their own code:
-\texttt{topicgpt}~\citep{pham2024topicgpt} (the
-\texttt{topicgpt\_python} package with default prompts, routed
+\textsc{TopicGPT}~\citep{pham2024topicgpt} (the
+\textsc{TopicGPT} package with default prompts, routed
 through OpenRouter via the OpenAI client's \texttt{base\_url}), and
-\texttt{brady\_islam}~\citep{brady2025iterativetax} (their
+Brady \& Islam~\citep{brady2025iterativetax} (their
 repository, their prompts, all-MiniLM-L6-v2 + HDBSCAN + iterative
 per-cluster topic synthesis), both with the same Llama-3.2-3B
-(\texttt{brady\_islam}) or DeepSeek-v4-Flash (\texttt{topicgpt})
+(Brady \& Islam) or DeepSeek-v4-Flash (\textsc{TopicGPT})
 model served via OpenRouter to match our uniform OpenRouter routing.
 On DarkBench, where the gold categories are manipulation types and not
-surface topics, \texttt{topicgpt} also runs with generation and
+surface topics, \textsc{TopicGPT} also runs with generation and
 assignment prompts that ask for the manipulation type, alongside its
 default topic prompt, and BERTopic also runs with an instruction-tuned
 embedding (multilingual-e5-large-instruct) conditioned on grouping by
@@ -62,11 +62,11 @@ single CPU node. Wall-clock times reported in
 \S\ref{sec:eval-results-20ng} reflect this environment. All LLM
 baselines route through OpenRouter on matched models so that cost
 and quality comparisons are apples-to-apples; $K{=}16$ for
-\texttt{embed\_cluster\_llm} and LDA matches the 20 gold classes
+\textsc{Embed-Cluster-Label} and LDA matches the 20 gold classes
 loosely to remove $K$ as a confound.
 
 \paragraph{Metrics.}
-We report external metrics (purity, NMI, ARI), intrinsic metrics of
+We report external metrics (purity, normalized mutual information [NMI], adjusted Rand index [ARI]), intrinsic metrics of
 topic quality (NPMI, $C_v$ coherence~\citep{rehurek2010gensim},
 label redundancy), cost in \$ from OpenRouter \texttt{usage.cost},
 and wall-clock time.

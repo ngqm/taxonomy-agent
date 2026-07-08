@@ -56,7 +56,7 @@ released \texttt{apart/darkbench} dataset (660 prompts, six balanced
 categories); we run it with an empty size hint so the category count
 is not supplied.
 
-Baselines: \texttt{embed\_cluster\_llm} embeds with
+Baselines: \textsc{Embed-Cluster-Label} embeds with
 \texttt{sentence-transformers/all-MiniLM-L6-v2}~\citep{reimers2019sbert} (v3.2.1), runs
 sklearn~\citep{pedregosa2011sklearn} k-means at $K{=}16$ with a fixed \texttt{random\_state},
 and names each cluster with one DeepSeek-v4-Flash call sampled from
@@ -91,11 +91,11 @@ Table~\ref{tab:discovered} aligns each of the six gold DarkBench
 categories with the label the best-matching discovered cluster carries,
 for \textsc{TaxonomyAgent} and every baseline (a single run,
 DeepSeek-v4-Flash). \textsc{TaxonomyAgent} and the axis-matched
-\texttt{topicgpt} recover all six categories under near-verbatim names.
-\texttt{bertopic} labels clusters with keyword bags and folds sycophancy
+\textsc{TopicGPT} recover all six categories under near-verbatim names.
+\textsc{BERTopic} labels clusters with keyword bags and folds sycophancy
 and harmful generation into one large lexical cluster, so neither is
-recovered as a distinct category. \texttt{single\_shot} and
-\texttt{embed\_cluster\_llm} name their clusters but over-split, mapping
+recovered as a distinct category. \textsc{Single-Shot} and
+\textsc{Embed-Cluster-Label} name their clusters but over-split, mapping
 several discovered categories onto a single gold category. This is the
 qualitative counterpart to the agreement scores in
 Table~\ref{tab:darkbench}: the two methods that recover the taxonomy at
@@ -107,7 +107,7 @@ the right granularity also carry the highest NMI.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}>{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{1.9cm} >{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}p{2.6cm} >{\raggedright\arraybackslash}p{2.6cm}@{}}
 \toprule
-Gold category & \textsc{TaxonomyAgent} & \texttt{topicgpt} & \texttt{bertopic} & \texttt{single\_shot} & \texttt{embed\_cluster\_llm} \\
+Gold category & \textsc{TaxonomyAgent} & \textsc{TopicGPT} & \textsc{BERTopic} & \textsc{Single-Shot} & \textsc{Embed-Cluster-Label} \\
  & 7 clusters & 6 & 8 & 10 & 20 \\
 \midrule
 brand bias & brand\_bias & brand-bias & \emph{ai, the, companies, most,\,\ldots}~($+$4) & Comparison and ranking~($+$1) & Forced Ranking~($+$4) \\
@@ -121,10 +121,10 @@ sneaking & sneaking & sneaking & \emph{the, and, that, to,\,\ldots} & Rephrase w
 \caption{DarkBench gold categories and the label the best-matching
 discovered cluster carries under each method (a single run). The column
 subheading gives the total number of clusters each method produced.
-Bag-of-keyword labels (\texttt{bertopic}) are italicised;
+Bag-of-keyword labels (\textsc{BERTopic}) are italicised;
 ``\emph{(merged)}'' marks a gold category with no dedicated cluster;
 ``$+k$'' counts additional clusters that map to the same gold category.
-\textsc{TaxonomyAgent} and axis-matched \texttt{topicgpt} recover all
+\textsc{TaxonomyAgent} and axis-matched \textsc{TopicGPT} recover all
 six categories under near-verbatim names, while the clustering baselines
 either merge categories or over-split them.}
 \label{tab:discovered}

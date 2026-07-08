@@ -7,7 +7,7 @@ taxonomy, a parallel judge LLM scores items against that taxonomy and
 reports a don't-fit rate, and the loop terminates once that rate falls
 below a configurable threshold, gated by a minimum-iteration floor.
 This section walks the architecture
-(\S\ref{sec:system:arch}), the tools and revise DSL together with
+(\S\ref{sec:system:arch}), the tools and typed revise operations together with
 the convergence signal (\S\ref{sec:system:tools}), and the
 operational safeguards that make the pipeline usable as a single
 command (\S\ref{sec:system:safeguards}).
@@ -19,7 +19,48 @@ these user prompts by the type of manipulative dark pattern each one
 is designed to elicit from an AI assistant.''
 The goal instruction is interpolated into the orchestrator's system
 prompt verbatim and into every judge classify call; an empty goal
-falls back to topic discovery.
+falls back to topic discovery. Figure~\ref{fig:arch} summarises the loop.
+
+\begin{figure}[t]
+\centering
+\definecolor{pine}{HTML}{2F6B4F}
+\definecolor{cream}{HTML}{F3F2EC}
+\definecolor{ink}{HTML}{232B27}
+\definecolor{pinetint}{HTML}{E8F1EB}
+\begin{tikzpicture}[
+  font=\sffamily\small, node distance=9mm, text=ink,
+  io/.style={draw=pine!30, line width=0.6pt, rounded corners=3pt,
+             fill=cream, align=center, inner sep=6pt, minimum width=48mm},
+  role/.style={draw=pine!55, line width=0.8pt, rounded corners=3pt,
+               fill=pinetint, align=center, inner sep=7pt, text width=60mm},
+  lbl/.style={font=\sffamily\scriptsize, text=ink!85},
+  arr/.style={-{Latex[length=2.6mm,width=2.2mm]}, line width=1pt, pine},
+]
+\node[io]   (in)    {Corpus $+$ one-line goal instruction};
+\node[role, below=of in] (orch)
+      {{\bfseries\color{pine}Orchestrator}\; (LLM agent)\\[3pt]
+       {\footnotesize edits a working taxonomy with typed operations:}\\[-1pt]
+       {\footnotesize add, rename, edit, merge, split, drop}};
+\node[role, below=15mm of orch] (judge)
+      {{\bfseries\color{pine}Judge}\; (stateless, parallel)\\[3pt]
+       {\footnotesize labels one item at a time}};
+\node[io, below=of judge]   (out)   {Taxonomy $+$ per-item labels $+$ trace};
+
+\draw[arr] (in) -- (orch);
+\draw[arr] ($(orch.south)+(-13mm,0)$) -- ($(judge.north)+(-13mm,0)$)
+      node[midway, left, lbl, align=right] {classify a probe\\ of sampled items};
+\draw[arr] ($(judge.north)+(13mm,0)$) -- ($(orch.south)+(13mm,0)$)
+      node[midway, right, lbl, align=left] {labels $+$\\ don't-fit rate};
+\draw[arr] (judge.south) -- (out)
+      node[midway, right, lbl, align=left] {on don't-fit $<\theta$:\\ label the full corpus};
+\end{tikzpicture}
+\caption{Each round, the orchestrator revises the taxonomy and has the
+judge label a small probe of sampled items; the judge returns the labels
+and the don't-fit rate (the fraction it could not place). Once that rate
+drops below the threshold~$\theta$, the judge labels the full corpus and
+the run finalizes.}
+\label{fig:arch}
+\end{figure}
 
 \subsection{Architecture}
 \label{sec:system:arch}
@@ -52,7 +93,7 @@ taxonomy lives only in this closure, the orchestrator never passes it
 as a tool argument, which shrinks payloads and rules out edits to
 stale copies.
 
-\subsection{Tools, Revise DSL, and Convergence}
+\subsection{Tools, Typed Revise Operations, and Convergence}
 \label{sec:system:tools}
 
 The orchestrator's action space is six tools:
@@ -65,12 +106,13 @@ category with an \texttt{"other"} escape hatch vs.\ open-ended
 generation), and conflating them hurt judge reliability in early
 prototypes.
 
-\paragraph{Revise DSL.}
+\paragraph{Typed revise operations.}
 Every taxonomy mutation flows through \texttt{revise\_taxonomy}, which
-accepts an ordered list of typed operations
-(\textsc{add}/\textsc{rename}/\textsc{edit}/\textsc{merge}/\textsc{split}/\textsc{drop})
-dispatched to pure handlers of signature
-\texttt{(tax, op)$\to$(new\_tax, log)}.
+accepts an ordered list of six typed operations: \textsc{add} a
+category, \textsc{rename} one, \textsc{edit} its definition,
+\textsc{merge} several into one, \textsc{split} one into several, and
+\textsc{drop} a category. Each is dispatched to a pure handler of
+signature \texttt{(tax, op)$\to$(new\_tax, log)}.
 \emph{Validate before mutate}: each handler checks every
 precondition (source category exists, target name unused, child set
 non-empty for \textsc{split}, parents disjoint for \textsc{merge})
@@ -129,4 +171,17 @@ labels.
 A single-file Streamlit app (\texttt{app.py}) wraps \texttt{run()}
 for non-CLI users, exposes the parameters that matter, streams the
 working taxonomy live, and reads the same on-disk artifacts the CLI
-writes so runs are inspectable without re-execution.
+writes so runs are inspectable without re-execution
+(Figure~\ref{fig:demo}).
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/demo_taxonomy_crop.png}
+\caption{The Streamlit demo inspecting a finished DarkBench run: the
+discovered taxonomy shown as a gallery of cards, one per category, each
+with its name, item count, definition, and a representative item from
+the corpus. The Inspect tab also reports the run's cost, a map of the
+corpus, and the per-item classifications, all read back from the on-disk
+artifacts a command-line run writes.}
+\label{fig:demo}
+\end{figure*}

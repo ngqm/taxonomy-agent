@@ -13,8 +13,8 @@ prompts by the type of manipulation they attempt''); the system
 returns a labelled taxonomy, a per-item classification, and a
 replayable trace. On DarkBench, a benchmark of prompts that elicit six
 manipulative dark patterns from AI assistants,
-\textsc{TaxonomyAgent} recovers the six-category expert taxonomy at
-NMI 0.927 with no hint about the number of categories, ahead of
+\textsc{TaxonomyAgent} recovers the six-category expert taxonomy at a
+normalized mutual information (NMI) of 0.927 with no hint about the number of categories, ahead of
 topic-modeling and LLM-clustering baselines even when each is asked to
 group by the same manipulation type.
 On 20~Newsgroups it reaches NMI 0.740 and beats a published
