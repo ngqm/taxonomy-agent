@@ -36,8 +36,22 @@ class Settings(NamedTuple):
 
 def render_sidebar() -> Settings:
     with st.sidebar:
+        # Appearance: light "Day" / dark "Night" palette. Writes session_state
+        # only; app.py re-injects the matching CSS. Purely cosmetic — not part
+        # of the Settings contract the tabs consume.
         st.header("Configuration")
-    
+
+        with st.expander("Appearance", expanded=True):
+            _theme_label = st.segmented_control(
+                "Theme",
+                ["Day", "Night"],
+                default=("Night" if st.session_state.get("theme", "day") == "night" else "Day"),
+                label_visibility="collapsed",
+                help="Light 'Day' paper palette or dark 'Night' ink palette. "
+                     "Category colours stay the same.",
+            )
+            st.session_state["theme"] = "night" if _theme_label == "Night" else "day"
+
         with st.expander("API & models", expanded=True):
             env_key = os.getenv("OPENROUTER_API_KEY", "")
             # On the hosted demo a shared key may be supplied via a Modal secret.
@@ -48,6 +62,7 @@ def render_sidebar() -> Settings:
                 "OpenRouter API key" + (" (optional)" if _shared_key else ""),
                 type="password",
                 value="" if _shared_key else env_key,
+                placeholder="sk-or-•••••••••",
                 help="Leave blank to use the key we provide. Add your own key here "
                      "to run on your own account instead.",
             )
@@ -79,10 +94,7 @@ def render_sidebar() -> Settings:
                 )
             else:
                 orchestrator = orch_choice
-            # Show the full model id below the dropdown so the user can read what
-            # was selected even when the dropdown clips on a narrow sidebar.
-            st.caption(f"→ `{orchestrator}`" if orchestrator else "→ (not set)")
-    
+
             judge_choice = st.selectbox(
                 "Judge model",
                 JUDGE_OPTIONS,
@@ -98,45 +110,46 @@ def render_sidebar() -> Settings:
                 )
             else:
                 judge = judge_choice
-            st.caption(f"→ `{judge}`" if judge else "→ (not set)")
-    
+
+        def _numrow(label, lo, hi, default, helptext):
+            # Mockup-style "label left … value right" spec row (borderless via CSS).
+            _lc, _vc = st.columns([1.7, 1], vertical_alignment="center")
+            _lc.markdown(f'<span class="side-numlabel">{label}</span>',
+                         unsafe_allow_html=True)
+            return _vc.number_input(label, lo, hi, default,
+                                    label_visibility="collapsed", help=helptext)
+
         with st.expander("Discovery loop", expanded=True):
-            max_iters = st.number_input(
+            max_iters = _numrow(
                 "Max iterations", 1, 50, 10,
-                help="Hard ceiling on revise/probe rounds. The orchestrator may "
-                     "converge sooner if the don't-fit threshold is met.",
-            )
-            min_iters = st.number_input(
+                "Hard ceiling on revise/probe rounds. The orchestrator may "
+                "converge sooner if the don't-fit threshold is met.")
+            min_iters = _numrow(
                 "Min iterations", 0, 50, 3,
-                help="Floor on classify_with_judge rounds before convergence is "
-                     "allowed. Prevents premature finalize on a lucky early probe. "
-                     "Must be ≤ max iterations.",
-            )
+                "Floor on classify_with_judge rounds before convergence is "
+                "allowed. Prevents premature finalize on a lucky early probe. "
+                "Must be ≤ max iterations.")
             threshold = st.slider(
                 "Don't-fit threshold", 0.0, 0.5, 0.10, 0.01,
                 help="Stop when fewer than this fraction of a fresh probe falls outside the taxonomy.",
             )
-            probe_size = st.number_input(
+            probe_size = _numrow(
                 "Probe batch size (K)", 5, 100, 20,
-                help="How many items the judge classifies per probe round. Larger "
-                     "K = more stable signal but more judge calls per iteration.",
-            )
+                "How many items the judge classifies per probe round. Larger "
+                "K = more stable signal but more judge calls per iteration.")
     
-        with st.expander("Execution"):
-            concurrency = st.number_input(
+        with st.expander("Execution", expanded=True):
+            concurrency = _numrow(
                 "Parallel judge calls", 1, 64, 8,
-                help="How many judge requests run in parallel. Higher = faster "
-                     "wall time but more pressure on rate limits.",
-            )
-            recursion_limit = st.number_input(
-                "LangGraph recursion limit", 20, 500, 80,
-                help="Safety cap on total LangGraph node transitions. Rarely "
-                     "needs changing unless you bump max iterations.",
-            )
-            pool_limit = st.number_input(
+                "How many judge requests run in parallel. Higher = faster "
+                "wall time but more pressure on rate limits.")
+            recursion_limit = _numrow(
+                "Recursion limit", 20, 500, 80,
+                "Safety cap on total LangGraph node transitions. Rarely "
+                "needs changing unless you bump max iterations.")
+            pool_limit = _numrow(
                 "Pool limit (0 = no cap)", 0, 100000, 0,
-                help="Cap items used. Useful for smoke tests.",
-            )
+                "Cap items used. Useful for smoke tests.")
     return Settings(api_key, orchestrator, judge, max_iters, min_iters,
                     threshold, probe_size, concurrency, recursion_limit,
                     pool_limit, orch_choice, judge_choice)

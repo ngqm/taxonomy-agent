@@ -21,31 +21,52 @@ def render(settings):
     (api_key, orchestrator, judge, max_iters, min_iters, threshold,
      probe_size, concurrency, recursion_limit, pool_limit,
      orch_choice, judge_choice) = settings
+
+    # New-user orientation lives on the Run (landing) tab only, so Inspect and
+    # Compare open straight on their content instead of repeating this band.
+    if _EXAMPLE_RUN.exists():
+        st.markdown(
+            '<div class="new-banner"><span class="tag">New?</span>'
+            '<span class="msg">Open <b>Inspect</b> or <b>Compare</b> to browse '
+            'finished runs on DarkBench and 20 Newsgroups. You don\'t need your '
+            'own API key — the run uses ours.</span></div>',
+            unsafe_allow_html=True,
+        )
     # ── Quick demo: one-click 60-second run on the bundled example. ─────────
     # Sets a small pool + low iter budget, picks the bundled example preset,
     # then falls through into the regular Start-run code path via `start=True`.
-    quick_demo_clicked = st.button(
-        "🚀 Run the demo (~2 min, under \\$0.05)",
-        type="primary",
-        disabled=ss.running,
-        help="Runs the agent on the small bundled example (rhetorical "
-             "strategies) with DeepSeek-v4-Flash as both orchestrator and "
-             "judge. Total spend under \\$0.05. Watch the loop converge in "
-             "the trace pane below.",
-    )
-    st.caption(
-        "**You don't need your own API key.** Set an instruction and press "
-        "Start; the run uses ours. If you'd rather use your own, add an "
-        "OpenRouter key in the sidebar. Bring your own texts with **Upload** or "
-        "**Paste JSONL** (up to 2,000 rows), or try the bundled example in one "
-        "click."
+    with st.container(key="demo_cta"):
+        quick_demo_clicked = st.button(
+            "● Run the demo",
+            type="primary",
+            disabled=ss.running,
+            help="Runs the agent on the small bundled example (rhetorical "
+                 "strategies) with DeepSeek-v4-Flash as both orchestrator and "
+                 "judge. Total spend under \\$0.05. Watch the loop converge in "
+                 "the trace pane below.",
+        )
+        st.markdown(
+            '<div class="demo-serif" style="margin-top:7px;">One click · '
+            'DarkBench · ~2 min · under &#36;0.05. No API key needed — the run '
+            'uses ours.</div>',
+            unsafe_allow_html=True,
+        )
+    st.markdown(
+        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
+        'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 22px;">'
+        'Or bring your own texts: set an instruction, provide items, and press '
+        '<b>Start run</b>. Add an OpenRouter key in the sidebar to use your own '
+        'budget.</div>',
+        unsafe_allow_html=True,
     )
 
-    st.markdown("##### 1. Task")
+    st.markdown('<div class="step-head"><span class="step-num">1</span>'
+                '<span class="step-label">Task</span></div>',
+                unsafe_allow_html=True)
     # Task preset — fills instruction / category focus / size hint with sensible
     # defaults. Re-selecting the same preset is a no-op; switching presets
     # overwrites the three fields, but the user can edit them after.
-    preset = st.selectbox(
+    preset = st.columns([2, 3])[0].selectbox(
         "Task preset",
         list(PRESETS.keys()),
         help="Auto-fills instruction, category focus, and size hint. Pick "
@@ -59,13 +80,15 @@ def render(settings):
             ss.cat_focus_text = cfg["category_focus"]
             ss.size_hint_text = cfg["size_hint"]
 
-    st.markdown("##### 2. Items")
-    src = st.radio(
+    st.markdown('<div class="step-head"><span class="step-num">2</span>'
+                '<span class="step-label">Items</span></div>',
+                unsafe_allow_html=True)
+    src = st.segmented_control(
         "Source", ["Upload JSONL", "Paste JSONL", "File path", "Use example"],
-        horizontal=True,
+        default="Upload JSONL", key="source_seg",
         help="Where to read the items the agent should classify. JSONL = one "
              "`{\"id\": ..., \"text\": ...}` per line.",
-    )
+    ) or "Upload JSONL"
 
     items_path: str | None = None
     if src == "Upload JSONL":
@@ -107,15 +130,17 @@ def render(settings):
             )
             items_path = None
 
-    st.markdown("##### 3. Instruction")
+    st.markdown('<div class="step-head"><span class="step-num">3</span>'
+                '<span class="step-label">Instruction</span></div>',
+                unsafe_allow_html=True)
     instruction = st.text_area(
         "What should the agent classify? (natural language)",
-        height=110,
+        height=68,
         key="instruction_text",
         placeholder="Identify the dominant topic of each text.",
     )
 
-    fc1, fc2 = st.columns(2)
+    fc1, fc2 = st.columns([4, 1])
     with fc1:
         category_focus = st.text_input(
             "Category focus (optional)",
@@ -131,11 +156,13 @@ def render(settings):
                  "target. The orchestrator chooses.",
         )
 
-    st.markdown("##### 4. Output")
+    st.markdown('<div class="step-head"><span class="step-num">4</span>'
+                '<span class="step-label">Output</span></div>',
+                unsafe_allow_html=True)
     output_dir_in = st.text_input(
         "Output directory (leave blank for auto)",
         value="",
-        placeholder=str(DEFAULT_RUNS_ROOT / "run_<timestamp>"),
+        placeholder="taxonomy_runs / run-<timestamp>",
         help="Defaults to `taxonomy_runs/run_<current timestamp>/` at the "
              "moment you click Start run.",
     )
@@ -161,10 +188,11 @@ def render(settings):
             f"_Calibrated for the {pair_label}._"
         )
     else:
-        st.caption(
-            "Cost estimate appears once items are loaded. Rule of thumb: "
-            "~\\$0.10 per orchestrator iteration plus ~\\$0.0003 per judge call "
-            "(probes + finalize)."
+        st.markdown(
+            '<div class="page-subtitle" style="font-size:13px;margin:6px 0;">'
+            'Estimate ≈ &#36;0.10 / orchestrator iteration + &#36;0.0003 / judge '
+            'call (probes + finalize).</div>',
+            unsafe_allow_html=True,
         )
 
     # Validate Custom… model IDs up front so Start can be disabled.
