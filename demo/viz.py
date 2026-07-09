@@ -183,8 +183,11 @@ def run_card_html(run_dir: str, title: str) -> str:
             f'<div style="font-family:{_SANS};font-size:10px;letter-spacing:0.16em;'
             'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Distribution</div>'
         )
-        parts.append(distribution_bars_html(sorted(counts.items(),
-                                                    key=lambda kv: -kv[1]), cmap, compact=True))
+        # Same sort as the Taxonomy list above: count-descending with 'other'
+        # always pinned last, so the two components line up row-for-row.
+        parts.append(distribution_bars_html(
+            sorted(counts.items(), key=lambda kv: (kv[0] == "other", -kv[1])),
+            cmap, compact=True))
     parts.append('</div></div>')
     return "".join(parts)
 

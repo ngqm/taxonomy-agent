@@ -42,15 +42,29 @@ def render_sidebar() -> Settings:
         st.header("Configuration")
 
         with st.expander("Appearance", expanded=True):
-            _theme_label = st.segmented_control(
+            # The control persists its own state under `key` so a SINGLE click
+            # switches the theme. A `default=` that depends on ss["theme"] (the
+            # previous approach) creates a feedback loop that needs two clicks.
+            # Seed/repair the key before the widget: on first run it has no value,
+            # and clicking the already-active segment deselects it to None — in
+            # both cases restore it from the current theme so a segment is always
+            # selected and the theme never flips to a stale value.
+            if st.session_state.get("theme_seg") not in ("Day", "Night"):
+                st.session_state["theme_seg"] = (
+                    "Night" if st.session_state.get("theme", "day") == "night"
+                    else "Day"
+                )
+            st.segmented_control(
                 "Theme",
                 ["Day", "Night"],
-                default=("Night" if st.session_state.get("theme", "day") == "night" else "Day"),
+                key="theme_seg",
                 label_visibility="collapsed",
                 help="Light 'Day' paper palette or dark 'Night' ink palette. "
                      "Category colours stay the same.",
             )
-            st.session_state["theme"] = "night" if _theme_label == "Night" else "day"
+            st.session_state["theme"] = (
+                "night" if st.session_state.get("theme_seg") == "Night" else "day"
+            )
 
         with st.expander("API & models", expanded=True):
             env_key = os.getenv("OPENROUTER_API_KEY", "")
@@ -62,7 +76,7 @@ def render_sidebar() -> Settings:
                 "OpenRouter API key" + (" (optional)" if _shared_key else ""),
                 type="password",
                 value="" if _shared_key else env_key,
-                placeholder="sk-or-•••••••••",
+                placeholder="Paste your sk-or-… key",
                 help="Leave blank to use the key we provide. Add your own key here "
                      "to run on your own account instead.",
             )

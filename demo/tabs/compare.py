@@ -33,7 +33,7 @@ def render():
         def _cmp_label(r: dict) -> str:
             bits = [Path(r["name"]).name]
             if r.get("n_categories") is not None:
-                bits.append(f"{r['n_categories']} cats")
+                bits.append(f"{r['n_categories']} categories")
             cost = (r.get("cost") or {}).get("total_usd")
             if cost is not None:
                 bits.append(f"${cost:.2f}")

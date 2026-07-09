@@ -34,7 +34,7 @@ from demo.tabs import run as run_tab_mod, history as history_tab_mod, \
 
 # ── Page bootstrap (must run on every rerun, so it lives here, not in demo/) ──
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
-st.markdown('<div class="page-eyebrow">Taxonomy-agent</div>',
+st.markdown('<div class="page-eyebrow">Agentic taxonomy discovery</div>',
             unsafe_allow_html=True)
 # Rendered as a bespoke serif masthead rather than st.title: st.title wraps its
 # text in a span the global `span,div {sans}` rule would force to Public Sans,
@@ -44,7 +44,7 @@ st.markdown('<div class="page-title">Taxonomy Agent</div>',
 st.markdown(
     '<div class="page-subtitle">Give it a set of texts and a one-line goal — '
     'it works out the categories on its own and labels every item, so you '
-    'never define the label set up front.</div>',
+    'never define the categories up front.</div>',
     unsafe_allow_html=True,
 )
 

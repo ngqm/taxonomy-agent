@@ -22,11 +22,11 @@ import streamlit as st
 # both the warm-paper and deep-ink canvases; the palette does NOT change between
 # themes — only the surrounding neutrals do. 'other' is always neutral grey.
 CATEGORY_COLORS: dict[str, str] = {
-    "anthropomorphization": "#5b8def",  # blue
-    "sycophancy":           "#3fb0c7",  # teal
+    "anthropomorphization": "#5a6ed6",  # indigo-blue (nudged off the teal)
+    "sycophancy":           "#2fb0a0",  # teal-green (nudged off the blue)
     "brand_bias":           "#c79237",  # amber
     "user_retention":       "#a85fc0",  # violet
-    "sneaking":             "#d4553a",  # red
+    "sneaking":             "#e15e39",  # tomato (nudged off the vermilion UI accent)
     "harmful_generation":   "#3f9f6b",  # green
     "polarizing_stance":    "#c74f8a",  # magenta
     "other":                "#a6a6ad",  # grey
@@ -36,7 +36,7 @@ CATEGORY_COLORS: dict[str, str] = {
 # any corpus other than DarkBench). Same mid-luminance family so arbitrary runs
 # still read as one system.
 FALLBACK_PALETTE: list[str] = [
-    "#5b8def", "#3fb0c7", "#c79237", "#a85fc0", "#d4553a",
+    "#5a6ed6", "#2fb0a0", "#c79237", "#a85fc0", "#e15e39",
     "#3f9f6b", "#c74f8a", "#6f7fd6", "#4a9d8e", "#b8863f",
     "#8f6fb5", "#c9705a", "#5aa06f", "#c05f92", "#7d94c4",
 ]
@@ -169,6 +169,7 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 .stApp [data-baseweb="input"], .stApp [data-baseweb="base-input"],
 .stApp [data-baseweb="textarea"], .stApp [data-baseweb="select"] > div,
 .stApp [data-testid="stNumberInputContainer"],
+.stApp [data-testid="stTextInputRootElement"],
 .stApp input, .stApp textarea {
   background-color: var(--panel) !important; border-radius: 0 !important;
   border-color: var(--card-border) !important; color: var(--ink) !important;
@@ -190,6 +191,15 @@ body, p, span, div, label, li, td, th, .stMarkdown,
    catalogue's square corners) and inset the value area, so the first chip is no
    longer flush against the border with white gaps showing through the rounded
    pill corners (read as the chip being "cut" on the left). */
+/* Selectbox: the dropdown-arrow cell is painted with Streamlit's light base
+   secondaryBackgroundColor — a shaded "caret cell" split off from the field in
+   Day, and a bright cell in Night. Repaint the control wrapper on the panel
+   colour so the select reads as one uniform field in both themes. */
+.stApp [data-testid="stSelectbox"] div { background-color: var(--panel) !important; }
+/* ...but keep the widget label itself on the canvas (the broad rule above would
+   otherwise paint a panel-coloured box behind "TASK PRESET" etc.). */
+.stApp [data-testid="stSelectbox"] [data-testid="stWidgetLabel"],
+.stApp [data-testid="stSelectbox"] [data-testid="stWidgetLabel"] * { background-color: transparent !important; }
 .stApp [data-testid="stMultiSelect"] [data-baseweb="tag"] { border-radius: 0 !important; }
 /* The left inset must live on the label span, NOT the tag: the tag's own
    padding-left is swallowed by the value container's overflow clip, so the text
@@ -298,6 +308,18 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 [data-testid="stMain"] [data-testid="stExpander"] details[open] > summary { background: var(--track) !important; color: var(--ink) !important; }
 [data-testid="stMain"] [data-testid="stExpander"] summary p,
 [data-testid="stMain"] [data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] * { color: var(--ink) !important; }
+/* Clamp long expander headers (e.g. History run rows carrying the goal text) to
+   a tidy two-line block so cards don't vary in height with truncated overflow. */
+[data-testid="stMain"] [data-testid="stExpander"] summary p {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+/* Flatten the secondary "type a run directory path" expander into a light,
+   link-like toggle so it doesn't read as a second bordered field beside the
+   run selectbox (Inspect › Run under inspection). */
+.st-key-run_path_adv [data-testid="stExpander"] { border: none !important; background: transparent !important; }
+.st-key-run_path_adv [data-testid="stMain"] [data-testid="stExpander"] summary,
+.st-key-run_path_adv [data-testid="stExpander"] summary { background: transparent !important; padding-left: 0 !important; }
+.st-key-run_path_adv [data-testid="stExpander"] summary p { color: var(--muted) !important; font-size: 0.82rem; }
 .stApp [data-testid="stAlert"], .stApp [data-testid="stAlert"] > div,
 .stApp [data-testid="stAlertContainer"] {
   background-color: var(--panel-2) !important; border-radius: 0 !important;
@@ -354,25 +376,41 @@ def inject_theme(theme: str = "day") -> None:
 
 # ── HTML component builders (catalogue "specimens") ──────────────────────────
 
+def _titlecase(slug: str) -> str:
+    """'brand_bias' -> 'Brand bias' (sentence case; underscores to spaces) for a
+    human-readable serif headline. The exact machine slug is shown separately so
+    no information is lost."""
+    s = str(slug).replace("_", " ").strip()
+    return (s[:1].upper() + s[1:]) if s else str(slug)
+
+
 def gallery_card_html(num: int, name: str, count, desc: str, quote: str,
                       color: str) -> str:
     """One taxonomy "specimen" card: catalogue number, square colour chip,
     serif name + count, definition, and a blockquote representative item with a
     left rule in the category's colour. Square corners; neutrals from CSS vars."""
+    _slug = _esc(str(name))
+    _disp = _esc(_titlecase(name))
     parts = [
         # No fixed height / bottom margin: the card is a CSS-grid item (see
         # gallery_grid_html) and stretches to its row's height so every card in
         # a row is equal-sized and aligned; the grid gap handles spacing.
         '<div style="border:1px solid var(--card-border);background:var(--panel);'
         'padding:16px 18px;display:flex;flex-direction:column;">',
-        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:10px;">',
+        # Catalogue number + the exact machine slug as a small mono kicker; the
+        # serif headline below carries the human-readable (title-cased) name so
+        # the display face never has to render an underscore.
         f'<span style="font-family:{_SANS};font-size:10px;letter-spacing:0.18em;'
-        f'text-transform:uppercase;color:var(--faint);font-weight:600;">Nº {num:02d}</span>',
+        f'text-transform:uppercase;color:var(--faint);font-weight:600;overflow:hidden;'
+        f'text-overflow:ellipsis;white-space:nowrap;min-width:0;">Nº {num:02d}'
+        f'<span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;'
+        f'letter-spacing:0;text-transform:none;color:var(--muted);"> · {_slug}</span></span>',
         f'<span style="width:11px;height:11px;background:{color};flex:none;display:inline-block;"></span>',
         '</div>',
         '<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;">',
         f'<span style="font-family:{_SERIF};font-weight:500;font-size:22px;'
-        f'line-height:1.1;color:var(--ink);">{_esc(str(name))}</span>',
+        f'line-height:1.1;color:var(--ink);">{_disp}</span>',
         f'<span style="font-family:{_SERIF};font-size:24px;color:var(--ink);'
         f'flex:none;line-height:1;">{count}</span>',
         '</div>',
@@ -386,7 +424,9 @@ def gallery_card_html(num: int, name: str, count, desc: str, quote: str,
         )
     if quote:
         parts.append(
-            '<div style="border-top:1px solid var(--rule);margin-top:13px;padding-top:11px;">'
+            # margin-top:auto anchors the specimen to the card's bottom so
+            # short cards don't strand blank space (cards are equal-height).
+            '<div style="border-top:1px solid var(--rule);margin-top:auto;padding-top:11px;">'
             f'<div style="font-family:{_SANS};font-size:9px;letter-spacing:0.18em;'
             f'text-transform:uppercase;color:var(--faint);margin-bottom:7px;font-weight:600;">'
             'Representative specimen</div>'
