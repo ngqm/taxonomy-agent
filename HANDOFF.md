@@ -36,11 +36,14 @@ itself has no automated tests yet (see backlog).
 - `tests/`: backend unit tests (ops, cost, metrics, judge, parsing, tools).
 
 **Demo (where most inspection/improvement will happen):**
-- `app.py` (~80 lines): thin entry point. Page bootstrap (`set_page_config`,
-  title, banner, `st.session_state` init — these MUST stay here; module-level
-  code in demo/ runs once per process, not per Streamlit rerun), then
-  `settings = render_sidebar()`, then `st.tabs(...)` dispatching to the tab
-  renderers.
+- `app.py` (~85 lines): thin entry point. Page bootstrap (`set_page_config`,
+  the masthead eyebrow / title / subtitle, `st.session_state` init — these MUST
+  stay here; module-level code in demo/ runs once per process, not per Streamlit
+  rerun), then `settings = render_sidebar()`, then `inject_theme(ss["theme"])`
+  (the Day/Night CSS, injected *after* the sidebar's Appearance toggle has set
+  the theme so the switch takes effect the same rerun), then `st.tabs(...)`
+  dispatching to the tab renderers. (The "New?" onboarding banner now lives in
+  the Run tab, not here.)
 - `demo/`: the app, as a package (names re-exported via `from demo import *`).
   - `sidebar.py`: `render_sidebar()` renders the config sidebar and returns a
     `Settings` NamedTuple.
@@ -48,13 +51,22 @@ itself has no automated tests yet (see backlog).
     and `inspect` take the `Settings`; `history`/`compare` take nothing.
   - `helpers.py` (paths, run discovery/scanning, cost estimate, trace/cost
     renderers, presets, model lists), `guards.py` (hosted caps + content
-    filter), `viz.py` (category colours, embeddings/UMAP, run-card renderer).
+    filter), `viz.py` (per-category colour *mapper*, embeddings/UMAP, run-card
+    renderer).
+  - `theme.py`: the visual design system ("The Journal" editorial look) —
+    Day/Night palette tokens, the shared category-colour palette, the font +
+    widget CSS (`inject_theme`), and the bespoke HTML component builders
+    (specimen cards, stat ledger, distribution bars, map legend, filter-chip
+    tinting). Purely presentational; imported by `viz.py`, `helpers.py`, and the
+    tabs.
 - `modal_app.py`: the Modal deployment (serves `app.py` in one container).
 - `scripts/precompute_example_viz.py`: regenerates the bundled runs' map/example
   JSON.
 - `example_runs/`: three finished runs shipped in the repo so the results tabs
   have content out of the box (two DarkBench, one 20 Newsgroups).
-- `.streamlit/config.toml`: the theme (pine-green).
+- `.streamlit/config.toml`: the static base theme Streamlit paints first (the
+  warm-paper "Day" palette + vermilion primary). `demo/theme.py` layers the full
+  "The Journal" editorial look and the runtime Day/Night switch on top.
 
 ## How the non-obvious demo pieces work
 
