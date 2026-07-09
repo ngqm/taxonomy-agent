@@ -134,27 +134,26 @@ def render(settings):
                 '<span class="step-label">Instruction</span></div>',
                 unsafe_allow_html=True)
     instruction = st.text_area(
-        "What should the agent classify? (natural language)",
+        "What should the agent classify?",
         height=68,
         key="instruction_text",
         placeholder="Identify the dominant topic of each text.",
     )
 
-    fc1, fc2 = st.columns([4, 1])
-    with fc1:
-        category_focus = st.text_input(
-            "Category focus (optional)",
-            key="cat_focus_text",
-            help="What categories should describe (e.g. 'what each text is "
-                 "about'). Blank = let the instruction carry the meaning.",
-        )
-    with fc2:
-        size_hint = st.text_input(
-            "Size hint",
-            key="size_hint_text",
-            help="Target taxonomy size (e.g. '4–10', 'around 6'). Blank = no "
-                 "target. The orchestrator chooses.",
-        )
+    category_focus = st.text_input(
+        "What should the categories capture? (optional)",
+        key="cat_focus_text",
+        placeholder="e.g. the type of manipulation, or the reasoning strategy",
+        help="Refines what the categories describe. Blank = let the "
+             "instruction above carry the meaning.",
+    )
+    size_hint = st.text_input(
+        "How many categories? (optional)",
+        key="size_hint_text",
+        placeholder="4–10",
+        help="A target range or single number (e.g. '4–10', 'around 6'). "
+             "Blank = no target; the orchestrator decides.",
+    )
 
     st.markdown('<div class="step-head"><span class="step-num">4</span>'
                 '<span class="step-label">Output</span></div>',
