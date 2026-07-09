@@ -12,6 +12,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from .theme import stat_ledger_html  # shared serif KPI-strip (no circular dep)
+
 PACKAGE_DIR = Path(__file__).resolve().parent.parent  # repo root (app dir)
 PROJECT_ROOT = PACKAGE_DIR.parent
 EXAMPLE_DIR = PACKAGE_DIR / "example"
@@ -264,13 +266,16 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
     final_dont_fit = dont_fits[-1] if dont_fits else None
 
     with box.container():
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Events", len(events))
-        c2.metric("Revise calls", len(revise_events))
-        c3.metric(
-            "Final don't-fit",
-            f"{final_dont_fit:.0%}" if final_dont_fit is not None else "—",
-        )
+        # Serif KPI strip, same component as the Inspect ledgers, so every
+        # figure on the page shares one serif voice (value_size 32 = the
+        # lighter secondary tier used by the Cost breakdown).
+        st.markdown(stat_ledger_html([
+            {"label": "Events", "value": str(len(events))},
+            {"label": "Revise calls", "value": str(len(revise_events))},
+            {"label": "Final don't-fit",
+             "value": (f"{final_dont_fit:.0%}"
+                       if final_dont_fit is not None else "—")},
+        ], value_size=32), unsafe_allow_html=True)
 
         for i, e in enumerate(events):
             kind = e.get("kind", "?")

@@ -39,7 +39,7 @@ def render(settings):
             cost = (r.get("cost") or {}).get("total_usd")
             cost_s = f" · ${cost:.2f}" if cost is not None else ""
             cats = r.get("n_categories")
-            cats_s = f" · {cats} cats" if cats is not None else ""
+            cats_s = f" · {cats} categories" if cats is not None else ""
             labels.append(f"{str(r['name']).replace(chr(92), '/')}  ({started}{cats_s}{cost_s})")
         # Default selection: the currently-loaded run if it matches, else placeholder.
         try:
@@ -69,16 +69,20 @@ def render(settings):
             "**Run** tab to generate one in about two minutes."
         )
 
-    with st.expander("Or type a run directory path", expanded=False):
-        typed = st.text_input(
-            "Run output directory",
-            value=ss.result_dir or "",
-            help="Directory containing taxonomy.json (and optionally trace.jsonl).",
-            label_visibility="collapsed",
-        )
-        if typed and typed != candidate:
-            ss.result_dir = typed
-            candidate = typed
+    # Secondary "type a path" affordance. Keyed so theme.py can flatten it into
+    # a light, link-like toggle under the run selector (the selectbox is the one
+    # bordered "run under inspection" field; this shouldn't read as a second one).
+    with st.container(key="run_path_adv"):
+        with st.expander("Or type a run directory path", expanded=False):
+            typed = st.text_input(
+                "Run output directory",
+                value=ss.result_dir or "",
+                help="Directory containing taxonomy.json (and optionally trace.jsonl).",
+                label_visibility="collapsed",
+            )
+            if typed and typed != candidate:
+                ss.result_dir = typed
+                candidate = typed
 
     if candidate:
         cand_path = Path(candidate).expanduser()
@@ -169,7 +173,7 @@ def render(settings):
                 if isinstance(n_items_v, int) else str(n_coerced_v)
             )
             st.markdown(stat_ledger_html([
-                {"label": "Items", "value": _items_val, "sub": "corpus size"},
+                {"label": "Items", "value": _items_val, "sub": "items in this run"},
                 {"label": "Categories",
                  "value": str(len(art.get("taxonomy", []))), "chips": _chips},
                 {"label": "Cost",
@@ -261,7 +265,8 @@ def render(settings):
                             unsafe_allow_html=True)
                 st.markdown(
                     distribution_bars_html(
-                        sorted(counts.items(), key=lambda kv: -kv[1]), cmap),
+                        sorted(counts.items(),
+                               key=lambda kv: (kv[0] == "other", -kv[1])), cmap),
                     unsafe_allow_html=True,
                 )
 
@@ -413,7 +418,7 @@ def render(settings):
                 st.caption(
                     "Every tool call the orchestrator and judge made on the "
                     "way to the final taxonomy, in order. Auditable trace "
-                    "evidence for the discovered codebook."
+                    "evidence for the discovered taxonomy."
                 )
                 _render_iteration_trace(st.container(), trace_path)
 
