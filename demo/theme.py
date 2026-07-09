@@ -355,6 +355,20 @@ hr { border-color: var(--rule); }
 .new-banner .tag { font-family: %(sans)s; font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); flex: none; }
 .new-banner .msg { font-family: %(sans)s; font-size: 13px; line-height: 1.5; color: var(--body); }
 .demo-serif { font-family: %(serif)s; font-style: italic; font-size: 14px; line-height: 1.45; color: var(--body); }
+
+/* --- Narrow screens / mobile: stack column layouts (stat strips, card
+   grids) that otherwise clip off the right edge, and tighten the frame.
+   Scoped to the main area so the sidebar drawer is untouched. Literal
+   percents are doubled because this string is %%-formatted below. */
+@media (max-width: 640px) {
+  [data-testid="stMainBlockContainer"] { padding: 20px 16px 32px !important; margin: 6px auto 18px !important; }
+  [data-testid="stMain"] [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; gap: 0.6rem !important; }
+  [data-testid="stMain"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
+    flex: 1 1 100%% !important; width: 100%% !important; min-width: 100%% !important;
+  }
+  .page-title { font-size: 30px !important; line-height: 1.08 !important; }
+  .page-subtitle { font-size: 15.5px !important; }
+}
 """ % {"sans": _SANS, "serif": _SERIF, "grey": OTHER_GREY}
 
 
@@ -444,8 +458,14 @@ def gallery_grid_html(cards: list[str], ncol: int = 3) -> str:
     A real grid — not st.columns — so every card in a row stretches to the same
     height (align-items:stretch) and rows line up, matching the mockup's
     `grid-template-columns:repeat(N,1fr)` catalogue gallery."""
+    # auto-fit + minmax keeps the ~ncol-column catalogue on wide screens but
+    # wraps to fewer (down to one) columns on narrow/mobile viewports instead
+    # of clipping cards off the right edge. min(100%, ..) avoids overflow when
+    # the container is narrower than the track's ideal width.
+    _min = max(200, 900 // max(1, ncol))  # ~280px for ncol=3
     return (
-        f'<div style="display:grid;grid-template-columns:repeat({ncol},1fr);'
+        f'<div style="display:grid;'
+        f'grid-template-columns:repeat(auto-fit,minmax(min(100%, {_min}px),1fr));'
         f'gap:16px;margin-bottom:14px;">' + "".join(cards) + '</div>'
     )
 
@@ -457,7 +477,8 @@ def stat_ledger_html(cells: list[dict], value_size: int = 50) -> str:
     `chips` renders a swatch strip in place of `sub` (used for the category tally).
     `value_size` is the figure px (50 for the headline ledger, 32 for the Cost row)."""
     out = [
-        f'<div style="display:grid;grid-template-columns:repeat({len(cells)},1fr);'
+        f'<div style="display:grid;'
+        f'grid-template-columns:repeat(auto-fit,minmax(min(100%, 150px),1fr));'
         'gap:0;border:1px solid var(--card-border);background:var(--panel);margin:6px 0 10px;">'
     ]
     last = len(cells) - 1
