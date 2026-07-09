@@ -284,6 +284,20 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 /* ── expanders / alerts / code / dataframe ────────────────────────────── */
 [data-testid="stExpander"] { border: 1px solid var(--card-border) !important; border-radius: 0 !important; background: var(--panel) !important; }
 [data-testid="stExpander"] summary { color: var(--ink); }
+/* Pin the main-area expander header to the theme in EVERY interactive state.
+   Streamlit derives its hover/active/focus tint from the light config.toml base
+   theme, so in Night that pale tint can wash the header background and hide the
+   light header text (clicking a run row or "Final classification prompt" makes
+   the text vanish). Force dark panel + light ink here; scoped to the main area
+   so the flattened sidebar expanders are untouched. */
+[data-testid="stMain"] [data-testid="stExpander"] summary { background: var(--panel) !important; color: var(--ink) !important; }
+[data-testid="stMain"] [data-testid="stExpander"] summary:hover,
+[data-testid="stMain"] [data-testid="stExpander"] summary:focus,
+[data-testid="stMain"] [data-testid="stExpander"] summary:focus-visible,
+[data-testid="stMain"] [data-testid="stExpander"] summary:active,
+[data-testid="stMain"] [data-testid="stExpander"] details[open] > summary { background: var(--track) !important; color: var(--ink) !important; }
+[data-testid="stMain"] [data-testid="stExpander"] summary p,
+[data-testid="stMain"] [data-testid="stExpander"] summary [data-testid="stMarkdownContainer"] * { color: var(--ink) !important; }
 .stApp [data-testid="stAlert"], .stApp [data-testid="stAlert"] > div,
 .stApp [data-testid="stAlertContainer"] {
   background-color: var(--panel-2) !important; border-radius: 0 !important;
