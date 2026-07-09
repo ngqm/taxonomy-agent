@@ -4,7 +4,7 @@ This is a working guide for inspecting and improving the **TaxonomyAgent demo**
 (the Streamlit app and its Modal deployment). For the research/library details
 see `README.md`; for deploy mechanics see `DEPLOY.md`.
 
-- **Live demo:** https://ngqm--taxonomy-agent.modal.run
+- **Live demo:** https://ngqm--taxonomyagent.modal.run
 - **Repo:** https://github.com/ngqm/taxonomy-agent (branch `main`)
 - **What it is:** point it at a corpus and a one-line goal; an orchestrator LLM
   discovers a taxonomy and a judge LLM labels every item. Default models are

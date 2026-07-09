@@ -67,7 +67,7 @@ _secrets: list = [modal.Secret.from_name("openrouter-demo-key")]
     timeout=3600,
 )
 @modal.concurrent(max_inputs=100)  # one container serves many browser sessions
-@modal.web_server(port=8501, startup_timeout=180, label="taxonomy-agent")
+@modal.web_server(port=8501, startup_timeout=180, label="taxonomyagent")
 def serve():
     cmd = (
         f"streamlit run {APP_DIR}/app.py "

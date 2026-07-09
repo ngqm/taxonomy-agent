@@ -5,7 +5,7 @@ of texts and **classifies** every text into that taxonomy. An orchestrator LLM
 proposes typed edits to a working taxonomy while a cheaper judge LLM labels each
 item; both run through OpenRouter (default: DeepSeek-v4-Flash for both roles).
 
-**Live demo:** https://ngqm--taxonomy-agent.modal.run. Explore
+**Live demo:** https://ngqm--taxonomyagent.modal.run. Explore
 finished DarkBench and 20 Newsgroups runs with no key needed, or run your own
 corpus with an OpenRouter key. Deploy details in [`DEPLOY.md`](DEPLOY.md).
 
