@@ -1,9 +1,11 @@
-# TaxonomyAgent Streamlit theme.
-# A deep pine-green primary on warm paper neutrals — editorial and calm,
-# deliberately away from the default red and the indigo/violet "AI" cliche.
+# TaxonomyAgent Streamlit theme — "The Journal" (Direction B), Day palette.
+# Editorial / scientific-catalogue: warm paper, vermilion accent, square corners.
+# Base font is the SANS body face (Public Sans); headings/figures are switched
+# to the Newsreader serif in demo/theme.py. This is the static base Streamlit
+# paints before the app's injected CSS adds the runtime Day/Night switch.
 [theme]
-primaryColor = "#2F6B4F"              # deep pine green — buttons, active tab, slider, links
-backgroundColor = "#FFFFFF"           # clean white main canvas
-secondaryBackgroundColor = "#F3F2EC"  # warm paper/greige for sidebar + inputs
-textColor = "#232B27"                 # warm near-black
+primaryColor = "#B63D29"              # vermilion (exact oklch 0.53 0.16 32)
+backgroundColor = "#EAE6DD"           # warm paper canvas (oklch 0.925 0.013 84)
+secondaryBackgroundColor = "#F3F0E9"  # sidebar / inputs (oklch 0.955 0.01 82)
+textColor = "#554B43"                 # body ink (oklch 0.42 0.018 60)
 font = "sans serif"
