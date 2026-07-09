@@ -9,21 +9,29 @@ import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-import pandas as pd
 import streamlit as st
 
-_CAT_PALETTE = [
-    "#4C78A8", "#F58518", "#54A24B", "#E45756", "#72B7B2",
-    "#B279A2", "#EECA3B", "#FF9DA6", "#9D755D", "#8CD17D",
-    "#499894", "#D37295", "#FABFD2", "#79706E", "#86BCB6",
-]
+from .theme import (CATEGORY_COLORS, FALLBACK_PALETTE, OTHER_GREY,
+                    distribution_bars_html)
+
+_SERIF = "'Newsreader', Georgia, serif"
+_SANS = "'Public Sans', sans-serif"
 
 
 def _category_colors(categories) -> dict:
-    """Deterministic category -> hex map. 'other' is always neutral grey."""
+    """Deterministic category -> hex map. Named DarkBench categories take the
+    design palette; any others get a stable fallback hue by sorted position.
+    'other' is always neutral grey."""
     ordered = sorted(c for c in set(categories) if c and c != "other")
-    cmap = {c: _CAT_PALETTE[i % len(_CAT_PALETTE)] for i, c in enumerate(ordered)}
-    cmap["other"] = "#BAB0AC"
+    cmap: dict = {}
+    fb = 0
+    for c in ordered:
+        if c in CATEGORY_COLORS:
+            cmap[c] = CATEGORY_COLORS[c]
+        else:
+            cmap[c] = FALLBACK_PALETTE[fb % len(FALLBACK_PALETTE)]
+            fb += 1
+    cmap["other"] = OTHER_GREY
     return cmap
 
 
@@ -76,22 +84,34 @@ def _representative_examples(run_key: str, texts: tuple, cats: tuple, k: int = 3
     return out
 
 
-def _render_run_card(container, run_dir: str, title: str) -> None:
-    """One run's summary for the Compare tab: headline metrics, its taxonomy
-    (largest categories first), and a distribution chart with the shared
-    per-category colours. Kept flat (no nested columns) so two cards sit
-    cleanly side by side."""
+def _run_card_msg_html(title: str, msg: str) -> str:
+    """A minimal, same-shaped placeholder card (missing/unreadable run) so a
+    failed side still fills its grid cell and both cards stay equal size."""
+    return (
+        '<div style="border:1px solid var(--frame-border);background:var(--panel);'
+        'box-sizing:border-box;padding:16px;">'
+        f'<div style="font-family:{_SERIF};font-weight:500;font-size:17px;'
+        f'color:var(--ink);margin-bottom:10px;">{html.escape(str(title))}</div>'
+        f'<div style="font-family:{_SANS};font-size:13px;color:var(--muted);">'
+        f'{html.escape(str(msg))}</div></div>'
+    )
+
+
+def run_card_html(run_dir: str, title: str) -> str:
+    """One run's summary for the Compare tab, as a single catalogue card: a
+    titled header, a ruled Items/Categories/Cost strip, the discovered taxonomy
+    as colour-dot rows, and a distribution bar set — all with the shared
+    per-category colours. Returns the card as one HTML string (rather than
+    writing to a container) so the two cards share a single CSS grid and stretch
+    to equal height side by side."""
     d = Path(run_dir)
     tax_path = d / "taxonomy.json"
-    container.markdown(f"#### {title}")
     if not tax_path.exists():
-        container.warning(f"No `taxonomy.json` in `{d.name}`.")
-        return
+        return _run_card_msg_html(title, f"No taxonomy.json in {d.name}.")
     try:
         art = json.loads(tax_path.read_text())
     except Exception as e:
-        container.error(f"Could not read taxonomy.json: {e}")
-        return
+        return _run_card_msg_html(title, f"Could not read taxonomy.json: {e}")
     counts = art.get("category_counts", {}) or {}
     n_items = art.get("n_items", "?")
     n_cats = len(art.get("taxonomy", []))
@@ -102,60 +122,74 @@ def _render_run_card(container, run_dir: str, title: str) -> None:
             cost = json.loads(cost_path.read_text()).get("total_usd")
         except Exception:
             cost = None
-    cost_str = f"\\${cost:.2f}" if cost is not None else "cost n/a"
-    container.markdown(f"**{n_items} items · {n_cats} categories · {cost_str}**")
-    container.caption(f"`{d.name}`")
-
+    cost_str = f"${cost:.2f}" if cost is not None else "n/a"
     cmap = _category_colors(list(counts.keys())) if counts else {}
 
-    def _swatch(cat_name: str) -> str:
-        c = cmap.get(cat_name, "#888888")
-        return (
-            f'<span style="display:inline-block;width:9px;height:9px;'
-            f'border-radius:2px;background:{c};margin-right:7px;'
-            f'vertical-align:middle"></span>'
-        )
+    def esc(s):
+        return html.escape(str(s))
 
-    container.markdown("**Taxonomy**")
-    for cat in sorted(
-        art.get("taxonomy", []),
-        key=lambda c: -counts.get(c.get("name", ""), 0),
-    ):
+    parts = [
+        '<div style="border:1px solid var(--frame-border);background:var(--panel);">',
+        '<div style="display:flex;align-items:center;justify-content:space-between;'
+        'padding:12px 16px;border-bottom:1px solid var(--rule);background:var(--panel-2);">'
+        f'<span style="font-family:{_SERIF};font-weight:500;font-size:17px;color:var(--ink);">{esc(title)}</span>'
+        f'<span style="font-family:{_SANS};font-size:11px;color:var(--muted);">{esc(d.name)} ▾</span>'
+        '</div>',
+        '<div style="padding:16px;">',
+    ]
+    # Ruled metrics strip.
+    metrics = [("Items", n_items), ("Categories", n_cats), ("Cost", cost_str)]
+    parts.append('<div style="display:flex;gap:0;margin-bottom:18px;border:1px solid var(--rule);">')
+    for i, (lab, val) in enumerate(metrics):
+        br = "" if i == len(metrics) - 1 else "border-right:1px solid var(--rule);"
+        parts.append(
+            f'<div style="flex:1;padding:10px 14px;{br}">'
+            f'<div style="font-family:{_SANS};font-size:9px;letter-spacing:0.14em;'
+            f'text-transform:uppercase;color:var(--muted);font-weight:600;">{esc(lab)}</div>'
+            f'<div style="font-family:{_SERIF};font-weight:500;font-size:30px;color:var(--ink);">{esc(val)}</div>'
+            '</div>'
+        )
+    parts.append('</div>')
+    # Taxonomy rows (largest first).
+    parts.append(
+        f'<div style="font-family:{_SANS};font-size:10px;letter-spacing:0.16em;'
+        'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Taxonomy</div>'
+        '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:16px;">'
+    )
+    tax_sorted = sorted(art.get("taxonomy", []),
+                        key=lambda c: -counts.get(c.get("name", ""), 0))
+    for cat in tax_sorted:
         name = cat.get("name", "?")
-        container.markdown(
-            f"{_swatch(name)}**{name}** · {counts.get(name, 0)}",
-            unsafe_allow_html=True,
+        col = cmap.get(name, OTHER_GREY)
+        parts.append(
+            '<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span style="width:9px;height:9px;background:{col};flex:none;display:inline-block;"></span>'
+            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--ink);flex:1;">{esc(name)}</span>'
+            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--faint);">{counts.get(name, 0)}</span>'
+            '</div>'
         )
     if counts.get("other"):
-        container.markdown(
-            f"{_swatch('other')}*other* · {counts['other']}",
-            unsafe_allow_html=True,
+        parts.append(
+            '<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span style="width:9px;height:9px;background:{OTHER_GREY};flex:none;display:inline-block;"></span>'
+            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--muted);flex:1;">other</span>'
+            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--muted);">{counts["other"]}</span>'
+            '</div>'
         )
-
+    parts.append('</div>')
+    # Distribution bars.
     if counts:
-        df_c = (
-            pd.DataFrame([{"category": k, "count": v} for k, v in counts.items()])
-            .sort_values("count", ascending=False)
+        parts.append(
+            f'<div style="font-family:{_SANS};font-size:10px;letter-spacing:0.16em;'
+            'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Distribution</div>'
         )
-        try:
-            import altair as alt
-            ch = (
-                alt.Chart(df_c).mark_bar().encode(
-                    x=alt.X("count:Q", title="items"),
-                    y=alt.Y("category:N", sort="-x", title=None),
-                    color=alt.Color(
-                        "category:N",
-                        scale=alt.Scale(domain=list(cmap.keys()),
-                                        range=list(cmap.values())),
-                        legend=None,
-                    ),
-                    tooltip=["category", "count"],
-                )
-                .properties(height=max(160, 26 * len(df_c)))
-            )
-            container.altair_chart(ch, use_container_width=True)
-        except Exception:
-            container.bar_chart(df_c.set_index("category"))
+        # Same sort as the Taxonomy list above: count-descending with 'other'
+        # always pinned last, so the two components line up row-for-row.
+        parts.append(distribution_bars_html(
+            sorted(counts.items(), key=lambda kv: (kv[0] == "other", -kv[1])),
+            cmap, compact=True))
+    parts.append('</div></div>')
+    return "".join(parts)
 
 
 

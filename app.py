@@ -26,32 +26,30 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from demo import *  # helpers, guards, viz
+from demo import *  # helpers, guards, viz, theme
+from demo.theme import inject_theme
 from demo.sidebar import render_sidebar
 from demo.tabs import run as run_tab_mod, history as history_tab_mod, \
     inspect as inspect_tab_mod, compare as compare_tab_mod
 
 # ── Page bootstrap (must run on every rerun, so it lives here, not in demo/) ──
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
-st.title("Taxonomy Agent")
-st.caption(
-    "Give it a set of texts and a one-line goal, like “group these prompts by "
-    "the type of manipulation they attempt.” It works out the categories on "
-    "its own and labels every item, so you never define the label set up front."
+st.markdown('<div class="page-eyebrow">Agentic taxonomy discovery</div>',
+            unsafe_allow_html=True)
+# Rendered as a bespoke serif masthead rather than st.title: st.title wraps its
+# text in a span the global `span,div {sans}` rule would force to Public Sans,
+# which left the title in the wrong (sans) face. See theme.py `.page-title`.
+st.markdown('<div class="page-title">Taxonomy Agent</div>',
+            unsafe_allow_html=True)
+st.markdown(
+    '<div class="page-subtitle">Give it a set of texts and a one-line goal — '
+    'it works out the categories on its own and labels every item, so you '
+    'never define the categories up front.</div>',
+    unsafe_allow_html=True,
 )
 
-if _EXAMPLE_RUN.exists():
-    st.info(
-        "**New here?** Open **Inspect** or **Compare** to browse finished runs "
-        "on DarkBench and 20 Newsgroups: the taxonomy the agent found, a map of "
-        "the corpus, and what it cost. Want to run your own texts? Go to the "
-        "**Run** tab and press Start. **You don't need your own API key; the "
-        "run uses ours.** If you'd rather use your own, add an OpenRouter key "
-        "in the sidebar.",
-        icon="👋",
-    )
-
 ss = st.session_state
+ss.setdefault("theme", "day")  # "day" (light) / "night" (dark) — set by the sidebar
 ss.setdefault("log_lines", [])
 ss.setdefault("result_dir", str(_EXAMPLE_RUN) if _EXAMPLE_RUN.exists() else None)
 ss.setdefault("running", False)
@@ -63,6 +61,11 @@ ss.setdefault("preset_applied", "— Custom —")
 
 
 settings = render_sidebar()
+
+# Inject the theme AFTER the sidebar's Appearance selector has written the
+# chosen theme into session_state, so switching Day/Night takes effect on the
+# same rerun (CSS is global — it styles the title/banner rendered above too).
+inject_theme(ss["theme"])
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
 run_tab, runs_tab, results_tab, compare_tab = st.tabs(

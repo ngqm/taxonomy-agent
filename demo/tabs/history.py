@@ -40,7 +40,7 @@ def render():
         )
     with c_refresh:
         st.write("")  # vertical alignment
-        if st.button("🔄 Refresh", width="stretch"):
+        if st.button("↻ Refresh", width="stretch"):
             st.rerun()
 
     extra_root = st.text_input(
@@ -67,11 +67,14 @@ def render():
             st.info(f"No runs found under {roots_str}.")
         else:
             st.write(f"Found **{len(rows)}** run(s).")
+            # Monochrome typographic status marks (no colored OS emoji): a
+            # check for done, plain words otherwise, so any colour emphasis is
+            # reserved for the type system, not glossy multi-colour glyphs.
             badges = {
-                "ok":         "✅ Completed",
-                "running":    "⏳ In progress",
-                "incomplete": "⚠️ Incomplete",
-                "unknown":    "❓ Unknown",
+                "ok":         "✓ Completed",
+                "running":    "In progress",
+                "incomplete": "Incomplete",
+                "unknown":    "Unknown",
             }
             for r in rows:
                 badge = badges.get(r["status"], r["status"])

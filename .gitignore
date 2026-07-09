@@ -85,6 +85,9 @@ venv.bak/
 *.swp
 *.swo
 
+# Local agent working notes (not part of the shipped repo)
+CLAUDE.md
+
 # OS detritus
 .DS_Store
 Thumbs.db

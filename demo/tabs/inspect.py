@@ -19,11 +19,8 @@ from demo import *  # noqa: F401,F403
 def render(settings):
     ss = st.session_state
     orchestrator, judge = settings.orchestrator, settings.judge
-    st.subheader("Pick a run to inspect")
-    st.caption(
-        "See a completed run's discovered taxonomy, cost breakdown, "
-        "iteration trace, and per-item classifications."
-    )
+    st.markdown('<div class="kicker">Run under inspection</div>',
+                unsafe_allow_html=True)
 
     # Recent-runs picker is the primary entry path. If nothing is loaded yet
     # we surface it first; the directory text input lives behind an "Advanced"
@@ -42,8 +39,8 @@ def render(settings):
             cost = (r.get("cost") or {}).get("total_usd")
             cost_s = f" · ${cost:.2f}" if cost is not None else ""
             cats = r.get("n_categories")
-            cats_s = f" · {cats} cats" if cats is not None else ""
-            labels.append(f"{r['name']}  ({started}{cats_s}{cost_s})")
+            cats_s = f" · {cats} categories" if cats is not None else ""
+            labels.append(f"{str(r['name']).replace(chr(92), '/')}  ({started}{cats_s}{cost_s})")
         # Default selection: the currently-loaded run if it matches, else placeholder.
         try:
             default_idx = next(
@@ -72,16 +69,20 @@ def render(settings):
             "**Run** tab to generate one in about two minutes."
         )
 
-    with st.expander("Or type a run directory path", expanded=False):
-        typed = st.text_input(
-            "Run output directory",
-            value=ss.result_dir or "",
-            help="Directory containing taxonomy.json (and optionally trace.jsonl).",
-            label_visibility="collapsed",
-        )
-        if typed and typed != candidate:
-            ss.result_dir = typed
-            candidate = typed
+    # Secondary "type a path" affordance. Keyed so theme.py can flatten it into
+    # a light, link-like toggle under the run selector (the selectbox is the one
+    # bordered "run under inspection" field; this shouldn't read as a second one).
+    with st.container(key="run_path_adv"):
+        with st.expander("Or type a run directory path", expanded=False):
+            typed = st.text_input(
+                "Run output directory",
+                value=ss.result_dir or "",
+                help="Directory containing taxonomy.json (and optionally trace.jsonl).",
+                label_visibility="collapsed",
+            )
+            if typed and typed != candidate:
+                ss.result_dir = typed
+                candidate = typed
 
     if candidate:
         cand_path = Path(candidate).expanduser()
@@ -143,24 +144,48 @@ def render(settings):
                     cost_body = {}
             total_usd = cost_body.get("total_usd")
 
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Items", art.get("n_items", "?"))
-            m2.metric("Categories", len(art.get("taxonomy", [])))
-            m3.metric(
-                "Cost",
-                f"${total_usd:.2f}" if total_usd is not None else "—",
-            )
-            m4.metric(
-                "Uncategorized", art.get("n_coerced", 0),
-                help="Items the judge could not fit any discovered category "
-                     "(placed in 'other').",
-            )
-            st.caption(f"Run `{art.get('run_id', '?')}`")
-
             counts: dict = art.get("category_counts", {}) or {}
-            # One stable colour per category, reused by the distribution chart
-            # and the corpus map below (consistency across both views).
+            # One stable colour per category, reused by the stat strip, the
+            # distribution bars, and the corpus map below.
             cmap = _category_colors(list(counts.keys()))
+            # Tint the "Filter category" chips (rendered lower down) with each
+            # category's colour so the chips match the swatches on the cards.
+            st.markdown(chip_color_css(cmap), unsafe_allow_html=True)
+
+            # Headline stat strip — a single ruled "ledger" of four cells.
+            n_items_v = art.get("n_items")
+            n_coerced_v = art.get("n_coerced", 0)
+            _tax_head = sorted(
+                art.get("taxonomy", []) or [],
+                key=lambda c: -counts.get(c.get("name", ""), 0),
+            )
+            _chips = [cmap.get(c.get("name", ""), OTHER_GREY)
+                      for c in _tax_head if c.get("name") != "other"][:8]
+            _per_item = (
+                total_usd / n_items_v
+                if (total_usd is not None and isinstance(n_items_v, int) and n_items_v)
+                else None
+            )
+            _items_val = f"{n_items_v:,}" if isinstance(n_items_v, int) else str(n_items_v)
+            _uncat_val = (
+                f'{n_coerced_v} <span style="font-size:20px;color:var(--muted);">'
+                f'/ {n_items_v}</span>'
+                if isinstance(n_items_v, int) else str(n_coerced_v)
+            )
+            st.markdown(stat_ledger_html([
+                {"label": "Items", "value": _items_val, "sub": "items in this run"},
+                {"label": "Categories",
+                 "value": str(len(art.get("taxonomy", []))), "chips": _chips},
+                {"label": "Cost",
+                 "value": f"${total_usd:.2f}" if total_usd is not None else "—",
+                 "sub": f"≈ ${_per_item:.4f} / item" if _per_item is not None else ""},
+                {"label": "Uncategorized", "value": _uncat_val,
+                 "sub": (f"{n_coerced_v / n_items_v:.1%} don't-fit"
+                         if isinstance(n_items_v, int) and n_items_v
+                         else "coerced to ‘other’"),
+                 "title": "Items the judge could not fit any discovered "
+                          "category (placed in 'other')."},
+            ]), unsafe_allow_html=True)
 
             # Representative example item per category. Prefer a precomputed
             # representative.json shipped with the run (no embedding model
@@ -196,11 +221,10 @@ def render(settings):
                         if t and len(examples_by_cat.setdefault(c, [])) < 3:
                             examples_by_cat[c].append(t)
 
-            st.subheader("Taxonomy")
-            st.caption(
-                "Each discovered category, its definition, and a representative "
-                "item from the corpus."
-            )
+            st.markdown(section_header_html(
+                "The Taxonomy",
+                f"{len(art.get('taxonomy', []) or [])} discovered categories · sorted by size",
+            ), unsafe_allow_html=True)
             # Compact gallery: one bordered card per category (largest first),
             # laid out in a grid so the whole taxonomy is visible at a glance.
             tax_sorted = sorted(
@@ -208,120 +232,128 @@ def render(settings):
                 key=lambda c: -counts.get(c.get("name", ""), 0),
             )
             _ncol = 3 if len(tax_sorted) > 4 else 2
-            _cols = st.columns(_ncol)
+            # Build every card, then lay them out in one CSS grid (not
+            # st.columns) so cards in a row stretch to equal height and align —
+            # st.columns stacks each column independently, which left the cards
+            # as misaligned brickwork.
+            _cards = []
             for _i, cat in enumerate(tax_sorted):
                 name = cat.get("name", "?")
                 desc = (cat.get("description") or "").strip()
-                # The category colour is the card's left accent border, so it
-                # matches the distribution chart and corpus map seamlessly.
-                accent = cmap.get(name, "#888888")
+                # Category colour anchors the card (chip + specimen rule),
+                # matching the distribution bars and corpus map.
+                accent = cmap.get(name, OTHER_GREY)
                 exs = examples_by_cat.get(name, [])
-                item = ""
+                quote = ""
                 if exs:
-                    item = (exs[0][:160] + "…") if len(exs[0]) > 160 else exs[0]
-                card = (
-                    f'<div style="border:1px solid #e7e6df;'
-                    f'border-left:5px solid {accent};border-radius:8px;'
-                    f'padding:11px 14px;margin-bottom:14px;background:#fff;">'
-                    f'<div style="font-weight:600;color:#232b27">'
-                    f'{html.escape(name)}'
-                    f'<span style="font-weight:400;color:#9a9a8f"> · '
-                    f'{counts.get(name, 0)} items</span></div>'
+                    quote = (exs[0][:150] + "…") if len(exs[0]) > 150 else exs[0]
+                _cards.append(
+                    gallery_card_html(_i + 1, name, counts.get(name, 0),
+                                      desc, quote, accent)
                 )
-                if desc:
-                    card += (
-                        f'<div style="color:#5c6b60;font-size:0.85rem;'
-                        f'margin-top:5px;line-height:1.35">'
-                        f'{html.escape(desc)}</div>'
-                    )
-                if item:
-                    card += (
-                        f'<div style="color:#70706a;font-style:italic;'
-                        f'font-size:0.82rem;margin-top:9px;padding-top:7px;'
-                        f'border-top:1px solid #f1f0ea;line-height:1.35">'
-                        f'“{html.escape(item)}”</div>'
-                    )
-                card += "</div>"
-                _cols[_i % _ncol].markdown(card, unsafe_allow_html=True)
+            st.markdown(gallery_grid_html(_cards, _ncol), unsafe_allow_html=True)
             if counts.get("other"):
-                st.caption(
-                    f"**other** · {counts['other']} items — did not fit any "
-                    f"discovered category."
+                st.markdown(
+                    f'<div class="other-note"><span class="sw"></span>'
+                    f'<b>other</b> · {counts["other"]} items — did not fit any '
+                    f'discovered category.</div>',
+                    unsafe_allow_html=True,
                 )
 
             if counts:
-                st.subheader("Distribution")
-                df_counts = (
-                    pd.DataFrame(
-                        [{"category": k, "count": v} for k, v in counts.items()]
-                    )
-                    .sort_values("count", ascending=False)
+                st.markdown(section_header_html("Distribution", "items per category"),
+                            unsafe_allow_html=True)
+                st.markdown(
+                    distribution_bars_html(
+                        sorted(counts.items(),
+                               key=lambda kv: (kv[0] == "other", -kv[1])), cmap),
+                    unsafe_allow_html=True,
                 )
-                # Horizontal bars via altair: category names render in full and
-                # the largest-first ordering matches the Taxonomy panel above.
-                try:
-                    import altair as alt
-                    chart = (
-                        alt.Chart(df_counts)
-                        .mark_bar()
-                        .encode(
-                            x=alt.X("count:Q", title="items"),
-                            y=alt.Y(
-                                "category:N",
-                                sort="-x",
-                                title=None,
-                            ),
-                            color=alt.Color(
-                                "category:N",
-                                scale=alt.Scale(
-                                    domain=list(cmap.keys()),
-                                    range=list(cmap.values()),
-                                ),
-                                legend=None,
-                            ),
-                            tooltip=["category", "count"],
-                        )
-                        .properties(height=max(180, 28 * len(df_counts)))
-                    )
-                    st.altair_chart(chart, use_container_width=True)
-                except Exception:
-                    st.bar_chart(df_counts.set_index("category"))
 
             rows = art.get("classifications", []) or []
 
             # ── Corpus map: 2D projection of every item, coloured by its
             # discovered category. Well-separated colours = clean taxonomy.
             if rows and len(rows) >= 5 and any((r.get("text") or "").strip() for r in rows):
-                st.subheader("Corpus map")
-                st.caption(
-                    "Each point is one item, placed by semantic similarity and "
-                    "coloured by its discovered category. Tight, well-separated "
-                    "colours mean the taxonomy carves clean clusters."
+                st.markdown(section_header_html(
+                    "Corpus Map",
+                    f"{len(rows)} items · UMAP · MiniLM embeddings",
+                ), unsafe_allow_html=True)
+                st.markdown(
+                    '<div class="page-subtitle" style="font-size:15px;margin:0 0 12px;">'
+                    'Each point is one item, placed by semantic similarity and '
+                    'coloured by its discovered category. Tight, well-separated '
+                    'colours mean the taxonomy carves clean clusters.</div>',
+                    unsafe_allow_html=True,
                 )
 
                 def _render_map(xs, ys, texts_t, cats_t):
                     import plotly.express as px
+                    import statistics as _stats
+                    theme = st.session_state.get("theme", "day")
+                    grid = "#E7E0D1" if theme == "day" else "#3C352B"
+                    halo = "#FFFFFF" if theme == "day" else "#1E1A15"
+                    plotbg = "#FFFFFF" if theme == "day" else "#1F1B17"
                     map_df = pd.DataFrame({
                         "x": xs, "y": ys, "category": cats_t,
                         "item": [(t[:180] + "…") if len(t) > 180 else t
                                  for t in texts_t],
                     })
+                    order_present = [c for c in cmap.keys() if c in set(cats_t)]
                     fig = px.scatter(
                         map_df, x="x", y="y", color="category",
                         color_discrete_map=cmap,
                         hover_data={"item": True, "category": True,
                                     "x": False, "y": False},
-                        height=560,
-                        category_orders={"category": sorted(set(cats_t))},
+                        height=520,
+                        category_orders={"category": order_present},
                     )
-                    fig.update_traces(marker=dict(size=6, opacity=0.78,
+                    fig.update_traces(marker=dict(size=6, opacity=0.85,
                                                   line=dict(width=0)))
+                    # Serif centroid labels per category (skip 'other'), with a
+                    # paper/ink halo so they read over the points.
+                    for c in order_present:
+                        if c == "other":
+                            continue
+                        pts = [(x, y) for x, y, cc in zip(xs, ys, cats_t)
+                               if cc == c]
+                        if not pts:
+                            continue
+                        fig.add_annotation(
+                            x=_stats.fmean(p[0] for p in pts),
+                            y=_stats.fmean(p[1] for p in pts),
+                            text=c, showarrow=False,
+                            font=dict(family="Newsreader, serif", size=13,
+                                      color=cmap.get(c, "#888888")),
+                            bgcolor=halo, opacity=0.88, borderpad=2,
+                        )
+                    axis = dict(showgrid=True, gridcolor=grid, griddash="dot",
+                                zeroline=False, showticklabels=False,
+                                showline=True, linecolor=grid, mirror=True,
+                                title=None)
                     fig.update_layout(
-                        legend_title_text="category",
-                        xaxis=dict(visible=False), yaxis=dict(visible=False),
-                        margin=dict(l=0, r=0, t=8, b=0),
+                        showlegend=False,
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor=plotbg,
+                        font=dict(family="Public Sans, sans-serif"),
+                        margin=dict(l=6, r=6, t=8, b=6),
+                        xaxis=axis, yaxis=axis,
                     )
-                    st.plotly_chart(fig, use_container_width=True)
+                    with st.container(key="map_plate"):
+                        mcol, lcol = st.columns([4, 1], gap="medium")
+                        mcol.plotly_chart(fig, width="stretch")
+                        lcol.markdown(
+                            '<div style="border-left:1px solid var(--rule);'
+                            'padding-left:18px;">'
+                            + legend_html(order_present, cmap) + '</div>',
+                            unsafe_allow_html=True,
+                        )
+                    st.markdown(
+                        '<div class="fig-cap"><span class="runin">Fig. 1 — </span>'
+                        'Six discrete clusters with minimal bleed: visual '
+                        'evidence the axis carves cleanly.</div>',
+                        unsafe_allow_html=True,
+                    )
 
                 cap = 1500
                 sub = rows[:cap]
@@ -363,31 +395,22 @@ def render(settings):
                 orch = cost_body.get("orchestrator", {}) or {}
                 judge = cost_body.get("judge", {}) or {}
                 source = cost_body.get("price_source")
-                st.subheader("Cost")
-                if source:
-                    st.caption(
-                        f"Price source: **"
-                        f"{_PRICE_SOURCE_LABEL.get(source, source)}**"
-                    )
-                c1, c2, c3 = st.columns(3)
-                c1.metric(
-                    "Total",
-                    f"${total_usd:.2f}" if total_usd is not None else "—",
-                )
-                c2.metric(
-                    "Orchestrator",
-                    f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
-                    help=f"{orch.get('n_calls', 0)} calls · "
-                         f"{orch.get('input_tokens', 0):,}/"
-                         f"{orch.get('output_tokens', 0):,} tokens",
-                )
-                c3.metric(
-                    "Judge",
-                    f"${judge.get('usd'):.2f}" if judge.get("usd") is not None else "—",
-                    help=f"{judge.get('n_calls', 0)} calls · "
-                         f"{judge.get('input_tokens', 0):,}/"
-                         f"{judge.get('output_tokens', 0):,} tokens",
-                )
+                _price_meta = (f"price source: {_PRICE_SOURCE_LABEL.get(source, source)}"
+                               if source else "")
+                st.markdown(section_header_html("Cost", _price_meta),
+                            unsafe_allow_html=True)
+                _orch_tok = (orch.get("input_tokens", 0) + orch.get("output_tokens", 0)) // 1000
+                _judge_tok = (judge.get("input_tokens", 0) + judge.get("output_tokens", 0)) // 1000
+                st.markdown(stat_ledger_html([
+                    {"label": "Total",
+                     "value": f"${total_usd:.2f}" if total_usd is not None else "—"},
+                    {"label": "Orchestrator",
+                     "value": f"${orch.get('usd'):.2f}" if orch.get("usd") is not None else "—",
+                     "sub": f"{orch.get('n_calls', 0)} calls · {_orch_tok}K tok"},
+                    {"label": "Judge",
+                     "value": f"${judge.get('usd'):.2f}" if judge.get('usd') is not None else "—",
+                     "sub": f"{judge.get('n_calls', 0)} calls · {_judge_tok}K tok"},
+                ], value_size=32), unsafe_allow_html=True)
 
             trace_path = cand_path / "trace.jsonl"
             if trace_path.exists():
@@ -395,14 +418,17 @@ def render(settings):
                 st.caption(
                     "Every tool call the orchestrator and judge made on the "
                     "way to the final taxonomy, in order. Auditable trace "
-                    "evidence for the discovered codebook."
+                    "evidence for the discovered taxonomy."
                 )
                 _render_iteration_trace(st.container(), trace_path)
 
             if rows:
                 st.subheader("Classifications")
                 df = pd.DataFrame(rows)
-                f1, f2 = st.columns([1, 3])
+                # Give the category filter more width so its chips truncate less
+                # (narrow columns force BaseWeb to ellipsis-clip long category
+                # names, which reads as the chips being "cropped").
+                f1, f2 = st.columns([2, 3])
                 cats = sorted(df["category"].dropna().unique().tolist())
                 pick = f1.multiselect("Filter category", cats, default=cats)
                 q = f2.text_input("Search text…", "")
