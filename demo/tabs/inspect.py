@@ -291,9 +291,11 @@ def render(settings):
                     import plotly.express as px
                     import statistics as _stats
                     theme = st.session_state.get("theme", "day")
-                    grid = "#E7E0D1" if theme == "day" else "#3C352B"
-                    halo = "#FFFFFF" if theme == "day" else "#1E1A15"
-                    plotbg = "#FFFFFF" if theme == "day" else "#1F1B17"
+                    # Hardcoded (plotly can't read CSS vars) — keep in sync with
+                    # the theme.py palette: grid≈track, halo/plotbg≈panel.
+                    grid = "#E0DDD5" if theme == "day" else "#282C30"
+                    halo = "#FBFAF6" if theme == "day" else "#1A1D20"
+                    plotbg = "#FBFAF6" if theme == "day" else "#1A1D20"
                     map_df = pd.DataFrame({
                         "x": xs, "y": ys, "category": cats_t,
                         "item": [(t[:180] + "…") if len(t) > 180 else t
