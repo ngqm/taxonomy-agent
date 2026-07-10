@@ -235,15 +235,18 @@ body, p, span, div, label, li, td, th, .stMarkdown,
   border-bottom: none !important; padding-bottom: 0 !important; font-family: %(serif)s !important;
   color: var(--ink) !important; font-size: 1.2rem !important;
 }
-[data-testid="stSidebar"] [data-testid="stExpander"] {
+[data-testid="stSidebar"] [data-testid="stExpander"],
+[data-testid="stSidebar"] [data-testid="stExpander"] details {
   border: none !important; background: transparent !important; box-shadow: none !important;
+  border-radius: 0 !important;
 }
 [data-testid="stSidebar"] [data-testid="stExpander"] summary {
-  text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.66rem !important;
+  text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.7rem !important;
   font-weight: 600; color: var(--muted) !important; font-family: %(sans)s !important;
   border-bottom: 1px solid var(--frame-border); padding: 0 0 6px 0 !important;
+  min-height: 0 !important; align-items: flex-end !important; line-height: 1.2 !important;
 }
-[data-testid="stSidebar"] [data-testid="stExpander"] summary p { font-size: 0.66rem !important; letter-spacing: 0.16em; }
+[data-testid="stSidebar"] [data-testid="stExpander"] summary p { font-size: 0.7rem !important; letter-spacing: 0.16em; line-height: 1.2 !important; }
 [data-testid="stSidebar"] [data-testid="stExpander"] summary svg,
 [data-testid="stSidebar"] [data-testid="stExpander"] summary [data-testid="stIconMaterial"] { display: none !important; }
 /* hide the +/- steppers on sidebar number inputs; right-align the serif value */
@@ -255,7 +258,11 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 [data-testid="stSidebar"] [data-testid="stNumberInput"] [data-baseweb="base-input"] {
   border: none !important; background: transparent !important; box-shadow: none !important;
 }
-.side-numlabel { font-family: %(sans)s; font-size: 11.5px; color: var(--body); display: block; padding-top: 7px; }
+.side-numlabel { font-family: %(sans)s; font-size: 12.5px; color: var(--body); display: block; padding-top: 7px; }
+/* keep every sidebar field label (selectbox, text input, slider) at the same
+   reasonable size as the numeric spec-row labels, so no label is visibly
+   larger than its neighbours within a section. */
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { font-size: 12.5px !important; }
 /* hide the "?" help-tooltip icons next to field LABELS (not button tooltips) */
 .stApp [data-testid="stWidgetLabel"] [data-testid="stTooltipIcon"] { display: none !important; }
 
