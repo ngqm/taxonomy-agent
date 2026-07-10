@@ -22,6 +22,16 @@ def render(settings):
      probe_size, concurrency, recursion_limit, pool_limit,
      orch_choice, judge_choice) = settings
 
+    # One-line tool description. Rendered here (Run tab) rather than above the
+    # tab bar so it does not repeat on History / Inspect / Compare.
+    st.markdown(
+        '<div class="page-subtitle" style="margin-top:2px;">Provide a corpus of '
+        'texts and a one-sentence goal. The system discovers a set of categories '
+        'along that axis and labels each item, with no category set defined in '
+        'advance.</div>',
+        unsafe_allow_html=True,
+    )
+
     # New-user orientation lives on the Run (landing) tab only, so Inspect and
     # Compare open straight on their content instead of repeating this band.
     if _EXAMPLE_RUN.exists():

@@ -41,12 +41,8 @@ st.markdown('<div class="page-eyebrow">Agentic taxonomy discovery</div>',
 # which left the title in the wrong (sans) face. See theme.py `.page-title`.
 st.markdown('<div class="page-title">Taxonomy Agent</div>',
             unsafe_allow_html=True)
-st.markdown(
-    '<div class="page-subtitle">Provide a corpus of texts and a one-sentence '
-    'goal. The system discovers a set of categories along that axis and '
-    'labels each item, with no category set defined in advance.</div>',
-    unsafe_allow_html=True,
-)
+# The tool description now lives on the Run tab (demo/tabs/run.py) so it does
+# not repeat above the History / Inspect / Compare content.
 
 ss = st.session_state
 ss.setdefault("theme", "day")  # "day" (light) / "night" (dark) — set by the sidebar

@@ -150,41 +150,15 @@ def run_card_html(run_dir: str, title: str) -> str:
             '</div>'
         )
     parts.append('</div>')
-    # Taxonomy rows (largest first).
-    parts.append(
-        f'<div style="font-family:{_SANS};font-size:10px;letter-spacing:0.16em;'
-        'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Taxonomy</div>'
-        '<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:16px;">'
-    )
-    tax_sorted = sorted(art.get("taxonomy", []),
-                        key=lambda c: -counts.get(c.get("name", ""), 0))
-    for cat in tax_sorted:
-        name = cat.get("name", "?")
-        col = cmap.get(name, OTHER_GREY)
-        parts.append(
-            '<div style="display:flex;align-items:center;gap:8px;">'
-            f'<span style="width:9px;height:9px;background:{col};flex:none;display:inline-block;"></span>'
-            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--ink);flex:1;">{esc(name)}</span>'
-            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--faint);">{counts.get(name, 0)}</span>'
-            '</div>'
-        )
-    if counts.get("other"):
-        parts.append(
-            '<div style="display:flex;align-items:center;gap:8px;">'
-            f'<span style="width:9px;height:9px;background:{OTHER_GREY};flex:none;display:inline-block;"></span>'
-            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--muted);flex:1;">other</span>'
-            f'<span style="font-family:{_SERIF};font-size:14px;color:var(--muted);">{counts["other"]}</span>'
-            '</div>'
-        )
-    parts.append('</div>')
-    # Distribution bars.
+    # Discovered categories, sized by item count. The bars already carry each
+    # category's name AND its count, so this single section is both the
+    # taxonomy and its size distribution. (It used to render a plain
+    # name+count list and then the same data again as bars.)
     if counts:
         parts.append(
             f'<div style="font-family:{_SANS};font-size:10px;letter-spacing:0.16em;'
-            'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Distribution</div>'
+            'text-transform:uppercase;color:var(--muted);margin-bottom:10px;font-weight:600;">Taxonomy</div>'
         )
-        # Same sort as the Taxonomy list above: count-descending with 'other'
-        # always pinned last, so the two components line up row-for-row.
         parts.append(distribution_bars_html(
             sorted(counts.items(), key=lambda kv: (kv[0] == "other", -kv[1])),
             cmap, compact=True))
