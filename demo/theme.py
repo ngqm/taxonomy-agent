@@ -249,6 +249,13 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 [data-testid="stSidebar"] [data-testid="stExpander"] summary p { font-size: 0.7rem !important; letter-spacing: 0.16em; line-height: 1.2 !important; }
 [data-testid="stSidebar"] [data-testid="stExpander"] summary svg,
 [data-testid="stSidebar"] [data-testid="stExpander"] summary [data-testid="stIconMaterial"] { display: none !important; }
+/* The collapse-chevron sits in its own 20px flex slot ahead of the label; the
+   icon glyph above is hidden but the slot + its 8px gap still indent every
+   kicker ~28px past the "Configuration" heading. Drop the slot and the gap so
+   kickers left-align with the heading. (Label text is a div, not a span, so
+   hiding the summary's inner span hits only the icon slot.) */
+[data-testid="stSidebar"] [data-testid="stExpander"] summary > span { gap: 0 !important; }
+[data-testid="stSidebar"] [data-testid="stExpander"] summary > span > span { display: none !important; }
 /* hide the +/- steppers on sidebar number inputs; right-align the serif value */
 [data-testid="stSidebar"] [data-testid="stNumberInput"] button { display: none !important; }
 [data-testid="stSidebar"] [data-testid="stNumberInput"] input { text-align: right; }
