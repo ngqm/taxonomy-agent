@@ -28,8 +28,8 @@ def render(settings):
         st.markdown(
             '<div class="new-banner"><span class="tag">New?</span>'
             '<span class="msg">Open <b>Inspect</b> or <b>Compare</b> to browse '
-            'finished runs on DarkBench and 20 Newsgroups. Viewing them '
-            'needs no API key.</span></div>',
+            'finished runs on DarkBench and 20 Newsgroups. The hosted demo '
+            'runs on its own API key, so you don\'t need your own.</span></div>',
             unsafe_allow_html=True,
         )
     # ── Quick demo: one-click 60-second run on the bundled example. ─────────
@@ -47,8 +47,8 @@ def render(settings):
         )
         st.markdown(
             '<div class="demo-serif" style="margin-top:7px;">Runs on '
-            'DarkBench in about 2 minutes for under &#36;0.05. No API key '
-            'required.</div>',
+            'DarkBench in about 2 minutes for under &#36;0.05. The hosted demo '
+            'uses its own API key, so you don\'t need one.</div>',
             unsafe_allow_html=True,
         )
     st.markdown(
