@@ -1,10 +1,10 @@
 # TaxonomyAgent Streamlit theme — "The Journal" (Direction B), Day palette.
-# Editorial / scientific-catalogue: newsprint paper, press-red accent, square corners.
+# Editorial / scientific-catalogue: newsprint paper, ink-blue accent, square corners.
 # Base font is the SANS body face (Public Sans); headings/figures are switched
 # to the Newsreader serif in demo/theme.py. This is the static base Streamlit
 # paints before the app's injected CSS adds the runtime Day/Night switch.
 [theme]
-primaryColor = "#8A0E10"              # press red (oklch 0.405 0.156 27)
+primaryColor = "#2E6E96"              # ink/steel blue (works on both Day + Night)
 backgroundColor = "#E4E1D8"           # newsprint canvas (oklch 0.910 0.013 92)
 secondaryBackgroundColor = "#ECE9E1"  # sidebar / inputs (oklch 0.934 0.011 90)
 textColor = "#403A33"                 # body ink (oklch 0.352 0.014 72)

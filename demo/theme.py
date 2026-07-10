@@ -63,8 +63,8 @@ _THEMES: dict[str, dict[str, str]] = {
         "body":         "#403A33",  # oklch(0.352 0.014 72)
         "muted":        "#6E665D",  # oklch(0.515 0.017 71)
         "faint":        "#8B837A",  # oklch(0.614 0.016 71)
-        "accent":       "#8A0E10",  # press red  oklch(0.405 0.156 27)
-        "accent-soft":  "rgba(138,14,16,0.09)",
+        "accent":       "#1E4C6E",  # ink blue
+        "accent-soft":  "rgba(30,76,110,0.10)",
         "track":        "#E0DDD5",  # oklch(0.898 0.011 90)
         "code-bg":      "#EDEBE4",
     },
@@ -76,14 +76,14 @@ _THEMES: dict[str, dict[str, str]] = {
         "frame-border": "#333A40",  # oklch(0.344 0.014 244)
         "card-border":  "#373E44",  # oklch(0.360 0.014 244)
         "rule":         "#2D3339",  # oklch(0.318 0.014 248)
-        "section-rule": "rgba(224,106,92,0.45)",
+        "section-rule": "rgba(111,168,204,0.42)",
         "ink":          "#E6E8EA",  # oklch(0.930 0.003 248)
         "ink-strong":   "#F1F3F5",  # oklch(0.963 0.003 248)
         "body":         "#AAB0B6",  # oklch(0.754 0.011 248)
         "muted":        "#8C939A",  # oklch(0.660 0.013 248) — raised for WCAG legibility on ink
         "faint":        "#767D84",  # oklch(0.586 0.014 248) — placeholders/quotes stay readable
-        "accent":       "#E06A5C",  # coral  oklch(0.663 0.150 29)
-        "accent-soft":  "rgba(224,106,92,0.16)",
+        "accent":       "#6FA8CC",  # steel blue
+        "accent-soft":  "rgba(111,168,204,0.16)",
         "track":        "#282C30",  # oklch(0.291 0.009 248)
         "code-bg":      "#16191C",
     },
