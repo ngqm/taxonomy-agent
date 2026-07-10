@@ -229,11 +229,15 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 /* Tighten the sidebar's vertical rhythm to the mockup's compact spec-sheet:
    less air between widgets, between spec rows, and between groups. */
 [data-testid="stSidebar"] [data-testid="stVerticalBlock"] { gap: 0.5rem !important; }
-[data-testid="stSidebar"] [data-testid="stExpanderDetails"] { gap: 0.3rem !important; padding-top: 6px; }
+[data-testid="stSidebar"] [data-testid="stExpanderDetails"] { gap: 0.55rem !important; padding-top: 11px; }
 [data-testid="stSidebar"] [data-testid="stExpander"] summary { padding-top: 2px !important; }
+/* Separate the section groups from each other (and from the "Configuration"
+   heading) by more than the gap between fields inside a group, so the kickers
+   read as group headers rather than just another tight row. */
+[data-testid="stSidebar"] [data-testid="stExpander"] { margin-top: 16px !important; }
 [data-testid="stSidebar"] [data-testid="stHeading"], [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2 {
   border-bottom: none !important; padding-bottom: 0 !important; font-family: %(serif)s !important;
-  color: var(--ink) !important; font-size: 1.2rem !important;
+  color: var(--ink) !important; font-size: 1.2rem !important; margin-bottom: 8px !important;
 }
 [data-testid="stSidebar"] [data-testid="stExpander"],
 [data-testid="stSidebar"] [data-testid="stExpander"] details {
