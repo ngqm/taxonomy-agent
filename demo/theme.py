@@ -7,9 +7,9 @@ distribution bars, the map legend). It contains no application logic and reads
 no run data — callers pass already-loaded values in.
 
 Editorial / scientific-catalogue aesthetic: Newsreader (serif display + figures)
-+ Public Sans (body/labels), warm paper / deep-ink themes, square corners,
-vermilion accent. Both themes share one category-colour map so a category keeps
-its colour across every tab and chart.
++ Public Sans (body/labels), a warm "newsprint" (Day) / cool "slate-press"
+(Night) theme, square corners, and a press-red / coral accent. Both themes share
+one category-colour map so a category keeps its colour across every tab and chart.
 """
 from __future__ import annotations
 
@@ -45,46 +45,47 @@ OTHER_GREY = CATEGORY_COLORS["other"]
 
 
 # ── Theme tokens (light "Day" / dark "Night") ────────────────────────────────
-# Exact sRGB conversions of the design's authoritative oklch() tokens (computed,
-# not eyeballed) so colour matches the source pixel-for-pixel.
+# Two neutral+accent palettes: a warm "newsprint" Day and a cool "slate-press"
+# Night. sRGB hex / rgba values with their oklch() equivalents in comments; the
+# shared category-colour palette (above) is theme-independent and unchanged.
 _THEMES: dict[str, dict[str, str]] = {
-    "day": {  # "The Journal" — warm paper
-        "canvas":       "#EAE6DD",  # oklch(0.925 0.013 84)
-        "panel":        "#FFFFFF",
-        "panel-2":      "#F8F5F0",  # frame / app bg  oklch(0.972 0.008 84)
-        "sidebar-bg":   "#F3F0E9",  # oklch(0.955 0.01 82)
-        "frame-border": "#D2CDC5",  # oklch(0.85 0.012 78)
-        "card-border":  "#D9D3CC",  # oklch(0.87 0.012 78)
-        "rule":         "#E1DDD7",  # oklch(0.9 0.01 80)
-        "section-rule": "rgba(182,61,41,0.40)",
-        "ink":          "#271D16",  # oklch(0.24 0.02 55)
-        "ink-strong":   "#1D140D",  # oklch(0.2 0.02 55)
-        "body":         "#554B43",  # oklch(0.42 0.018 60)
-        "muted":        "#7B736C",  # oklch(0.56 0.015 62)
-        "faint":        "#918B85",  # oklch(0.64 0.012 68)
-        "accent":       "#B63D29",  # vermilion oklch(0.53 0.16 32)
-        "accent-soft":  "rgba(182,61,41,0.10)",
-        "track":        "#EAE7E2",  # oklch(0.93 0.008 82)
-        "code-bg":      "#F1EEE9",
+    "day": {  # "The Journal" — newsprint
+        "canvas":       "#E4E1D8",  # oklch(0.910 0.013 92)
+        "panel":        "#FBFAF6",
+        "panel-2":      "#F2F0E9",  # frame / app bg  oklch(0.955 0.010 94)
+        "sidebar-bg":   "#ECE9E1",  # oklch(0.934 0.011 90)
+        "frame-border": "#C7C2B8",  # oklch(0.815 0.015 85)
+        "card-border":  "#D3CEC4",  # oklch(0.853 0.015 85)
+        "rule":         "#DAD6CD",  # oklch(0.877 0.013 87)
+        "section-rule": "rgba(20,18,16,0.55)",
+        "ink":          "#1A1712",  # oklch(0.206 0.011 81)
+        "ink-strong":   "#0F0C08",  # oklch(0.157 0.010 76)
+        "body":         "#403A33",  # oklch(0.352 0.014 72)
+        "muted":        "#6E665D",  # oklch(0.515 0.017 71)
+        "faint":        "#8B837A",  # oklch(0.614 0.016 71)
+        "accent":       "#8A0E10",  # press red  oklch(0.405 0.156 27)
+        "accent-soft":  "rgba(138,14,16,0.09)",
+        "track":        "#E0DDD5",  # oklch(0.898 0.011 90)
+        "code-bg":      "#EDEBE4",
     },
-    "night": {  # "The Journal" — deep ink
-        "canvas":       "#120D0A",  # oklch(0.165 0.01 62)
-        "panel":        "#1F1B17",  # card  oklch(0.225 0.01 62)
-        "panel-2":      "#17130F",  # frame oklch(0.19 0.01 62)
-        "sidebar-bg":   "#0D0906",  # oklch(0.145 0.01 62)
-        "frame-border": "#37322D",  # oklch(0.32 0.012 66)
-        "card-border":  "#3A342F",  # oklch(0.33 0.012 66)
-        "rule":         "#312D29",  # oklch(0.3 0.01 64)
-        "section-rule": "rgba(208,95,69,0.45)",
-        "ink":          "#EDE7DE",  # oklch(0.93 0.014 82)
-        "ink-strong":   "#F2EEE6",  # oklch(0.95 0.012 82)
-        "body":         "#B6B0A9",  # oklch(0.76 0.012 76)
-        "muted":        "#9E958A",  # oklch(0.68 0.014 72) — raised for WCAG legibility on ink
-        "faint":        "#8A8279",  # oklch(0.62 0.014 70) — placeholders/quotes stay readable
-        "accent":       "#D05F45",  # vermilion oklch(0.62 0.15 34)
-        "accent-soft":  "rgba(208,95,69,0.16)",
-        "track":        "#2C2824",  # oklch(0.28 0.01 64)
-        "code-bg":      "#191511",
+    "night": {  # "The Journal" — slate press
+        "canvas":       "#0F1113",  # oklch(0.176 0.005 248)
+        "panel":        "#1A1D20",  # card  oklch(0.229 0.007 248)
+        "panel-2":      "#141619",  # frame oklch(0.199 0.007 258)
+        "sidebar-bg":   "#0A0C0E",  # oklch(0.153 0.005 248)
+        "frame-border": "#333A40",  # oklch(0.344 0.014 244)
+        "card-border":  "#373E44",  # oklch(0.360 0.014 244)
+        "rule":         "#2D3339",  # oklch(0.318 0.014 248)
+        "section-rule": "rgba(224,106,92,0.45)",
+        "ink":          "#E6E8EA",  # oklch(0.930 0.003 248)
+        "ink-strong":   "#F1F3F5",  # oklch(0.963 0.003 248)
+        "body":         "#AAB0B6",  # oklch(0.754 0.011 248)
+        "muted":        "#8C939A",  # oklch(0.660 0.013 248) — raised for WCAG legibility on ink
+        "faint":        "#767D84",  # oklch(0.586 0.014 248) — placeholders/quotes stay readable
+        "accent":       "#E06A5C",  # coral  oklch(0.663 0.150 29)
+        "accent-soft":  "rgba(224,106,92,0.16)",
+        "track":        "#282C30",  # oklch(0.291 0.009 248)
+        "code-bg":      "#16191C",
     },
 }
 
