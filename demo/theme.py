@@ -343,9 +343,9 @@ hr { border-color: var(--rule); }
    element (not st.title) because st.title wraps its text in a span/div that the
    generic `span,div {sans}` rule would otherwise force back to Public Sans. */
 .page-title { font-family: %(serif)s; font-weight: 500; font-size: 38px; line-height: 1.05; letter-spacing: -0.005em; color: var(--ink); margin: 6px 0 6px; }
-.page-subtitle { font-family: %(serif)s; font-style: italic; font-size: 17px; line-height: 1.5; color: var(--body); max-width: 780px; margin: 4px 0 8px; }
+.page-subtitle { font-family: %(serif)s; font-size: 17px; line-height: 1.5; color: var(--body); max-width: 780px; margin: 4px 0 8px; }
 .kicker { font-family: %(sans)s; font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 6px 0 8px; }
-.fig-cap { font-family: %(serif)s; font-style: italic; font-size: 13.5px; color: var(--body); margin: 10px 0 30px; }
+.fig-cap { font-family: %(serif)s; font-size: 13.5px; color: var(--body); margin: 10px 0 30px; }
 .fig-cap .runin { font-family: %(sans)s; font-style: normal; font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
 .other-note { font-family: %(sans)s; font-size: 12px; color: var(--muted); margin: 2px 0 8px; display: flex; align-items: center; gap: 8px; }
 .other-note .sw { width: 10px; height: 10px; background: %(grey)s; display: inline-block; flex: none; }
@@ -355,7 +355,7 @@ hr { border-color: var(--rule); }
 .new-banner { display: flex; align-items: baseline; gap: 12px; background: var(--accent-soft); border: 1px solid var(--section-rule); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 4px 0 16px; }
 .new-banner .tag { font-family: %(sans)s; font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); flex: none; }
 .new-banner .msg { font-family: %(sans)s; font-size: 13px; line-height: 1.5; color: var(--body); }
-.demo-serif { font-family: %(serif)s; font-style: italic; font-size: 14px; line-height: 1.45; color: var(--body); }
+.demo-serif { font-family: %(serif)s; font-size: 14px; line-height: 1.45; color: var(--body); }
 
 /* --- Narrow screens / mobile: stack column layouts (stat strips, card
    grids) that otherwise clip off the right edge, and tighten the frame.
