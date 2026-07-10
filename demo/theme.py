@@ -278,7 +278,7 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 /* Warm-paper panel with a vermilion left-rule (matching the NEW? callout) and
    a single filled-vermilion primary button — vermilion is the one "act" colour
    in the system, so the recommended action wears it (not an off-palette green). */
-.st-key-demo_cta { border: 1px solid var(--card-border); border-left: 3px solid var(--accent); background: var(--panel-2); padding: 15px 18px; margin-bottom: 12px; }
+.st-key-demo_cta { border: 1px solid var(--card-border); border-left: 3px solid var(--accent); background: var(--panel-2); padding: 15px 18px 17px; margin-bottom: 12px; }
 .st-key-demo_cta [data-testid^="stBaseButton"] { background: var(--accent) !important; border: 1px solid var(--accent) !important; color: #ffffff !important; }
 .st-key-demo_cta [data-testid^="stBaseButton"]:hover { filter: brightness(1.08); }
 
@@ -355,14 +355,14 @@ hr { border-color: var(--rule); }
 .new-banner { display: flex; align-items: baseline; gap: 12px; background: var(--accent-soft); border: 1px solid var(--section-rule); border-left: 3px solid var(--accent); padding: 12px 16px; margin: 4px 0 16px; }
 .new-banner .tag { font-family: %(sans)s; font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); flex: none; }
 .new-banner .msg { font-family: %(sans)s; font-size: 13px; line-height: 1.5; color: var(--body); }
-.demo-serif { font-family: %(serif)s; font-size: 14px; line-height: 1.45; color: var(--body); }
+.demo-serif { font-family: %(serif)s; font-size: 14px; line-height: 1.45; color: var(--body); margin-bottom: 8px; }
 
 /* --- Narrow screens / mobile: stack column layouts (stat strips, card
    grids) that otherwise clip off the right edge, and tighten the frame.
    Scoped to the main area so the sidebar drawer is untouched. Literal
    percents are doubled because this string is %%-formatted below. */
 @media (max-width: 640px) {
-  [data-testid="stMainBlockContainer"] { padding: 20px 16px 32px !important; margin: 6px auto 18px !important; }
+  [data-testid="stMainBlockContainer"] { padding: 50px 16px 32px !important; margin: 6px auto 18px !important; }
   [data-testid="stMain"] [data-testid="stHorizontalBlock"] { flex-wrap: wrap !important; gap: 0.6rem !important; }
   [data-testid="stMain"] [data-testid="stHorizontalBlock"] > [data-testid="stColumn"] {
     flex: 1 1 100%% !important; width: 100%% !important; min-width: 100%% !important;

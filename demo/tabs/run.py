@@ -137,7 +137,7 @@ def render(settings):
         "What should the agent classify?",
         height=68,
         key="instruction_text",
-        placeholder="Identify the dominant topic of each text.",
+        placeholder="e.g. Identify the dominant topic of each text.",
     )
 
     category_focus = st.text_input(
