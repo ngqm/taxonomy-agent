@@ -19,7 +19,7 @@ from demo import *  # noqa: F401,F403
 def render():
     ss = st.session_state
     st.markdown('<div style="font-family:\'Newsreader\',Georgia,serif;font-weight:500;font-size:28px;color:var(--ink);margin:0 0 6px;">Two runs, side by side</div>', unsafe_allow_html=True)
-    st.markdown('<p class="page-subtitle" style="font-size:15px;margin:0 0 24px;">Headline metrics, the taxonomy each discovered, and category distributions — useful for seeing how the taxonomy shifts across seeds, models, or goal instructions.</p>', unsafe_allow_html=True)
+    st.markdown('<p class="page-subtitle" style="font-size:15px;margin:0 0 24px;">Headline metrics, the taxonomy each discovered, and category distributions, useful for seeing how the taxonomy shifts across seeds, models, or goal instructions.</p>', unsafe_allow_html=True)
     _cmp_runs = [
         r for r in _scan_runs(_discover_runs_roots())
         if r.get("status") == "ok"

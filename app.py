@@ -42,9 +42,9 @@ st.markdown('<div class="page-eyebrow">Agentic taxonomy discovery</div>',
 st.markdown('<div class="page-title">Taxonomy Agent</div>',
             unsafe_allow_html=True)
 st.markdown(
-    '<div class="page-subtitle">Give it a set of texts and a one-line goal — '
-    'it works out the categories on its own and labels every item, so you '
-    'never define the categories up front.</div>',
+    '<div class="page-subtitle">Provide a corpus of texts and a one-sentence '
+    'goal. The system discovers a set of categories along that axis and '
+    'labels each item, with no category set defined in advance.</div>',
     unsafe_allow_html=True,
 )
 
@@ -57,7 +57,7 @@ ss.setdefault("running", False)
 ss.setdefault("instruction_text", "")
 ss.setdefault("cat_focus_text", "")
 ss.setdefault("size_hint_text", "4–10")
-ss.setdefault("preset_applied", "— Custom —")
+ss.setdefault("preset_applied", "Custom")
 
 
 settings = render_sidebar()

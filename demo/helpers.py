@@ -392,7 +392,7 @@ JUDGE_OPTIONS = [
 
 
 PRESETS: dict[str, dict | None] = {
-    "— Custom —": None,
+    "Custom": None,
     "Topic modeling": dict(
         instruction="Identify the dominant topic of each text.",
         category_focus="what each text is about",

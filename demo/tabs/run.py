@@ -28,8 +28,8 @@ def render(settings):
         st.markdown(
             '<div class="new-banner"><span class="tag">New?</span>'
             '<span class="msg">Open <b>Inspect</b> or <b>Compare</b> to browse '
-            'finished runs on DarkBench and 20 Newsgroups. You don\'t need your '
-            'own API key — the run uses ours.</span></div>',
+            'finished runs on DarkBench and 20 Newsgroups. Viewing them '
+            'needs no API key.</span></div>',
             unsafe_allow_html=True,
         )
     # ── Quick demo: one-click 60-second run on the bundled example. ─────────
@@ -46,9 +46,9 @@ def render(settings):
                  "the trace pane below.",
         )
         st.markdown(
-            '<div class="demo-serif" style="margin-top:7px;">One click · '
-            'DarkBench · ~2 min · under &#36;0.05. No API key needed — the run '
-            'uses ours.</div>',
+            '<div class="demo-serif" style="margin-top:7px;">Runs on '
+            'DarkBench in about 2 minutes for under &#36;0.05. No API key '
+            'required.</div>',
             unsafe_allow_html=True,
         )
     st.markdown(
@@ -70,7 +70,7 @@ def render(settings):
         "Task preset",
         list(PRESETS.keys()),
         help="Auto-fills instruction, category focus, and size hint. Pick "
-             "'— Custom —' to leave the fields untouched.",
+             "'Custom' to leave the fields untouched.",
     )
     if preset != ss.preset_applied:
         ss.preset_applied = preset
@@ -358,10 +358,10 @@ def render(settings):
 
             st.info(
                 f"Running: `{' '.join(cmd[:5])} …`  →  output: `{out_abs}`\n\n"
-                f"This run is **detached** — closing this tab is safe; the run "
+                f"This run is **detached**. Closing this tab is safe; the run "
                 f"continues in the background. Find it later in the **History** tab."
             )
-            with st.spinner("Agent running — streaming logs below…"):
+            with st.spinner("Agent running; streaming logs below…"):
                 try:
                     proc = subprocess.Popen(
                         cmd,

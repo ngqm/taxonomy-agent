@@ -52,11 +52,11 @@ def render(settings):
             default_idx = 0
         pick = st.selectbox(
             "Recent completed runs",
-            options=["— choose one —", *labels],
+            options=["Choose one…", *labels],
             index=default_idx,
             label_visibility="collapsed",
         )
-        if pick != "— choose one —":
+        if pick != "Choose one…":
             idx = labels.index(pick)
             chosen = recent_for_picker[idx]["dir"]
             if chosen != candidate:
@@ -93,7 +93,7 @@ def render(settings):
             partial_jsonl = cand_path / "classifications.jsonl"
             if state_path.exists() or partial_jsonl.exists():
                 st.warning(
-                    f"`taxonomy.json` is missing in `{cand_path}` — the run "
+                    f"`taxonomy.json` is missing in `{cand_path}`. The run "
                     f"did not finalize cleanly. Showing recoverable partial state."
                 )
                 if state_path.exists():
@@ -102,7 +102,7 @@ def render(settings):
                         st.subheader("Working taxonomy at last revise")
                         for cat in state_body.get("taxonomy", []):
                             st.markdown(
-                                f"- **{cat.get('name')}** — {cat.get('description', '')}"
+                                f"- **{cat.get('name')}**: {cat.get('description', '')}"
                             )
                         st.caption(
                             f"`n_classify_calls={state_body.get('n_classify_calls', '?')}`"
@@ -255,7 +255,7 @@ def render(settings):
             if counts.get("other"):
                 st.markdown(
                     f'<div class="other-note"><span class="sw"></span>'
-                    f'<b>other</b> · {counts["other"]} items — did not fit any '
+                    f'<b>other</b> · {counts["other"]} items, did not fit any '
                     f'discovered category.</div>',
                     unsafe_allow_html=True,
                 )
@@ -351,7 +351,7 @@ def render(settings):
                             unsafe_allow_html=True,
                         )
                     st.markdown(
-                        '<div class="fig-cap"><span class="runin">Fig. 1 — </span>'
+                        '<div class="fig-cap"><span class="runin">Fig. 1. </span>'
                         'Six discrete clusters with minimal bleed: visual '
                         'evidence the axis carves cleanly.</div>',
                         unsafe_allow_html=True,

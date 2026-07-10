@@ -86,7 +86,7 @@ def render():
                 # Lead with the distinguishing tail (dataset dir + run leaf);
                 # the full path lives inside the card.
                 short_name = "/".join(Path(r["name"]).parts[-2:])
-                header = f"**{short_name}** — {badge} — {started}"
+                header = f"**{short_name}** · {badge} · {started}"
                 if instr_short:
                     header += f"  ·  {instr_short}"
                 with st.expander(header):
@@ -108,7 +108,7 @@ def render():
                     if st.button("Load in Inspect tab", key=f"load_{r['dir']}"):
                         ss.result_dir = r["dir"]
                         st.success(
-                            "Loaded — switch to the **Inspect** tab to view."
+                            "Loaded. Switch to the **Inspect** tab to view."
                         )
                     log_path = Path(r["dir"]) / "run.log"
                     if log_path.exists():
