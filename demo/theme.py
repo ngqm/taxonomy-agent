@@ -365,8 +365,8 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 /* Code blocks use the One Dark editor palette so they read as a real IDE,
    independent of the Day/Night page theme. */
 .stApp [data-testid="stCode"] { background: #282c34 !important; border: 1px solid #3e4451 !important; border-radius: 0 !important; }
-.stApp [data-testid="stCode"] pre { background: #282c34 !important; }
-.stApp [data-testid="stCode"] code { color: #abb2bf !important; }
+.stApp [data-testid="stCode"] pre { background: #282c34 !important; font-size: 0.95rem !important; }
+.stApp [data-testid="stCode"] code { color: #abb2bf !important; font-size: 0.95rem !important; }
 .stApp [data-testid="stCode"] code .token.comment,
 .stApp [data-testid="stCode"] code .token.prolog,
 .stApp [data-testid="stCode"] code .token.doctype,
