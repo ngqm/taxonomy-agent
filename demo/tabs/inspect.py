@@ -60,8 +60,9 @@ def render(settings):
             idx = labels.index(pick)
             chosen = recent_for_picker[idx]["dir"]
             if chosen != candidate:
+                # The selectbox change already reruns; an explicit st.rerun()
+                # here would reset the active tab back to the first one.
                 ss.result_dir = chosen
-                st.rerun()
             candidate = chosen
     else:
         st.caption(

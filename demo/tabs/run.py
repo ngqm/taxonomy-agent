@@ -262,8 +262,9 @@ def render(settings):
                 alive = False
             if not alive:
                 if st.button("Reset", help="Tracked process is gone. Clear stuck state."):
+                    # The button click already reruns; an explicit st.rerun()
+                    # would reset the active tab back to the first one.
                     ss.running = False
-                    st.rerun()
 
     progress_box = st.empty()
     taxonomy_preview_box = st.empty()

@@ -40,8 +40,9 @@ def render():
         )
     with c_refresh:
         st.write("")  # vertical alignment
-        if st.button("↻ Refresh", width="stretch"):
-            st.rerun()
+        # The click already reruns (which rescans the directories); an explicit
+        # st.rerun() would reset the active tab back to the first one.
+        st.button("↻ Refresh", width="stretch")
 
     extra_root = st.text_input(
         "Or add another directory (optional)",
