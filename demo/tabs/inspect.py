@@ -66,7 +66,7 @@ def render(settings):
     else:
         st.caption(
             "No completed runs found yet. Click **Run the demo** on the "
-            "**Run** tab to generate one in about two minutes."
+            "**Run** tab to generate one in five to ten minutes."
         )
 
     # Secondary "type a path" affordance. Keyed so theme.py can flatten it into

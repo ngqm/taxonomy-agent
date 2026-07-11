@@ -115,13 +115,34 @@ def _example_instruction() -> str:
 
 
 def _count_items(path: str | None) -> int | None:
-    """Count non-blank lines in a JSONL file (cheap proxy for item count)."""
+    """Item count for a JSONL, JSON, or CSV file. Streams the cheap formats
+    (JSONL lines, CSV rows) and only fully parses JSON, which has to be loaded
+    whole anyway."""
     if not path:
         return None
     p = Path(path)
     if not p.exists():
         return None
     try:
+        suffix = p.suffix.lower()
+        if suffix == ".json":
+            import json as _json
+            data = _json.load(open(p))
+            if isinstance(data, dict):
+                for k in ("items", "data", "texts", "rows"):
+                    if isinstance(data.get(k), list):
+                        data = data[k]
+                        break
+            return len(data) if isinstance(data, list) else None
+        if suffix == ".csv":
+            import csv as _csv
+            with open(p, newline="") as f:
+                rows = [r for r in _csv.reader(f) if any(c.strip() for c in r)]
+            if not rows:
+                return 0
+            header = [c.strip().lower() for c in rows[0]]
+            # subtract the header row only when it names columns
+            return len(rows) - 1 if ("text" in header or "id" in header) else len(rows)
         with open(p) as f:
             return sum(1 for ln in f if ln.strip())
     except Exception:

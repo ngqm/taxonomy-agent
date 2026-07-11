@@ -16,6 +16,31 @@ import streamlit as st
 
 from demo import *  # noqa: F401,F403
 
+_PY_SNIPPET = '''from taxonomy_agent import run
+
+# `items` can be a list of strings, a list of {"id", "text"} dicts,
+# or a path to a .jsonl / .json / .csv file.
+result = run(
+    items=[
+        "When asked about the budget, the senator pivoted to jobs.",
+        "She answered a question no one had asked.",
+        "He dismissed the scandal as old news and moved on.",
+        # ... your texts ...
+    ],
+    instruction="Group these by the rhetorical move used to dodge the question.",
+    output_dir="out/",
+    orchestrator_model="deepseek/deepseek-v4-flash",
+    judge_model="deepseek/deepseek-v4-flash",
+    size_hint="4-8",
+    api_key="sk-or-...",   # or set OPENROUTER_API_KEY in the environment
+)
+
+print(result["artifact"]["taxonomy"])   # the discovered categories
+print(result["cost"]["total_usd"])       # OpenRouter spend
+# per-item labels are streamed to out/classifications.jsonl
+'''
+
+
 def render(settings):
     ss = st.session_state
     (api_key, orchestrator, judge, max_iters, min_iters, threshold,
@@ -32,17 +57,28 @@ def render(settings):
         unsafe_allow_html=True,
     )
 
-    # New-user orientation lives on the Run (landing) tab only, so Inspect and
-    # Compare open straight on their content instead of repeating this band.
+    # Instant value first: render a finished run right on the landing so a
+    # visitor sees real output in seconds, before deciding whether to watch a
+    # live run (which takes several minutes). The live run below is opt-in.
     if _EXAMPLE_RUN.exists():
         st.markdown(
-            '<div class="new-banner"><span class="tag">New?</span>'
-            '<span class="msg">Open <b>Inspect</b> or <b>Compare</b> to browse '
-            'finished runs on DarkBench and 20 Newsgroups. The hosted demo '
-            'runs on its own API key, so you don\'t need your own.</span></div>',
+            '<div class="kicker" style="margin-bottom:8px;">A finished run '
+            '&mdash; DarkBench grouped by manipulation type</div>',
             unsafe_allow_html=True,
         )
-    # ── Quick demo: one-click 60-second run on the bundled example. ─────────
+        st.markdown(run_card_html(str(_EXAMPLE_RUN),
+                                  "DarkBench manipulation patterns"),
+                    unsafe_allow_html=True)
+        st.markdown(
+            '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
+            'line-height:1.5;color:var(--muted);max-width:840px;margin:8px 0 22px;">'
+            'Real output the agent discovered from an unlabelled corpus. Browse '
+            'it fully in <b>Inspect</b>, or set it side by side with the 20 '
+            'Newsgroups run in <b>Compare</b>. The hosted demo runs on its own '
+            'API key, so you don\'t need your own.</div>',
+            unsafe_allow_html=True,
+        )
+    # ── Quick demo: one-click run on the bundled DarkBench slice. ───────────
     # Sets a small pool + low iter budget, picks the bundled example preset,
     # then falls through into the regular Start-run code path via `start=True`.
     with st.container(key="demo_cta"):
@@ -71,6 +107,16 @@ def render(settings):
         'budget.</div>',
         unsafe_allow_html=True,
     )
+    with st.expander("Or run it from Python", expanded=False):
+        st.markdown(
+            '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
+            'line-height:1.5;color:var(--muted);margin:0 0 8px;">The same engine '
+            'behind this app is a small package &mdash; <code>pip install</code> it '
+            'and call <code>run()</code> with a list of strings, dicts, or a '
+            'JSONL/JSON/CSV path.</div>',
+            unsafe_allow_html=True,
+        )
+        st.code(_PY_SNIPPET, language="python")
 
     st.markdown('<div class="step-head"><span class="step-num">1</span>'
                 '<span class="step-label">Task</span></div>',
@@ -96,37 +142,48 @@ def render(settings):
                 '<span class="step-label">Items</span></div>',
                 unsafe_allow_html=True)
     src = st.segmented_control(
-        "Source", ["Upload JSONL", "Paste JSONL", "File path", "Use example"],
-        default="Upload JSONL", key="source_seg",
-        help="Where to read the items the agent should classify. JSONL = one "
-             "`{\"id\": ..., \"text\": ...}` per line.",
-    ) or "Upload JSONL"
+        "Source", ["Upload file", "Paste", "File path", "Use example"],
+        default="Upload file", key="source_seg",
+        help="Where to read the items the agent should classify. Accepts "
+             "JSONL / JSON / CSV: a `text` field (or column) per item, with an "
+             "optional `id`; ids are assigned automatically when absent.",
+    ) or "Upload file"
 
     items_path: str | None = None
-    if src == "Upload JSONL":
-        up = st.file_uploader("JSONL file (one `{id, text, ...}` per line)",
-                              type=["jsonl", "json", "txt"])
+    if src == "Upload file":
+        up = st.file_uploader(
+            "Data file (JSONL, JSON, or CSV)",
+            type=["jsonl", "json", "csv", "txt"],
+            help="JSONL: one `{id, text, ...}` per line. JSON: an array of "
+                 "objects or strings. CSV: a `text` column (optional `id`).",
+        )
         if up:
             tmp = Path(tempfile.gettempdir()) / f"taxa_items_{up.name}"
             tmp.write_bytes(up.getvalue())
             items_path = str(tmp)
-            try:
-                with open(items_path) as f:
-                    n = sum(1 for ln in f if ln.strip())
+            n = _count_items(items_path)
+            if n:
                 st.success(f"Loaded {n} items from {up.name}")
-            except Exception as e:
-                st.error(f"Could not read uploaded file: {e}")
-    elif src == "Paste JSONL":
+            else:
+                st.error(f"Could not read any items from {up.name}. Expected "
+                         "JSONL / JSON / CSV with a text field or column.")
+    elif src == "Paste":
         text = st.text_area(
-            "Paste JSONL (one item per line)", height=180,
-            placeholder='{"id": "1", "text": "..."}\n{"id": "2", "text": "..."}',
+            "Paste items — JSONL (one per line), a JSON array, or one text per line",
+            height=180,
+            placeholder='{"id": "1", "text": "..."}\n{"id": "2", "text": "..."}'
+                        '\n\n— or —\n["first text", "second text"]',
         )
         if text.strip():
-            tmp = Path(tempfile.gettempdir()) / "taxa_items_pasted.jsonl"
+            # A leading "[" means a JSON array; otherwise treat as JSONL / one
+            # text per line (both handled by _load_items on the right suffix).
+            ext = ".json" if text.lstrip().startswith("[") else ".jsonl"
+            tmp = Path(tempfile.gettempdir()) / f"taxa_items_pasted{ext}"
             tmp.write_text(text)
             items_path = str(tmp)
     elif src == "File path":
-        items_path = st.text_input("Path to JSONL file") or None
+        items_path = st.text_input(
+            "Path to a .jsonl, .json, or .csv file") or None
     else:  # Use example
         items_path = str(EXAMPLE_DIR / "items.jsonl")
         st.info(f"Using example items at `{items_path}`")

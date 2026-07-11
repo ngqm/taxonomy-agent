@@ -1,6 +1,7 @@
 """Orchestrator setup and the main `run()` entry point."""
 from __future__ import annotations
 
+import csv
 import datetime
 import json
 import os
@@ -18,40 +19,105 @@ from .prompts import SYSTEM_PROMPT_TEMPLATE
 from .tools import make_tools
 
 
-def _load_items(items_or_path: Union[str, Path, Iterable[dict]]) -> list[dict]:
-    """Accept either an in-memory iterable of dicts or a JSONL path.
+def _normalize_items(raw: Iterable) -> list[dict]:
+    """Coerce an iterable of raw items into `[{id, text, ...}]`.
 
-    Item ids must be unique — duplicates would silently collapse in the
-    id-keyed pool used by classify_with_judge, so we reject them up front."""
+    Each element may be a plain string (the text) or a dict. Missing ids are
+    auto-assigned by position; a dict must carry a `text` field. Blank texts are
+    dropped, and duplicate ids are rejected (they would silently collapse in the
+    id-keyed pool used by classify_with_judge)."""
+    out: list[dict] = []
+    seen: set[str] = set()
+    for idx, obj in enumerate(raw, start=1):
+        if isinstance(obj, str):
+            item = {"id": f"item-{idx}", "text": obj}
+        elif isinstance(obj, dict):
+            if "text" not in obj:
+                raise ValueError(f"item {idx} has no 'text' field: {obj!r}")
+            item = dict(obj)
+            item["id"] = str(item.get("id", f"item-{idx}"))
+        else:
+            raise ValueError(
+                f"item {idx} must be a string or a dict, got "
+                f"{type(obj).__name__}")
+        if not str(item["text"]).strip():
+            continue  # drop blank rows
+        if item["id"] in seen:
+            raise ValueError(f"duplicate id: {item['id']!r}")
+        seen.add(item["id"])
+        out.append(item)
+    if not out:
+        raise ValueError("no items with non-empty 'text' found")
+    return out
+
+
+def _load_items(items_or_path: Union[str, Path, Iterable]) -> list[dict]:
+    """Load items from a path (`.jsonl`, `.json`, or `.csv`) or an in-memory
+    iterable of strings and/or `{id, text, ...}` dicts.
+
+    - `.jsonl` — one JSON object (or bare string) per line.
+    - `.json`  — a JSON array of objects/strings, or an object with an
+      `items`/`data`/`texts`/`rows` array.
+    - `.csv`   — a `text` column (with an optional `id` column); a single-column
+      file is treated as one text per row.
+    Extra keys per dict item are preserved and passed to the judge as context."""
     if isinstance(items_or_path, (str, Path)):
-        items: list[dict] = []
-        seen: set[str] = set()
-        with open(items_or_path) as f:
-            for ln, line in enumerate(f, start=1):
+        p = Path(items_or_path)
+        suffix = p.suffix.lower()
+
+        if suffix == ".csv":
+            with open(p, newline="") as f:
+                rows = [r for r in csv.reader(f)]
+            if not rows:
+                raise ValueError(f"{p} is empty")
+            header = [c.strip().lower() for c in rows[0]]
+            if "text" in header:
+                ti = header.index("text")
+                ii = header.index("id") if "id" in header else None
+                raw: list = []
+                for r in rows[1:]:
+                    if not any(c.strip() for c in r):
+                        continue
+                    d = {"text": r[ti] if ti < len(r) else ""}
+                    if ii is not None and ii < len(r) and r[ii].strip():
+                        d["id"] = r[ii]
+                    raw.append(d)
+            else:
+                # No `text` header: treat the first column of every row as text.
+                raw = [r[0] for r in rows if r and r[0].strip()]
+            return _normalize_items(raw)
+
+        if suffix == ".json":
+            with open(p) as f:
+                data = json.load(f)
+            if isinstance(data, dict):
+                for k in ("items", "data", "texts", "rows"):
+                    if isinstance(data.get(k), list):
+                        data = data[k]
+                        break
+                else:
+                    raise ValueError(
+                        f"{p}: JSON object has no items/data/texts/rows array")
+            if not isinstance(data, list):
+                raise ValueError(
+                    f"{p}: expected a JSON array (or an object with an "
+                    f"items/data/texts/rows array)")
+            return _normalize_items(data)
+
+        # Default: JSONL. Tolerate a plain-text-per-line file too.
+        raw = []
+        with open(p) as f:
+            for line in f:
                 line = line.strip()
                 if not line:
                     continue
-                obj = json.loads(line)
-                if "id" not in obj:
-                    raise ValueError(f"item on line {ln} missing 'id': {obj}")
-                if "text" not in obj:
-                    raise ValueError(f"item on line {ln} missing 'text': {obj}")
-                obj["id"] = str(obj["id"])
-                if obj["id"] in seen:
-                    raise ValueError(f"duplicate id {obj['id']!r} on line {ln}")
-                seen.add(obj["id"])
-                items.append(obj)
-        return items
-    out = list(items_or_path)
-    seen = set()
-    for obj in out:
-        if "id" not in obj or "text" not in obj:
-            raise ValueError("every item must have 'id' and 'text'")
-        obj["id"] = str(obj["id"])
-        if obj["id"] in seen:
-            raise ValueError(f"duplicate id: {obj['id']!r}")
-        seen.add(obj["id"])
-    return out
+                try:
+                    raw.append(json.loads(line))
+                except json.JSONDecodeError:
+                    raw.append(line)
+        return _normalize_items(raw)
+
+    return _normalize_items(items_or_path)
 
 
 def run(
