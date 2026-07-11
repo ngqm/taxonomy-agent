@@ -362,35 +362,42 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 .stApp [data-testid="stCode"], .stApp pre { background: var(--code-bg) !important; border: 1px solid var(--card-border) !important; border-radius: 0 !important; }
 .stApp code { background: var(--code-bg) !important; color: var(--body) !important; border-radius: 0 !important; padding: 0.05em 0.34em; font-size: 0.86em; }
 .stApp pre code { background: transparent !important; padding: 0 !important; }
-/* Retone Streamlit's stock Prism highlighting (loud green strings, orange
-   operators, bright-blue keywords) into a restrained, theme-adaptive scheme:
-   comments muted+italic, strings/numbers in the accent, keywords/functions in
-   bold ink, punctuation/operators muted. Everything else stays body ink. */
+/* Code blocks use the One Dark editor palette so they read as a real IDE,
+   independent of the Day/Night page theme. */
+.stApp [data-testid="stCode"] { background: #282c34 !important; border: 1px solid #3e4451 !important; border-radius: 0 !important; }
+.stApp [data-testid="stCode"] pre { background: #282c34 !important; }
+.stApp [data-testid="stCode"] code { color: #abb2bf !important; }
 .stApp [data-testid="stCode"] code .token.comment,
 .stApp [data-testid="stCode"] code .token.prolog,
 .stApp [data-testid="stCode"] code .token.doctype,
-.stApp [data-testid="stCode"] code .token.cdata { color: var(--muted) !important; font-style: italic; }
-.stApp [data-testid="stCode"] code .token.punctuation,
-.stApp [data-testid="stCode"] code .token.operator { color: var(--muted) !important; }
+.stApp [data-testid="stCode"] code .token.cdata { color: #5c6370 !important; font-style: italic; }
+.stApp [data-testid="stCode"] code .token.punctuation { color: #abb2bf !important; }
+.stApp [data-testid="stCode"] code .token.operator { color: #56b6c2 !important; }
+.stApp [data-testid="stCode"] code .token.keyword,
+.stApp [data-testid="stCode"] code .token.storage { color: #c678dd !important; }
 .stApp [data-testid="stCode"] code .token.string,
 .stApp [data-testid="stCode"] code .token.char,
+.stApp [data-testid="stCode"] code .token.attr-value,
+.stApp [data-testid="stCode"] code .token.regex { color: #98c379 !important; }
 .stApp [data-testid="stCode"] code .token.number,
 .stApp [data-testid="stCode"] code .token.boolean,
-.stApp [data-testid="stCode"] code .token.attr-value,
-.stApp [data-testid="stCode"] code .token.regex { color: var(--accent) !important; }
-.stApp [data-testid="stCode"] code .token.keyword,
-.stApp [data-testid="stCode"] code .token.builtin,
-.stApp [data-testid="stCode"] code .token.class-name,
+.stApp [data-testid="stCode"] code .token.constant,
+.stApp [data-testid="stCode"] code .token.symbol { color: #d19a66 !important; }
 .stApp [data-testid="stCode"] code .token.function,
+.stApp [data-testid="stCode"] code .token.builtin { color: #61afef !important; }
+.stApp [data-testid="stCode"] code .token.class-name,
 .stApp [data-testid="stCode"] code .token.tag,
 .stApp [data-testid="stCode"] code .token.selector,
-.stApp [data-testid="stCode"] code .token.attr-name,
-.stApp [data-testid="stCode"] code .token.property { color: var(--ink) !important; font-weight: 600; }
-/* bash variables / flags (e.g. $ENV names, -g, -o) stay neutral ink, not the
-   stock cyan */
+.stApp [data-testid="stCode"] code .token.attr-name { color: #e5c07b !important; }
 .stApp [data-testid="stCode"] code .token.variable,
 .stApp [data-testid="stCode"] code .token.parameter,
-.stApp [data-testid="stCode"] code .token.symbol { color: var(--body) !important; }
+.stApp [data-testid="stCode"] code .token.property { color: #e06c75 !important; }
+/* Keep the built-in copy button visible on the dark block (light icon, faint
+   by default, solid on hover) so it's discoverable. */
+.stApp [data-testid="stCode"] button { color: #abb2bf !important; opacity: 0.55 !important; }
+.stApp [data-testid="stCode"]:hover button { opacity: 0.9 !important; }
+.stApp [data-testid="stCode"] button:hover { opacity: 1 !important; }
+.stApp [data-testid="stCode"] button svg { fill: #abb2bf !important; stroke: #abb2bf !important; }
 [data-testid="stDataFrame"] { border: 1px solid var(--card-border) !important; }
 hr { border-color: var(--rule); }
 [data-testid="stSlider"] [role="slider"] { background: var(--accent) !important; }
