@@ -16,30 +16,6 @@ import streamlit as st
 
 from demo import *  # noqa: F401,F403
 
-_PY_SNIPPET = '''from taxonomy_agent import run
-
-# `items` can be a list of strings, a list of {"id", "text"} dicts,
-# or a path to a .jsonl / .json / .csv file.
-result = run(
-    items=[
-        "When asked about the budget, the senator pivoted to jobs.",
-        "She answered a question no one had asked.",
-        "He dismissed the scandal as old news and moved on.",
-        # ... your texts ...
-    ],
-    instruction="Group these by the rhetorical move used to dodge the question.",
-    output_dir="out/",
-    orchestrator_model="deepseek/deepseek-v4-flash",
-    judge_model="deepseek/deepseek-v4-flash",
-    size_hint="4-8",
-    api_key="sk-or-...",   # or set OPENROUTER_API_KEY in the environment
-)
-
-print(result["artifact"]["taxonomy"])   # the discovered categories
-print(result["cost"]["total_usd"])       # OpenRouter spend
-# per-item labels are streamed to out/classifications.jsonl
-'''
-
 
 def render(settings):
     ss = st.session_state
@@ -57,25 +33,14 @@ def render(settings):
         unsafe_allow_html=True,
     )
 
-    # Instant value first: render a finished run right on the landing so a
-    # visitor sees real output in seconds, before deciding whether to watch a
-    # live run (which takes several minutes). The live run below is opt-in.
+    # Light orientation band pointing at the finished runs; the fuller
+    # "two ways to use it" overview lives on the Start tab.
     if _EXAMPLE_RUN.exists():
         st.markdown(
-            '<div class="kicker" style="margin-bottom:8px;">A finished run '
-            '&mdash; DarkBench grouped by manipulation type</div>',
-            unsafe_allow_html=True,
-        )
-        st.markdown(run_card_html(str(_EXAMPLE_RUN),
-                                  "DarkBench manipulation patterns"),
-                    unsafe_allow_html=True)
-        st.markdown(
-            '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-            'line-height:1.5;color:var(--muted);max-width:840px;margin:8px 0 22px;">'
-            'Real output the agent discovered from an unlabelled corpus. Browse '
-            'it fully in <b>Inspect</b>, or set it side by side with the 20 '
-            'Newsgroups run in <b>Compare</b>. The hosted demo runs on its own '
-            'API key, so you don\'t need your own.</div>',
+            '<div class="new-banner"><span class="tag">New?</span>'
+            '<span class="msg">Open <b>Inspect</b> or <b>Compare</b> to browse '
+            'finished runs on DarkBench and 20 Newsgroups. The hosted demo '
+            'runs on its own API key, so you don\'t need your own.</span></div>',
             unsafe_allow_html=True,
         )
     # ── Quick demo: one-click run on the bundled DarkBench slice. ───────────
@@ -104,19 +69,9 @@ def render(settings):
         'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 22px;">'
         'Or bring your own texts: set an instruction, provide items, and press '
         '<b>Start run</b>. Add an OpenRouter key in the sidebar to use your own '
-        'budget.</div>',
+        'budget. Prefer Python? See the <b>Start</b> tab.</div>',
         unsafe_allow_html=True,
     )
-    with st.expander("Or run it from Python", expanded=False):
-        st.markdown(
-            '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-            'line-height:1.5;color:var(--muted);margin:0 0 8px;">The same engine '
-            'behind this app is a small package &mdash; <code>pip install</code> it '
-            'and call <code>run()</code> with a list of strings, dicts, or a '
-            'JSONL/JSON/CSV path.</div>',
-            unsafe_allow_html=True,
-        )
-        st.code(_PY_SNIPPET, language="python")
 
     st.markdown('<div class="step-head"><span class="step-num">1</span>'
                 '<span class="step-label">Task</span></div>',

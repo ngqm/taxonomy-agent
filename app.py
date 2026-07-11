@@ -29,8 +29,9 @@ import streamlit as st
 from demo import *  # helpers, guards, viz, theme
 from demo.theme import inject_theme
 from demo.sidebar import render_sidebar
-from demo.tabs import run as run_tab_mod, history as history_tab_mod, \
-    inspect as inspect_tab_mod, compare as compare_tab_mod
+from demo.tabs import start as start_tab_mod, run as run_tab_mod, \
+    history as history_tab_mod, inspect as inspect_tab_mod, \
+    compare as compare_tab_mod
 
 # ── Page bootstrap (must run on every rerun, so it lives here, not in demo/) ──
 st.set_page_config(page_title="Taxonomy Agent", layout="wide")
@@ -64,10 +65,12 @@ settings = render_sidebar()
 inject_theme(ss["theme"])
 
 # ── Tabs ────────────────────────────────────────────────────────────────────
-run_tab, runs_tab, results_tab, compare_tab = st.tabs(
-    ["Run", "History", "Inspect", "Compare"]
+start_tab, run_tab, runs_tab, results_tab, compare_tab = st.tabs(
+    ["Start", "Run", "History", "Inspect", "Compare"]
 )
 
+with start_tab:
+    start_tab_mod.render()
 with run_tab:
     run_tab_mod.render(settings)
 with runs_tab:
