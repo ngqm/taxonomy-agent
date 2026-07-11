@@ -1,5 +1,5 @@
-"""Start tab: the landing page — what TaxonomyAgent is and the two ways to use
-it (as a Python library, or through this web interface)."""
+"""Start tab: the landing page — what TaxonomyAgent is and the three ways to
+use it (Python library, command line, or this web interface)."""
 from __future__ import annotations
 import streamlit as st
 
@@ -9,14 +9,15 @@ _INSTALL = "pip install taxonomy-agent"
 
 _PY_SNIPPET = '''from taxonomy_agent import run
 
-# `items` can be a list of strings, a list of {"id", "text"} dicts,
-# or a path to a .jsonl / .json / .csv file.
+# `items` accepts any of:
+#   - a list of strings:              ["first text", "second text", ...]
+#   - a list of {"id", "text"} dicts: [{"id": "a", "text": "..."}, ...]
+#   - a path to a .jsonl / .json / .csv file:  "corpus.csv"
 result = run(
     items=[
         "When asked about the budget, the senator pivoted to jobs.",
         "She answered a question no one had asked.",
         "He dismissed the scandal as old news and moved on.",
-        # ... your texts ...
     ],
     instruction="Group these by the rhetorical move used to dodge the question.",
     output_dir="out/",
@@ -31,6 +32,17 @@ print(result["cost"]["total_usd"])       # OpenRouter spend
 # per-item labels are streamed to out/classifications.jsonl
 '''
 
+_CLI_SNIPPET = '''export OPENROUTER_API_KEY=sk-or-...
+
+# Discover a taxonomy in a file (JSONL, JSON, or CSV) along an axis you name.
+taxonomy run corpus.csv \\
+  -g "Group these prompts by the manipulation tactic each uses." \\
+  -o out/
+
+# Or a one-command demo on a bundled slice of DarkBench.
+taxonomy demo
+'''
+
 
 def render():
     st.markdown(
@@ -43,30 +55,47 @@ def render():
     )
     st.markdown(
         '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:2px 0 26px;">'
-        'Two ways to run it: call it as a Python library, or use the web '
-        'interface in this app.</div>',
+        'line-height:1.5;color:var(--muted);max-width:840px;margin:2px 0 20px;">'
+        'Three ways to run it: as a Python library, on the command line, or '
+        'through the web interface in this app. The library and CLI install '
+        'with:</div>',
         unsafe_allow_html=True,
     )
+    st.code(_INSTALL, language="bash")
 
     # ── Path 1: Python library ──────────────────────────────────────────────
-    st.markdown('<div class="step-head"><span class="step-num">1</span>'
+    st.markdown('<div class="step-head" style="margin-top:22px;">'
+                '<span class="step-num">1</span>'
                 '<span class="step-label">In Python</span></div>',
                 unsafe_allow_html=True)
     st.markdown(
         '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
         'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 8px;">'
-        'Install the package, then call <code>run()</code> with a list of '
-        'strings, a list of <code>{id, text}</code> dicts, or a path to a '
-        'JSONL / JSON / CSV file.</div>',
+        'Call <code>run()</code> with a list of strings, a list of '
+        '<code>{id, text}</code> dicts, or a path to a JSONL / JSON / CSV '
+        'file.</div>',
         unsafe_allow_html=True,
     )
-    st.code(_INSTALL, language="bash")
     st.code(_PY_SNIPPET, language="python")
 
-    # ── Path 2: web interface ───────────────────────────────────────────────
+    # ── Path 2: command line ────────────────────────────────────────────────
     st.markdown('<div class="step-head" style="margin-top:26px;">'
                 '<span class="step-num">2</span>'
+                '<span class="step-label">On the command line</span></div>',
+                unsafe_allow_html=True)
+    st.markdown(
+        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
+        'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 8px;">'
+        'The <code>taxonomy</code> command reads the same JSONL / JSON / CSV '
+        'files. Point it at a corpus and name the axis with <code>-g</code>.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    st.code(_CLI_SNIPPET, language="bash")
+
+    # ── Path 3: web interface ───────────────────────────────────────────────
+    st.markdown('<div class="step-head" style="margin-top:26px;">'
+                '<span class="step-num">3</span>'
                 '<span class="step-label">In the browser</span></div>',
                 unsafe_allow_html=True)
     st.markdown(

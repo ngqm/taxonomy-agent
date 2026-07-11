@@ -119,7 +119,8 @@ def _cmd_run(argv: list[str]) -> None:
         ),
     )
     p.add_argument("corpus", nargs="?",
-                   help="Path to a JSONL file. Each line: {\"id\": ..., \"text\": ..., ...}")
+                   help="Path to a .jsonl / .json / .csv corpus (a text field "
+                        "or column per item; id optional).")
     p.add_argument("-g", "--goal", default=None,
                    help="One-sentence goal instruction (default: topic discovery).")
     p.add_argument("-o", "--output", default=None,
