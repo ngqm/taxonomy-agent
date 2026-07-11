@@ -25,6 +25,7 @@ import os
 import random
 import re
 import time
+from pathlib import Path
 from typing import Any
 
 import requests
@@ -130,12 +131,10 @@ CORPUS_SOURCES: list[str] = ["math500_l4_5", "simpleqa", "advice_custom"]
 GENERATOR_MODEL_DEFAULT = "google/gemini-3.1-flash-lite"
 VERIFIER_MODEL_DEFAULT = "deepseek/deepseek-v4-flash"
 
-DEFAULT_CORPUS_PATH = (
-    "/mnt/hdd/qmnguyen/taxonomy_agent/eval_data/cot_patterns.jsonl"
-)
-DEFAULT_ADVICE_PATH = (
-    "/mnt/hdd/qmnguyen/taxonomy_agent/eval_data/advice_prompts.jsonl"
-)
+# Repo-relative defaults (was a hardcoded absolute machine path).
+_EVAL_DATA = Path(__file__).resolve().parents[2] / "eval_data"
+DEFAULT_CORPUS_PATH = str(_EVAL_DATA / "cot_patterns.jsonl")
+DEFAULT_ADVICE_PATH = str(_EVAL_DATA / "advice_prompts.jsonl")
 
 
 # --------------------------------------------------------------------------- #
