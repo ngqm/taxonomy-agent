@@ -274,8 +274,19 @@ body, p, span, div, label, li, td, th, .stMarkdown,
    reasonable size as the numeric spec-row labels, so no label is visibly
    larger than its neighbours within a section. */
 [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p { font-size: 12.5px !important; }
-/* hide the "?" help-tooltip icons next to field LABELS (not button tooltips) */
-.stApp [data-testid="stWidgetLabel"] [data-testid="stTooltipIcon"] { display: none !important; }
+/* Hide the "?" help-tooltip icons next to field labels in the MAIN content
+   (the Run form explains itself with placeholders + captions), but keep them
+   in the sidebar so every config field carries an explanation. */
+.stApp [data-testid="stMain"] [data-testid="stWidgetLabel"] [data-testid="stTooltipIcon"] { display: none !important; }
+[data-testid="stSidebar"] [data-testid="stWidgetLabel"] [data-testid="stTooltipIcon"] { display: inline-flex !important; }
+/* "?" affordance on the numeric spec-rows, whose collapsed labels can't carry
+   Streamlit's own help icon. `title` supplies the hover text. */
+.side-help {
+  display: inline-block; margin-left: 5px; width: 13px; height: 13px;
+  line-height: 12px; text-align: center; font-size: 9px; font-weight: 700;
+  color: var(--muted); border: 1px solid var(--frame-border);
+  border-radius: 50%%; cursor: help; vertical-align: middle; user-select: none;
+}
 
 /* ── segmented controls (Day|Night in sidebar; Source on Run) ──────────── */
 .stApp [data-testid="stButtonGroup"] button[data-variant="segmented_control"] {

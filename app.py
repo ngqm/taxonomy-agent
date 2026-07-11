@@ -34,7 +34,8 @@ from demo.tabs import start as start_tab_mod, run as run_tab_mod, \
     compare as compare_tab_mod
 
 # ── Page bootstrap (must run on every rerun, so it lives here, not in demo/) ──
-st.set_page_config(page_title="Taxonomy Agent", layout="wide")
+st.set_page_config(page_title="Taxonomy Agent", layout="wide",
+                   initial_sidebar_state="collapsed")
 st.markdown('<div class="page-eyebrow">Agentic taxonomy discovery</div>',
             unsafe_allow_html=True)
 # Rendered as a bespoke serif masthead rather than st.title: st.title wraps its
