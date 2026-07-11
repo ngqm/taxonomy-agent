@@ -404,9 +404,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         `classify_prompt` MUST tell the judge to reply ONLY with a JSON object:
           {"category": <name | "other">, "rationale": <≤2 sentences>}.
 
-        Returns a compact summary: the don't-fit rate, per-category counts, and
-        the ids labelled "other" (feed those to propose_novelties_with_judge).
-        Full per-item labels and rationales are written to trace.jsonl."""
+        Returns per-item labels plus the share of items labelled "other"."""
         if state.classify_calls >= classify_budget:
             return (f"ERROR: classify_with_judge budget exhausted "
                     f"({classify_budget} calls — you set max_iters={max_iters} "
@@ -451,22 +449,11 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             "dont_fit_rate": rate, "n_coerced": n_coerced,
             "n_judge_errors": n_judge_errors,
         })
-        # Return a compact summary (rate, distribution, and the ids that didn't
-        # fit) rather than every per-item label+rationale. The orchestrator only
-        # needs the coverage signal, and the full results are already persisted
-        # to trace.jsonl above. This keeps the ReAct message history — resent on
-        # every serial orchestrator step — small, cutting per-call latency and
-        # cost on long runs.
-        category_counts: dict[str, int] = {}
-        for r in results:
-            category_counts[r["category"]] = category_counts.get(r["category"], 0) + 1
-        other_ids = [r["item_id"] for r in results if r["category"] == "other"]
         return json.dumps({
             "n_classified": n_scored,
             "n_judge_errors": n_judge_errors,
             "dont_fit_rate": round(rate, 3),
-            "category_counts": category_counts,
-            "other_item_ids": other_ids,
+            "results": results,
         }, indent=2)
 
     @tool
