@@ -1,5 +1,3 @@
-# taxonomy_agent
-
 Discover a taxonomy over an unlabelled corpus and label every item, along an
 axis you choose. An orchestrator LLM proposes typed edits to a working taxonomy;
 a cheaper judge LLM labels each item. Both run through OpenRouter, defaulting to
