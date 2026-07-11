@@ -187,6 +187,30 @@ class RunResult(dict):
         self.to_dataframe().to_csv(path, index=False)
         return path
 
+    @classmethod
+    def from_dir(cls, output_dir: Union[str, Path]) -> "RunResult":
+        """Reload a finished run from its ``output_dir`` without re-spending.
+
+        Reads ``taxonomy.json`` (the artifact) and, if present, ``cost.json``,
+        rebuilding the object :func:`run` returns so ``.definitions``,
+        ``.to_dataframe()``, and ``.cost_usd`` work offline."""
+        output_dir = Path(output_dir)
+        artifact_path = output_dir / "taxonomy.json"
+        with open(artifact_path) as f:
+            artifact = json.load(f)
+        out: dict = {
+            "run_id": artifact.get("run_id"),
+            "output_dir": str(output_dir),
+            "artifact_path": str(artifact_path),
+            "artifact": artifact,
+            "status": "ok",
+        }
+        cost_path = output_dir / "cost.json"
+        if cost_path.exists():
+            with open(cost_path) as f:
+                out["cost"] = json.load(f)
+        return cls(out)
+
 
 def run(
     items: Union[str, Path, Iterable[dict]],
@@ -212,9 +236,10 @@ def run(
     """Discover a taxonomy of patterns in `items` and classify every item.
 
     Args:
-        items: list/iterable of dicts (each must have `id` and `text`) OR a JSONL path.
-            Any extra keys per item are passed to the judge as context and copied into
-            the output classification rows.
+        items: a list of strings, a list of dicts (each with `text`, and optionally
+            `id`), or a path to a .jsonl / .json / .csv file. Ids are assigned by
+            position when absent. Any extra keys per item are passed to the judge as
+            context and copied into the output classification rows.
         instruction: short natural-language description of what to classify
             (e.g. "Identify the rhetorical strategy used to redirect from the question.").
         output_dir: directory for taxonomy.json and trace.jsonl.

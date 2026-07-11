@@ -123,10 +123,10 @@ def render(settings):
                          "JSONL / JSON / CSV with a text field or column.")
     elif src == "Paste":
         text = st.text_area(
-            "Paste items — JSONL (one per line), a JSON array, or one text per line",
+            "Paste items: JSONL (one per line), a JSON array, or one text per line",
             height=180,
             placeholder='{"id": "1", "text": "..."}\n{"id": "2", "text": "..."}'
-                        '\n\n— or —\n["first text", "second text"]',
+                        '\n\nor\n["first text", "second text"]',
         )
         if text.strip():
             # A leading "[" means a JSON array; otherwise treat as JSONL / one

@@ -52,7 +52,7 @@ def render():
         'discovers a labelled taxonomy over an unlabelled corpus along an axis '
         'you choose. Give it a corpus and one sentence naming the axis; it '
         'returns a set of categories, a label for every item, and a replayable '
-        'trace &mdash; with no category set defined in advance.</div>',
+        'trace. No category set is defined in advance.</div>',
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -104,7 +104,7 @@ def render():
         '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
         'line-height:1.6;color:var(--muted);max-width:840px;margin:0 0 8px;">'
         'Open the <b>Run</b> tab to provide a corpus, write an instruction, and '
-        'launch a run &mdash; or press <b>Run the demo</b> there for a one-click '
+        'launch a run. Or press <b>Run the demo</b> there for a one-click '
         'example on a slice of DarkBench. Browse finished runs in <b>Inspect</b> '
         'and set two side by side in <b>Compare</b>. The hosted demo runs on its '
         'own API key, so you don\'t need your own.</div>',

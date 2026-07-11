@@ -141,7 +141,7 @@ def _cmd_run(argv: list[str]) -> None:
     args = p.parse_args(argv)
 
     if not args.corpus:
-        p.error("missing positional argument: corpus (JSONL path)")
+        p.error("missing positional argument: corpus (.jsonl / .json / .csv path)")
     if not Path(args.corpus).exists():
         sys.exit(f"corpus file not found: {args.corpus}")
 
