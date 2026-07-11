@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import time
 
+from .base import Baseline
+
 
 def run_bertopic(items: list[dict], seed: int = 42, **kwargs) -> dict:
     try:
@@ -40,3 +42,11 @@ def run_bertopic(items: list[dict], seed: int = 42, **kwargs) -> dict:
         "cost_usd": 0.0,
         "wall_time_s": time.time() - t0,
     }
+
+
+class BERTopicBaseline(Baseline):
+    """Embed with all-MiniLM-L6-v2, cluster with BERTopic (no LLM)."""
+    name = "bertopic"
+
+    def run(self, items, *, seed=42, **kwargs):
+        return run_bertopic(items, seed=seed)

@@ -3,6 +3,10 @@ from __future__ import annotations
 
 import time
 
+from .base import Baseline
+
+_LDA_KWARGS = ("n_topics", "max_features", "max_iter")
+
 
 def _select_k_coherence(texts, vocab, X, seed, k_range, max_iter=10):
     """Pick K by maximizing gensim C_v topic coherence over a candidate range.
@@ -116,3 +120,12 @@ def run_lda(items: list[dict], seed: int = 42, **kwargs) -> dict:
         "cost_usd": 0.0,
         "wall_time_s": time.time() - t0,
     }
+
+
+class LDABaseline(Baseline):
+    """Latent Dirichlet Allocation over a bag-of-words (no LLM)."""
+    name = "lda"
+
+    def run(self, items, *, seed=42, **kwargs):
+        return run_lda(items, seed=seed,
+                       **{k: v for k, v in kwargs.items() if k in _LDA_KWARGS})

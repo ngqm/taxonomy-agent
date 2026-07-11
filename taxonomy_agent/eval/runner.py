@@ -72,30 +72,12 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
                 model: str, api_key: str | None, dry_run: bool, **kw) -> dict:
     if dry_run:
         return _dry_run_predictions(items, seed)
-    if method == "bertopic":
-        from .baselines.bertopic_baseline import run_bertopic
-        return run_bertopic(items, seed=seed)
-    if method == "lda":
-        from .baselines.lda_baseline import run_lda
-        return run_lda(items, seed=seed,
-                       **{k: v for k, v in kw.items()
-                          if k in ("n_topics", "max_features", "max_iter")})
-    if method == "single_shot":
-        from .baselines.single_shot_llm import run_single_shot
-        return run_single_shot(items, instruction=instruction, model=model,
-                               api_key=api_key, seed=seed)
-    if method == "topicgpt_style":
-        from .baselines.topicgpt_style import run_topicgpt_style
-        return run_topicgpt_style(items, instruction=instruction, model=model,
-                                  api_key=api_key, seed=seed)
-    if method == "embed_cluster_llm":
-        from .baselines.embed_cluster_llm import run_embed_cluster_llm
-        return run_embed_cluster_llm(
-            items, instruction=instruction, model=model,
-            api_key=api_key, seed=seed,
-            **{k: v for k, v in kw.items()
-               if k in ("k", "samples_per_cluster", "concurrency")},
-        )
+    from .baselines import REGISTRY
+    if method in REGISTRY:
+        # Each baseline ignores the keyword arguments it does not use.
+        return REGISTRY[method].run(
+            items, instruction=instruction, seed=seed, model=model,
+            api_key=api_key, **kw)
     if method in ("taxonomy_agent", "taxonomy_agent_prose"):
         from .. import run as taxagent_run
         prose = (method == "taxonomy_agent_prose")

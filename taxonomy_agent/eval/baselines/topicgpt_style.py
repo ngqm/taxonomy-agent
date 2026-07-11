@@ -13,6 +13,8 @@ import re
 import threading
 import time
 
+from .base import Baseline
+
 
 GEN_TMPL = """Instruction: {instruction}
 
@@ -144,3 +146,14 @@ def run_topicgpt_style(items: list[dict], instruction: str,
         "cost_usd": round(total_cost, 6),
         "wall_time_s": time.time() - t0,
     }
+
+
+class TopicGPTStyleBaseline(Baseline):
+    """Iterative reuse-or-propose topic induction, then per-item assignment."""
+    name = "topicgpt_style"
+    uses_instruction = True
+
+    def run(self, items, *, instruction="", seed=42, model="", api_key=None,
+            **kwargs):
+        return run_topicgpt_style(items, instruction=instruction, model=model,
+                                  api_key=api_key, seed=seed)

@@ -20,6 +20,10 @@ import re
 import threading
 import time
 
+from .base import Baseline
+
+_ECL_KWARGS = ("k", "samples_per_cluster", "concurrency")
+
 
 NAME_TMPL = """Instruction: {instruction}
 
@@ -227,3 +231,16 @@ def run_embed_cluster_llm(items: list[dict], instruction: str,
         "cost_usd": round(total_cost, 6),
         "wall_time_s": time.time() - t0,
     }
+
+
+class EmbedClusterLabelBaseline(Baseline):
+    """Embed, K-means, name each cluster with one LLM call, then judge-assign."""
+    name = "embed_cluster_llm"
+    uses_instruction = True
+
+    def run(self, items, *, instruction="", seed=42, model="", api_key=None,
+            **kwargs):
+        return run_embed_cluster_llm(
+            items, instruction=instruction, model=model, api_key=api_key,
+            seed=seed,
+            **{k: v for k, v in kwargs.items() if k in _ECL_KWARGS})

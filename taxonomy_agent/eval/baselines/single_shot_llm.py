@@ -7,6 +7,8 @@ import re
 import threading
 import time
 
+from .base import Baseline
+
 
 PROPOSE_TMPL = """You are given a corpus of short texts and an instruction.
 
@@ -102,3 +104,14 @@ def run_single_shot(items: list[dict], instruction: str,
         "cost_usd": round(total_cost, 6),
         "wall_time_s": time.time() - t0,
     }
+
+
+class SingleShotBaseline(Baseline):
+    """One LLM call proposes the categories, then a cheap call labels each item."""
+    name = "single_shot"
+    uses_instruction = True
+
+    def run(self, items, *, instruction="", seed=42, model="", api_key=None,
+            **kwargs):
+        return run_single_shot(items, instruction=instruction, model=model,
+                               api_key=api_key, seed=seed)
