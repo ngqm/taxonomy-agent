@@ -120,6 +120,74 @@ def _load_items(items_or_path: Union[str, Path, Iterable]) -> list[dict]:
     return _normalize_items(items_or_path)
 
 
+class RunResult(dict):
+    """The value returned by :func:`run`.
+
+    It behaves like the underlying dict (``result["artifact"]``,
+    ``result["cost"]``, ``result["status"]`` all still work) while adding
+    ergonomic access to the discovered categories, their definitions, and the
+    per-item classifications with the judge's rationales::
+
+        result = run(...)
+        result.definitions           # {category_name: one-line definition}
+        result.classifications       # [{id, text, category, rationale}, ...]
+        df = result.to_dataframe()   # a table incl. rationale + definition
+        result.save_csv("out.csv")   # export that same table
+    """
+
+    @property
+    def status(self) -> str | None:
+        return self.get("status")
+
+    @property
+    def cost_usd(self) -> float | None:
+        """Total OpenRouter spend for the run, in USD."""
+        return (self.get("cost") or {}).get("total_usd")
+
+    @property
+    def taxonomy(self) -> list[dict]:
+        """The discovered categories, each ``{"name", "description"}``."""
+        return (self.get("artifact") or {}).get("taxonomy", [])
+
+    @property
+    def definitions(self) -> dict[str, str]:
+        """Map of each category name to its one-line definition."""
+        return {t.get("name"): t.get("description", "") for t in self.taxonomy}
+
+    @property
+    def classifications(self) -> list[dict]:
+        """Every item with its assigned ``category`` and the judge's
+        ``rationale`` (alongside the item's original fields, e.g. ``id`` /
+        ``text``)."""
+        return (self.get("artifact") or {}).get("classifications", [])
+
+    @property
+    def category_counts(self) -> dict[str, int]:
+        """Number of items assigned to each category."""
+        return (self.get("artifact") or {}).get("category_counts", {})
+
+    def to_dataframe(self):
+        """A per-item ``pandas.DataFrame`` with columns ``id, text, category,
+        rationale, definition`` (the definition of the assigned category)."""
+        import pandas as pd
+        defs = self.definitions
+        rows = [{
+            "id": c.get("id"),
+            "text": c.get("text"),
+            "category": c.get("category"),
+            "rationale": c.get("rationale"),
+            "definition": defs.get(c.get("category"), ""),
+        } for c in self.classifications]
+        return pd.DataFrame(
+            rows, columns=["id", "text", "category", "rationale", "definition"])
+
+    def save_csv(self, path: str) -> str:
+        """Write the per-item table (with rationales and definitions) to
+        ``path`` as CSV and return the path."""
+        self.to_dataframe().to_csv(path, index=False)
+        return path
+
+
 def run(
     items: Union[str, Path, Iterable[dict]],
     instruction: str,
@@ -377,4 +445,4 @@ def run(
         print(f"[taxonomy_agent] tokens recorded; USD unknown for one or both "
               f"models (not in cost.MODEL_PRICES). See {output_dir}/cost.json.")
 
-    return out
+    return RunResult(out)

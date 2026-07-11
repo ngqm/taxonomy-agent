@@ -31,18 +31,42 @@ def test_iterable_input():
     assert [it["id"] for it in items] == ["1", "2"]
 
 
-def test_rejects_missing_id(tmp_path):
+def test_autoassigns_missing_id(tmp_path):
+    # Ids are optional now: assigned by position when absent, still unique.
     p = tmp_path / "items.jsonl"
-    p.write_text('{"text": "x"}\n')
-    with pytest.raises(ValueError, match="missing 'id'"):
-        _load_items(str(p))
+    p.write_text('{"text": "x"}\n{"text": "y"}\n')
+    items = _load_items(str(p))
+    assert len(items) == 2
+    assert all(it["id"] for it in items)
+    assert len({it["id"] for it in items}) == 2
 
 
 def test_rejects_missing_text(tmp_path):
     p = tmp_path / "items.jsonl"
     p.write_text('{"id": "a"}\n')
-    with pytest.raises(ValueError, match="missing 'text'"):
+    with pytest.raises(ValueError, match="no 'text'"):
         _load_items(str(p))
+
+
+def test_loads_list_of_strings():
+    items = _load_items(["first text", "second text"])
+    assert [it["text"] for it in items] == ["first text", "second text"]
+    assert len({it["id"] for it in items}) == 2
+
+
+def test_loads_json_array(tmp_path):
+    p = tmp_path / "items.json"
+    p.write_text('[{"id": "a", "text": "x"}, "bare string"]')
+    items = _load_items(str(p))
+    assert items[0]["text"] == "x"
+    assert items[1]["text"] == "bare string"
+
+
+def test_loads_csv(tmp_path):
+    p = tmp_path / "items.csv"
+    p.write_text("id,text\nr1,hello\nr2,world\n")
+    items = _load_items(str(p))
+    assert [(it["id"], it["text"]) for it in items] == [("r1", "hello"), ("r2", "world")]
 
 
 def test_rejects_duplicate_id_in_file(tmp_path):
@@ -58,7 +82,7 @@ def test_rejects_duplicate_id_in_iterable():
 
 
 def test_iterable_missing_field():
-    with pytest.raises(ValueError, match="every item must have"):
+    with pytest.raises(ValueError, match="no 'text'"):
         _load_items([{"id": "a"}])
 
 

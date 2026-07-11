@@ -260,8 +260,9 @@ The orchestrator drives the loop entirely through these tool calls:
 from taxonomy_agent import run
 
 result = run(
-    items="items.jsonl",                                # path or list of dicts
-    instruction="Classify each text into the rhetorical-strategy category used.",
+    items="items.jsonl",          # a list of strings, a list of {id, text}
+                                  # dicts, or a .jsonl / .json / .csv path
+    instruction="Group these prompts by the manipulation tactic each uses.",
     output_dir="results/",
     orchestrator_model="deepseek/deepseek-v4-flash",   # default
     judge_model="deepseek/deepseek-v4-flash",           # default
@@ -269,8 +270,19 @@ result = run(
     converge_below=0.10,
     probe_size=20,
 )
-print(result["artifact"]["category_counts"])
+
+result.definitions            # {category: one-line definition}
+result.classifications        # [{id, text, category, rationale}, ...]
+result.category_counts        # {category: n_items}
+result.cost_usd               # OpenRouter spend, in USD
+
+df = result.to_dataframe()    # id, text, category, rationale, definition
+result.save_csv("labels.csv") # export the table above
 ```
+
+`run()` returns a `RunResult` — a dict (`result["artifact"]`, `result["cost"]`
+still work) with the accessors above for the definitions and per-item
+rationales.
 
 ---
 

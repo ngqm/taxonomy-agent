@@ -27,9 +27,11 @@ result = run(
     api_key="sk-or-...",   # or set OPENROUTER_API_KEY in the environment
 )
 
-print(result["artifact"]["taxonomy"])   # the discovered categories
-print(result["cost"]["total_usd"])       # OpenRouter spend
-# per-item labels are streamed to out/classifications.jsonl
+result.definitions           # {category: one-line definition}
+result.classifications       # [{id, text, category, rationale}, ...]
+result.to_dataframe()        # a table with a rationale + definition per item
+result.save_csv("labels.csv")  # export that table
+print(result.cost_usd)       # OpenRouter spend, in USD
 '''
 
 _CLI_SNIPPET = '''export OPENROUTER_API_KEY=sk-or-...
