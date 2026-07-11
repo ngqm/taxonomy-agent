@@ -195,13 +195,11 @@ so the suite runs offline in a few seconds with no API key.
 ## Citation
 
 ```bibtex
-@inproceedings{nguyen2026taxonomyagent,
-  title     = {TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery},
-  author    = {Nguyen, Quang Minh},
-  booktitle = {Proceedings of the 2026 Conference on Empirical Methods in
-               Natural Language Processing: System Demonstrations},
-  year      = {2026}
+@misc{nguyen2026taxonomyagent,
+  title  = {TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery},
+  author = {Nguyen, Quang Minh},
+  year   = {2026},
+  note   = {Preprint},
+  howpublished = {\url{https://ngqm--taxonomyagent.modal.run}}
 }
 ```
-
-A machine-readable `CITATION.cff` is in the repo root.

@@ -9,11 +9,11 @@ authors:
 repository-code: "https://github.com/ngqm/taxonomy-agent"
 license: MIT
 preferred-citation:
-  type: conference-paper
-  title: "taxonomy_agent: Iterative LLM-Driven Taxonomy Discovery with Live Cost Tracking"
+  type: generic
+  title: "TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery"
   authors:
     - family-names: Nguyen
       given-names: Quang Minh
-  collection-title: "Proceedings of the 2026 Conference on Empirical Methods in Natural Language Processing: System Demonstrations"
   year: 2026
-  notes: "Preprint forthcoming."
+  url: "https://ngqm--taxonomyagent.modal.run"
+  notes: "Preprint. Not peer reviewed."
