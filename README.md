@@ -1,26 +1,35 @@
-Discover a taxonomy over an unlabelled corpus and label every item, along an
-axis you choose. An orchestrator LLM proposes typed edits to a working taxonomy;
-a cheaper judge LLM labels each item. Both run through OpenRouter, defaulting to
+# TaxonomyAgent
+
+TaxonomyAgent discovers an interpretable taxonomy over an unlabelled text
+corpus along an axis you choose, then labels every item against it. An
+orchestrator LLM proposes typed edits to a working taxonomy while a cheaper
+judge LLM classifies items. Both roles run through OpenRouter and default to
 DeepSeek-v4-Flash.
 
-Give it a corpus and one sentence naming the axis (for example, "group these
-prompts by the manipulation tactic each uses"). It returns the categories, a
-label and rationale for every item, and a replayable trace.
+You supply a corpus and one sentence describing the axis of interest, for
+example "group these prompts by the manipulation tactic each uses."
+TaxonomyAgent returns the discovered categories, a label and rationale for
+every item, and a replayable trace of the run.
 
-Live demo: https://ngqm--taxonomyagent.modal.run
+A hosted demo is available at https://ngqm--taxonomyagent.modal.run.
 
-## Install
+## Installation
 
-Requires Python 3.10+.
+TaxonomyAgent requires Python 3.10 or later.
 
 ```bash
-pip install -e .                        # registers the `taxonomy` command
+git clone https://github.com/ngqm/taxonomy-agent
+cd taxonomy-agent
+pip install -e .
 echo 'OPENROUTER_API_KEY=sk-or-...' > .env
 ```
 
-## Use it
+## Usage
 
-**Python**
+The same engine is available as a Python library, a command-line tool, and a
+web application.
+
+### Python
 
 ```python
 from taxonomy_agent import run
@@ -38,49 +47,56 @@ result.save_csv("labels.csv")
 result.cost_usd               # OpenRouter spend, in USD
 ```
 
-`RunResult.from_dir("out/")` reloads a finished run offline. See
+`RunResult.from_dir("out/")` reloads a completed run offline. See
 `notebooks/quickstart.ipynb` for a runnable walkthrough.
 
-**Command line**
+### Command line
 
 ```bash
 taxonomy run corpus.csv -g "Group these by the manipulation tactic each uses." -o out/
-taxonomy demo                           # one-command run on a bundled DarkBench slice
+taxonomy demo    # one-command run on a bundled DarkBench slice
 ```
 
-**Web**
+### Web
 
 ```bash
-taxonomy ui                             # or: streamlit run app.py
+taxonomy ui      # or: streamlit run app.py
 ```
 
-## Input
+## Input formats
 
-Pass a list of strings, a list of `{id, text}` dicts, or a path to a file:
+The library and the CLI accept a list of strings, a list of `{id, text}`
+dictionaries, or a path to a file:
 
-- `.jsonl`: one JSON object (or bare string) per line
-- `.json`: an array of objects or strings
-- `.csv`: a `text` column, optional `id` column
+- `.jsonl` — one JSON object, or a bare string, per line
+- `.json` — an array of objects or strings
+- `.csv` — a `text` column, with an optional `id` column
 
-Ids are assigned by position when absent.
+Identifiers are assigned by position when absent.
 
 ## Output
 
-`out/taxonomy.json` holds the taxonomy, per-item classifications, and category
-counts; `out/trace.jsonl` records every revise, classify, and novelty call.
+Each run writes two files to its output directory:
+
+- `taxonomy.json` — the taxonomy, the per-item classifications, and the
+  per-category counts
+- `trace.jsonl` — every revise, classify, and novelty-proposal call
 
 ## Cost
 
-With DeepSeek-v4-Flash for both roles, a 500-item run costs about $0.17 and
-takes roughly 10 minutes; a few dozen items cost a few cents. A stronger
-orchestrator (Claude Sonnet, GPT-5, Gemini Pro) raises quality on hard corpora
-at higher cost; keep the judge cheap.
+With DeepSeek-v4-Flash in both roles, a 500-item run costs roughly \$0.17 and
+takes about ten minutes; smaller corpora cost a few cents. A stronger
+orchestrator such as Claude Sonnet, GPT-5, or Gemini Pro improves quality on
+difficult corpora at higher cost, while the judge can remain inexpensive.
 
-## Tests
+## Testing
 
 ```bash
-python -m pytest tests/                 # offline, stubbed judges, no API key
+python -m pytest tests/
 ```
+
+The suite stubs the judge, so it runs offline in a few seconds without an API
+key.
 
 ## Citation
 
@@ -93,3 +109,7 @@ python -m pytest tests/                 # offline, stubbed judges, no API key
   howpublished = {\url{https://ngqm--taxonomyagent.modal.run}}
 }
 ```
+
+## License
+
+Released under the MIT License. See [LICENSE](LICENSE) for details.
