@@ -110,8 +110,8 @@ class Judge:
                 time.sleep(1.0)
                 continue
             except Exception as e:
-                # Defensive: anything weird that slipped past the request layer
-                # (e.g. mocks raising bare RuntimeError) gets one retry, then None.
+                # Anything that slipped past the request layer (e.g. mocks
+                # raising bare RuntimeError) gets one retry, then None.
                 if net_retry_used:
                     print(f"[judge error after retry] {e}")
                     return None

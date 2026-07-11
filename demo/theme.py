@@ -26,7 +26,7 @@ CATEGORY_COLORS: dict[str, str] = {
     "sycophancy":           "#2fb0a0",  # teal-green (nudged off the blue)
     "brand_bias":           "#c79237",  # amber
     "user_retention":       "#a85fc0",  # violet
-    "sneaking":             "#e15e39",  # tomato (nudged off the vermilion UI accent)
+    "sneaking":             "#e15e39",  # tomato (nudged off the UI accent)
     "harmful_generation":   "#3f9f6b",  # green
     "polarizing_stance":    "#c74f8a",  # magenta
     "other":                "#a6a6ad",  # grey
@@ -134,7 +134,7 @@ body, p, span, div, label, li, td, th, .stMarkdown,
   font-weight: 500; letter-spacing: 0;
 }
 .stApp h1 { font-size: 2.35rem; letter-spacing: -0.005em; }
-/* Section heads (st.header / st.subheader) sit above a vermilion hairline. */
+/* Section heads (st.header / st.subheader) sit above a hairline. */
 .stApp h2, .stApp h3 {
   border-bottom: 1px solid var(--section-rule);
   padding-bottom: 6px; margin-bottom: 12px; font-size: 1.6rem;
@@ -143,7 +143,7 @@ body, p, span, div, label, li, td, th, .stMarkdown,
   color: var(--muted) !important; font-family: %(sans)s;
 }
 
-/* ── tabs: SERIF labels (16px), ink active, vermilion underline ────────── */
+/* ── tabs: SERIF labels (16px), ink active, accent underline ────────── */
 /* Streamlit 1.59 tabs are [data-testid="stTab"] inside [role="tablist"]. */
 .stApp [role="tablist"] { border-bottom: 1px solid var(--card-border); gap: 26px; }
 .stApp [data-testid="stTab"] p {
@@ -304,8 +304,8 @@ body, p, span, div, label, li, td, th, .stMarkdown,
 .st-key-source_seg [data-testid="stButtonGroup"] button[aria-checked="true"] p { color: var(--canvas) !important; }
 
 /* ── the "Run the demo" call-out (keyed container in run.py) ────────────── */
-/* Warm-paper panel with a vermilion left-rule (matching the NEW? callout) and
-   a single filled-vermilion primary button — vermilion is the one "act" colour
+/* Warm-paper panel with a accent left-rule (matching the NEW? callout) and
+   a single filled-accent primary button — the accent is the one "act" colour
    in the system, so the recommended action wears it (not an off-palette green). */
 .st-key-demo_cta { border: 1px solid var(--card-border); border-left: 3px solid var(--accent); background: var(--panel-2); padding: 15px 18px 17px; margin-bottom: 12px; }
 .st-key-demo_cta [data-testid^="stBaseButton"] { background: var(--accent) !important; border: 1px solid var(--accent) !important; color: #ffffff !important; }
@@ -583,7 +583,7 @@ def stat_ledger_html(cells: list[dict], value_size: int = 50) -> str:
 
 def section_header_html(title: str, meta: str = "") -> str:
     """Editorial section header: serif title LEFT + muted meta RIGHT on one
-    baseline row, above a vermilion hairline. Matches the mockup's section
+    baseline row, above a hairline. Matches the mockup's section
     treatment (used instead of st.subheader + a separate caption)."""
     return (
         '<div style="display:flex;align-items:baseline;justify-content:space-between;'

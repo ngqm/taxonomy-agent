@@ -76,9 +76,8 @@ def render(settings):
     st.markdown('<div class="step-head"><span class="step-num">1</span>'
                 '<span class="step-label">Task</span></div>',
                 unsafe_allow_html=True)
-    # Task preset — fills instruction / category focus / size hint with sensible
-    # defaults. Re-selecting the same preset is a no-op; switching presets
-    # overwrites the three fields, but the user can edit them after.
+    # Re-selecting the same preset is a no-op; switching presets overwrites the
+    # three fields, but the user can edit them after.
     preset = st.columns([2, 3])[0].selectbox(
         "Task preset",
         list(PRESETS.keys()),

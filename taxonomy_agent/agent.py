@@ -41,7 +41,7 @@ def _normalize_items(raw: Iterable) -> list[dict]:
                 f"item {idx} must be a string or a dict, got "
                 f"{type(obj).__name__}")
         if not str(item["text"]).strip():
-            continue  # drop blank rows
+            continue
         if item["id"] in seen:
             raise ValueError(f"duplicate id: {item['id']!r}")
         seen.add(item["id"])

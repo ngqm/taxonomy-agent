@@ -448,7 +448,6 @@ def _call_llm(model: str, messages: list[dict], api_key: str, base_url: str,
                     cost = float(c)
             if text:
                 return {"text": text, "cost": cost}
-            # Empty content → retry.
             last_err = RuntimeError("empty content")
         except Exception as e:
             last_err = e

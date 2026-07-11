@@ -22,9 +22,6 @@ EXAMPLE_DIR = PACKAGE_DIR / "example"
 DEFAULT_RUNS_ROOT = PACKAGE_DIR / "taxonomy_runs"
 
 
-# Hosted-demo limits.
-
-
 def _discover_runs_roots() -> list[Path]:
     """Return every `*_runs/` directory under the project root *or* the
     package directory that actually exists. UI-launched runs land in
