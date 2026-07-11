@@ -5,7 +5,12 @@ import streamlit as st
 
 from demo import *  # noqa: F401,F403
 
-_INSTALL = "pip install taxonomy-agent"
+_REPO_URL = "https://github.com/ngqm/taxonomy-agent"
+_INSTALL = (
+    "git clone https://github.com/ngqm/taxonomy-agent\n"
+    "cd taxonomy-agent\n"
+    "pip install -e ."
+)
 
 _PY_SNIPPET = '''from taxonomy_agent import run
 
@@ -57,9 +62,17 @@ def render():
     )
     st.markdown(
         '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:2px 0 20px;">'
+        'line-height:1.5;color:var(--muted);max-width:840px;margin:6px 0 2px;">'
+        f'Source on GitHub: <a href="{_REPO_URL}" target="_blank" '
+        'style="color:var(--accent);text-decoration:none;border-bottom:'
+        f'1px solid var(--accent);">{_REPO_URL.replace("https://", "")}</a></div>',
+        unsafe_allow_html=True,
+    )
+    st.markdown(
+        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
+        'line-height:1.5;color:var(--muted);max-width:840px;margin:12px 0 20px;">'
         'Three ways to run it: as a Python library, on the command line, or '
-        'through the web interface in this app. The library and CLI install '
+        'through the web interface in this app. Clone the repo and install '
         'with:</div>',
         unsafe_allow_html=True,
     )
