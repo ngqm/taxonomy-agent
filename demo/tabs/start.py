@@ -52,74 +52,21 @@ taxonomy demo
 
 
 def render():
-    st.markdown(
-        '<div class="page-subtitle" style="margin-top:2px;">TaxonomyAgent '
-        'discovers a labelled taxonomy over an unlabelled corpus along an axis '
-        'you choose. Give it a corpus and one sentence naming the axis; it '
-        'returns a set of categories, a label for every item, and a replayable '
-        'trace. No category set is defined in advance.</div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:6px 0 2px;">'
-        f'Source on GitHub: <a href="{_REPO_URL}" target="_blank" '
-        'style="color:var(--accent);text-decoration:none;border-bottom:'
-        f'1px solid var(--accent);">{_REPO_URL.replace("https://", "")}</a></div>',
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:12px 0 20px;">'
-        'Three ways to run it: as a Python library, on the command line, or '
-        'through the web interface in this app. Clone the repo and install '
-        'with:</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="page-subtitle" style="margin-top:2px;">TaxonomyAgent discovers a labelled taxonomy over an unlabelled corpus along an axis you choose. Give it a corpus and one sentence naming the axis; it returns a set of categories, a label for every item, and a replayable trace. No category set is defined in advance.</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="page-subtitle" style="margin:4px 0 14px;">Source on GitHub: <a href="{_REPO_URL}" target="_blank" style="color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent);">{_REPO_URL.replace("https://", "")}</a></div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle" style="margin:14px 0 8px;">Three ways to run it: as a Python library, on the command line, or through the web interface in this app. Clone the repo and install with:</div>', unsafe_allow_html=True)
     st.code(_INSTALL, language="bash")
 
     # ── Path 1: Python library ──────────────────────────────────────────────
-    st.markdown('<div class="step-head" style="margin-top:22px;">'
-                '<span class="step-num">1</span>'
-                '<span class="step-label">In Python</span></div>',
-                unsafe_allow_html=True)
-    st.markdown(
-        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 8px;">'
-        'Call <code>run()</code> with a list of strings, a list of '
-        '<code>{id, text}</code> dicts, or a path to a JSONL / JSON / CSV '
-        'file.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="step-head" style="margin-top:22px;"><span class="step-num">1</span><span class="step-label">In Python</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle" style="margin:2px 0 10px;">Call <code>run()</code> with a list of strings, a list of <code>{id, text}</code> dicts, or a path to a JSONL / JSON / CSV file.</div>', unsafe_allow_html=True)
     st.code(_PY_SNIPPET, language="python")
 
     # ── Path 2: command line ────────────────────────────────────────────────
-    st.markdown('<div class="step-head" style="margin-top:26px;">'
-                '<span class="step-num">2</span>'
-                '<span class="step-label">On the command line</span></div>',
-                unsafe_allow_html=True)
-    st.markdown(
-        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.5;color:var(--muted);max-width:840px;margin:0 0 8px;">'
-        'The <code>taxonomy</code> command reads the same JSONL / JSON / CSV '
-        'files. Point it at a corpus and name the axis with <code>-g</code>.'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="step-head" style="margin-top:26px;"><span class="step-num">2</span><span class="step-label">On the command line</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle" style="margin:2px 0 10px;">The <code>taxonomy</code> command reads the same JSONL / JSON / CSV files. Point it at a corpus and name the axis with <code>-g</code>.</div>', unsafe_allow_html=True)
     st.code(_CLI_SNIPPET, language="bash")
 
     # ── Path 3: web interface ───────────────────────────────────────────────
-    st.markdown('<div class="step-head" style="margin-top:26px;">'
-                '<span class="step-num">3</span>'
-                '<span class="step-label">In the browser</span></div>',
-                unsafe_allow_html=True)
-    st.markdown(
-        '<div style="font-family:\'Public Sans\',sans-serif;font-size:12.5px;'
-        'line-height:1.6;color:var(--muted);max-width:840px;margin:0 0 8px;">'
-        'Open the <b>Run</b> tab to provide a corpus, write an instruction, and '
-        'launch a run. Or press <b>Run the demo</b> there for a one-click '
-        'example on a slice of DarkBench. Browse finished runs in <b>Inspect</b> '
-        'and set two side by side in <b>Compare</b>. The hosted demo runs on its '
-        'own API key, so you don\'t need your own.</div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="step-head" style="margin-top:26px;"><span class="step-num">3</span><span class="step-label">In the browser</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-subtitle" style="margin:2px 0 10px;">Open the <b>Run</b> tab to provide a corpus, write an instruction, and launch a run. Or press <b>Run the demo</b> there for a one-click example on a slice of DarkBench. Browse finished runs in <b>Inspect</b> and set two side by side in <b>Compare</b>. The hosted demo runs on its own API key, so you don\'t need your own.</div>', unsafe_allow_html=True)
