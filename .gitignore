@@ -150,3 +150,11 @@ paper/*.synctex.gz
 paper/*.pdf
 paper/*.tar.gz
 paper/paper_draft.txt
+
+# scratch output dir from the quickstart notebook / demo runs
+out/
+
+# Keep the paper (LaTeX source, figures, slides, audit docs) out of the public
+# repo; keep only paper/data/ (reproduction scripts + result JSONs).
+/paper/*
+!/paper/data/
