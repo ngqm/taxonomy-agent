@@ -8,7 +8,7 @@ no run data — callers pass already-loaded values in.
 
 Editorial / scientific-catalogue aesthetic: Newsreader (serif display + figures)
 + Public Sans (body/labels), a warm "newsprint" (Day) / cool "slate-press"
-(Night) theme, square corners, and a press-red / coral accent. Both themes share
+(Night) theme, square corners, and an ink-blue accent. Both themes share
 one category-colour map so a category keeps its colour across every tab and chart.
 """
 from __future__ import annotations
