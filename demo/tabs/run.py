@@ -58,7 +58,7 @@ def render(settings):
         )
         st.markdown(
             '<div class="demo-serif" style="margin-top:7px;">Runs on a '
-            'balanced 48-prompt slice of DarkBench in a couple of minutes '
+            'balanced 48-prompt slice of DarkBench in five to ten minutes '
             'for a few cents. The hosted demo uses its own API key, so you '
             'don\'t need one.</div>',
             unsafe_allow_html=True,

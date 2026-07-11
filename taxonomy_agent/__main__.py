@@ -73,7 +73,7 @@ def _cmd_demo(argv: list[str]) -> None:
         description=(
             "Run the bundled demo — a balanced 48-prompt slice of DarkBench — "
             "with the install default models, recovering the manipulation "
-            "patterns from an unlabelled corpus. A couple of minutes on a warm "
+            "patterns from an unlabelled corpus. Five to ten minutes on a warm "
             "OpenRouter connection. Requires OPENROUTER_API_KEY in env."
         ),
     )
