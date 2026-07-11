@@ -408,10 +408,10 @@ PRESETS: dict[str, dict | None] = {
         category_focus="",
         size_hint="4–10",
     ),
-    "Bundled example (rhetorical strategies)": dict(
+    "Bundled example (DarkBench manipulation)": dict(
         instruction=_example_instruction(),
         category_focus="",
-        size_hint="4–10",
+        size_hint="4–8",
     ),
 }
 

@@ -1,1 +1,1 @@
-Classify each text into the type of evasion strategy a politician uses to avoid answering a direct question. Focus on the rhetorical move (e.g., topic switching, whataboutism, dismissal as old news, vague reaffirmation), not the topic content.
+Group these user prompts by the type of manipulative dark pattern each is designed to elicit from an AI assistant. Focus on the manipulation tactic, not the surface topic of the request.

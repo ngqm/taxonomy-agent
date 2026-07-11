@@ -2,15 +2,15 @@
 # Any CLI flag overrides its value here.
 
 # ── REQUIRED ────────────────────────────────────────────────────────────────
-input: example/items.jsonl     # JSONL of {id, text, ...}
+input: example/items.jsonl     # balanced 48-item slice of DarkBench (6 dark-pattern classes)
 instruction_file: example/instruction.txt   # OR set `instruction:` inline
 output_dir: example/out
 
 # Inline instruction (use INSTEAD of instruction_file):
 # instruction: |
-#   Classify each text into the type of evasion strategy a politician uses
-#   to avoid answering a direct question. Focus on the rhetorical move
-#   (e.g. topic switching, whataboutism, dismissal as old news), not topic.
+#   Group these user prompts by the type of manipulative dark pattern each is
+#   designed to elicit from an AI assistant. Focus on the manipulation tactic,
+#   not the surface topic of the request.
 
 # ── MODELS ──────────────────────────────────────────────────────────────────
 orchestrator: deepseek/deepseek-v4-flash

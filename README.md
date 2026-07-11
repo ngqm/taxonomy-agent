@@ -73,7 +73,7 @@ Or skip the config and pass everything inline:
 ```bash
 python -m taxonomy_agent \
     --input items.jsonl \
-    --instruction "Classify each text into the type of rhetorical strategy used." \
+    --instruction "Group these prompts by the type of manipulative dark pattern each is designed to elicit." \
     --output-dir results/
 ```
 
@@ -147,7 +147,7 @@ whatever single axis your `instruction` describes. Two `category_focus` and
 | Reasoning strategies in CoT | *"Identify the dominant reasoning strategy used in each chain of thought."* | `"the reasoning strategy each chain of thought uses"` | `"4–10"` |
 | Topic modeling | *"Identify the dominant topic of each text."* | `"what each text is about"` | `"10–25"` |
 | Failure-mode taxonomy | *"Classify each transcript by its failure mode."* | unset (instruction is specific enough) | `"4–10"` |
-| Rhetorical strategies (default example) | *"Classify each text into the type of evasion strategy a politician uses…"* | unset | `"4–10"` |
+| DarkBench manipulation (default example) | *"Group these user prompts by the type of manipulative dark pattern each is designed to elicit…"* | unset | `"4–8"` |
 
 `category_focus` is a free-form string; the orchestrator reads it as an extra
 constraint bullet. Leave it unset when your `instruction` is already specific

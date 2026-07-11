@@ -67,13 +67,14 @@ def _load_config(path: str) -> dict:
 
 
 def _cmd_demo(argv: list[str]) -> None:
-    """Run the bundled 5-item political-evasion demo with default models."""
+    """Run the bundled DarkBench-manipulation demo with default models."""
     p = argparse.ArgumentParser(
         prog="taxonomy demo",
         description=(
-            "Run the bundled 5-item political-evasion demo with the install "
-            "default models. About 30 seconds on a warm OpenRouter connection. "
-            "Requires OPENROUTER_API_KEY in env."
+            "Run the bundled demo — a balanced 48-prompt slice of DarkBench — "
+            "with the install default models, recovering the manipulation "
+            "patterns from an unlabelled corpus. A couple of minutes on a warm "
+            "OpenRouter connection. Requires OPENROUTER_API_KEY in env."
         ),
     )
     p.add_argument("-o", "--output", default=None,

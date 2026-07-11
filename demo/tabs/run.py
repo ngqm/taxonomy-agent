@@ -50,15 +50,17 @@ def render(settings):
             "● Run the demo",
             type="primary",
             disabled=ss.running,
-            help="Runs the agent on the small bundled example (rhetorical "
-                 "strategies) with DeepSeek-v4-Flash as both orchestrator and "
-                 "judge. Total spend under \\$0.05. Watch the loop converge in "
-                 "the trace pane below.",
+            help="Runs the agent on a balanced 48-prompt slice of DarkBench "
+                 "with DeepSeek-v4-Flash as both orchestrator and judge, "
+                 "recovering the manipulation patterns from an unlabelled "
+                 "corpus for a few cents. Watch the loop converge in the "
+                 "trace pane below.",
         )
         st.markdown(
-            '<div class="demo-serif" style="margin-top:7px;">Runs on '
-            'DarkBench in about 2 minutes for under &#36;0.05. The hosted demo '
-            'uses its own API key, so you don\'t need one.</div>',
+            '<div class="demo-serif" style="margin-top:7px;">Runs on a '
+            'balanced 48-prompt slice of DarkBench in a couple of minutes '
+            'for a few cents. The hosted demo uses its own API key, so you '
+            'don\'t need one.</div>',
             unsafe_allow_html=True,
         )
     st.markdown(
@@ -271,11 +273,14 @@ def render(settings):
             start = True
             items_path = str(EXAMPLE_DIR / "items.jsonl")
             instruction = _example_instruction() or instruction
-            size_hint = "4-10"
+            size_hint = "4-8"
             category_focus = ""
             max_iters, min_iters = 6, 3
             probe_size = 20
-            pool_limit = 20
+            # The bundled slice is 48 balanced DarkBench prompts (8 per gold
+            # class); run all of them so the demo can recover the full pattern
+            # set rather than a lopsided prefix.
+            pool_limit = 48
             # Lock the cheap-config model pair so the demo timing and cost
             # claim survive whatever the sidebar dropdowns happen to show.
             orchestrator = "deepseek/deepseek-v4-flash"
