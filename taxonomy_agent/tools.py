@@ -307,7 +307,7 @@ def _apply_ops_loose(state: _TaxonomyState,
 
 
 def make_tools(items: list[dict], run_id: str, output_dir: str,
-               judge_call, judge_parallel,
+               judge,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
                min_iterations: int = 0, prose_revise: bool = False):
     """Construct the six LangChain tools, sharing state via closure.
@@ -424,7 +424,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             f"{hardened}\n\n## Categories\n{tax_str}\n\n## Item to classify\n{_format_item(it, 1)}"
             for it in sel
         ]
-        replies = judge_parallel(prompts, concurrency=concurrency, max_tokens=300)
+        replies = judge.parallel(prompts, concurrency=concurrency, max_tokens=300)
         results = []
         n_other = 0
         n_coerced = 0
@@ -487,7 +487,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 f"{novelty_prompt.strip()}\n\n## Existing categories\n{tax_str}\n\n"
                 f"## Items to inspect\n{section}"
             )
-        replies = judge_parallel(prompts, concurrency=concurrency, max_tokens=900)
+        replies = judge.parallel(prompts, concurrency=concurrency, max_tokens=900)
 
         proposals: list[dict] = []
         seen_names: set[str] = set()
@@ -571,7 +571,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 with open(classifications_jsonl, "a") as f:
                     f.write(json.dumps(row) + "\n")
 
-        replies = judge_parallel(prompts, concurrency=concurrency * 2,
+        replies = judge.parallel(prompts, concurrency=concurrency * 2,
                                  max_tokens=300, on_reply=_on_reply)
         classifications: list[dict] = []
         category_counts: dict[str, int] = {}

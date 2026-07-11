@@ -65,7 +65,7 @@ def run_topicgpt_style(items: list[dict], instruction: str,
                        api_key: str | None = None, seed: int = 42,
                        max_topics: int = 20, n_iters: int = 3,
                        batch_size: int = 10, concurrency: int = 8) -> dict:
-    from taxonomy_agent.judge import make_judge_caller
+    from taxonomy_agent.judge import Judge
 
     if api_key is None:
         raise ValueError("api_key required (set OPENROUTER_API_KEY).")
@@ -81,7 +81,8 @@ def run_topicgpt_style(items: list[dict], instruction: str,
             with cost_lock:
                 total_cost += float(c)
 
-    call, parallel = make_judge_caller(api_key, model, usage_sink=usage_sink)
+    judge = Judge(api_key, model, usage_sink=usage_sink)
+    call, parallel = judge.call, judge.parallel
     rng = random.Random(seed)
 
     topics: list[dict] = []  # [{"name": str, "description": str}]

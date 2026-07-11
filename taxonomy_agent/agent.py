@@ -14,7 +14,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
 from .cost import CostTracker
-from .judge import make_judge_caller
+from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
 from .tools import make_tools
 
@@ -307,11 +307,11 @@ def run(
     )
     cost.write()  # zero-state cost.json so the UI can read it immediately
 
-    judge_call, judge_parallel = make_judge_caller(
+    judge = Judge(
         api_key, judge_model, base_url=base_url, usage_sink=cost.add_judge_usage,
     )
     tools, force_finalize = make_tools(
-        items_list, run_id, output_dir, judge_call, judge_parallel,
+        items_list, run_id, output_dir, judge,
         concurrency=concurrency, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
     )

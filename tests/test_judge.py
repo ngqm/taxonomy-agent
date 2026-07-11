@@ -1,4 +1,4 @@
-"""make_judge_caller — retry behaviour with mocked OpenRouter calls."""
+"""Judge: retry behaviour with mocked OpenRouter calls."""
 from __future__ import annotations
 
 import json as _json
@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from taxonomy_agent.judge import JudgeAuthError, make_judge_caller
+from taxonomy_agent.judge import Judge, JudgeAuthError
 
 
 def _http_err_resp(status: int) -> MagicMock:
@@ -34,13 +34,13 @@ def _err_resp() -> MagicMock:
 
 
 def test_call_returns_content_on_success():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     with patch("taxonomy_agent.judge.requests.post", return_value=_ok_resp("hi")):
         assert call("prompt") == "hi"
 
 
 def test_call_retries_once_then_returns_none():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     posts: list[int] = []
 
     def fake_post(*a, **k):
@@ -56,7 +56,7 @@ def test_call_retries_once_then_returns_none():
 
 
 def test_call_retry_succeeds_after_initial_failure():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     responses = [_err_resp(), _ok_resp("recovered")]
 
     def fake_post(*a, **k):
@@ -68,7 +68,7 @@ def test_call_retry_succeeds_after_initial_failure():
 
 
 def test_parallel_preserves_order():
-    _, parallel = make_judge_caller("k", "model")
+    parallel = Judge("k", "model").parallel
 
     def fake_post(*a, data=None, **kw):
         body = _json.loads(data)
@@ -82,7 +82,7 @@ def test_parallel_preserves_order():
 
 def test_parallel_isolates_per_prompt_failures():
     """A failure on one prompt must not poison the rest of the batch."""
-    _, parallel = make_judge_caller("k", "model")
+    parallel = Judge("k", "model").parallel
 
     def fake_post(*a, data=None, **kw):
         body = _json.loads(data)
@@ -117,7 +117,7 @@ def _ok_resp_with_usage(content: str = "ok",
 
 def test_usage_sink_called_per_successful_call():
     captured: list[dict] = []
-    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    call = Judge("k", "model", usage_sink=captured.append).call
     with patch("taxonomy_agent.judge.requests.post",
                return_value=_ok_resp_with_usage(prompt_tokens=42, completion_tokens=7)):
         call("prompt")
@@ -127,7 +127,7 @@ def test_usage_sink_called_per_successful_call():
 
 def test_usage_sink_not_called_on_failure():
     captured: list[dict] = []
-    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    call = Judge("k", "model", usage_sink=captured.append).call
 
     def fake_post(*a, **k):
         raise RuntimeError("network")
@@ -142,7 +142,7 @@ def test_usage_sink_not_called_on_failure():
 def test_request_body_asks_openrouter_for_native_cost():
     """Every call must include `usage: {include: true}` in the request body —
     that's how OpenRouter knows to return usage.cost."""
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     captured: dict = {}
 
     def fake_post(*a, data=None, **k):
@@ -157,7 +157,7 @@ def test_request_body_asks_openrouter_for_native_cost():
 
 def test_usage_sink_forwards_native_cost():
     captured: list[dict] = []
-    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    call = Judge("k", "model", usage_sink=captured.append).call
     with patch("taxonomy_agent.judge.requests.post",
                return_value=_ok_resp_with_usage(prompt_tokens=100,
                                                   completion_tokens=20,
@@ -173,7 +173,7 @@ def test_usage_sink_error_does_not_break_call():
     def boom(usage):
         raise RuntimeError("sink exploded")
 
-    call, _ = make_judge_caller("k", "model", usage_sink=boom)
+    call = Judge("k", "model", usage_sink=boom).call
     with patch("taxonomy_agent.judge.requests.post",
                return_value=_ok_resp_with_usage()):
         assert call("prompt") == "ok"
@@ -181,7 +181,7 @@ def test_usage_sink_error_does_not_break_call():
 
 def test_parallel_on_reply_fires_per_completion():
     """on_reply must be called once per future result, with (index, reply)."""
-    _, parallel = make_judge_caller("k", "model")
+    parallel = Judge("k", "model").parallel
 
     def fake_post(*a, data=None, **kw):
         body = _json.loads(data)
@@ -201,7 +201,7 @@ def test_parallel_on_reply_fires_per_completion():
 
 
 def test_call_raises_on_401():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     with patch("taxonomy_agent.judge.requests.post",
                return_value=_http_err_resp(401)):
         with pytest.raises(JudgeAuthError):
@@ -209,7 +209,7 @@ def test_call_raises_on_401():
 
 
 def test_call_raises_on_403():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     with patch("taxonomy_agent.judge.requests.post",
                return_value=_http_err_resp(403)):
         with pytest.raises(JudgeAuthError):
@@ -217,7 +217,7 @@ def test_call_raises_on_403():
 
 
 def test_call_retries_with_backoff_on_429():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     posts: list[int] = []
 
     def fake_post(*a, **k):
@@ -236,7 +236,7 @@ def test_call_retries_with_backoff_on_429():
 
 
 def test_call_retries_on_500_then_succeeds():
-    call, _ = make_judge_caller("k", "model")
+    call = Judge("k", "model").call
     responses = [_http_err_resp(500), _ok_resp("recovered")]
 
     def fake_post(*a, **k):
@@ -250,7 +250,7 @@ def test_call_retries_on_500_then_succeeds():
 
 def test_usage_sink_receives_http_status():
     captured: list[dict] = []
-    call, _ = make_judge_caller("k", "model", usage_sink=captured.append)
+    call = Judge("k", "model", usage_sink=captured.append).call
     resp = _ok_resp_with_usage(prompt_tokens=10, completion_tokens=5)
     resp.status_code = 200
     with patch("taxonomy_agent.judge.requests.post", return_value=resp):
@@ -262,7 +262,7 @@ def test_usage_sink_receives_http_status():
 def test_parallel_on_reply_fires_for_failures_too():
     """A None result must still trigger on_reply so the streaming sink can
     persist a placeholder."""
-    _, parallel = make_judge_caller("k", "model")
+    parallel = Judge("k", "model").parallel
 
     def fake_post(*a, data=None, **kw):
         body = _json.loads(data)

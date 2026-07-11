@@ -122,7 +122,7 @@ def run_embed_cluster_llm(items: list[dict], instruction: str,
             "`pip install sentence-transformers scikit-learn`"
         ) from e
 
-    from taxonomy_agent.judge import make_judge_caller
+    from taxonomy_agent.judge import Judge
 
     if api_key is None:
         raise ValueError("api_key required (set OPENROUTER_API_KEY).")
@@ -141,7 +141,8 @@ def run_embed_cluster_llm(items: list[dict], instruction: str,
             with cost_lock:
                 total_cost += float(c)
 
-    call, parallel = make_judge_caller(api_key, model, usage_sink=usage_sink)
+    judge = Judge(api_key, model, usage_sink=usage_sink)
+    call, parallel = judge.call, judge.parallel
 
     # 1. Embed.
     texts = [it["text"] for it in items]

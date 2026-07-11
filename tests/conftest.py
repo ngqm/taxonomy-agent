@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -45,10 +46,11 @@ def make_tool_set(tmp_path):
     """Factory that returns a name→tool dict so tests don't unpack the 6-tuple
     every time. Pass items + judge stubs + any kwargs accepted by make_tools."""
     def _make(items, judge_call, judge_parallel, **kw):
+        # make_tools takes a judge object with .call/.parallel; wrap the stubs.
+        judge = SimpleNamespace(call=judge_call, parallel=judge_parallel)
         names = ["sample", "get", "revise", "classify", "propose", "finalize"]
         tool_list, _force_finalize = make_tools(
-            items, "run-test", str(tmp_path),
-            judge_call, judge_parallel, **kw,
+            items, "run-test", str(tmp_path), judge, **kw,
         )
         return dict(zip(names, tool_list))
 
