@@ -81,11 +81,14 @@ Identifiers are assigned by position when absent.
 
 ## Output
 
-Each run writes two files to its output directory:
+Each run writes to its output directory:
 
 - `taxonomy.json` — the taxonomy, the per-item classifications, and the
   per-category counts
+- `classifications.jsonl` — per-item labels, streamed row by row
 - `trace.jsonl` — every revise, classify, and novelty-proposal call
+- `taxonomy_state.json` — the working taxonomy, rewritten after each revision
+- `cost.json` — running spend, from OpenRouter's native usage cost
 
 ## Cost
 

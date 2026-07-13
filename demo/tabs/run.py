@@ -495,7 +495,10 @@ def render(settings):
                     log_w.close()
                 except Exception as e:
                     ss.running = False
-                    st.exception(e)
+                    if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+                        st.error("The run could not be started. Please try again.")
+                    else:
+                        st.exception(e)
                     st.stop()
 
             ss.running = False

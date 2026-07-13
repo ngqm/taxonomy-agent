@@ -130,8 +130,13 @@ def render(settings):
             else:
                 st.warning(f"No `taxonomy.json` in `{cand_path}`.")
         else:
-            with open(artifact_path) as f:
-                art = json.load(f)
+            try:
+                with open(artifact_path) as f:
+                    art = json.load(f)
+            except (ValueError, OSError) as e:
+                st.error(f"Could not read `taxonomy.json` in `{cand_path}` "
+                         f"(it may be truncated or mid-write): {e}")
+                return
 
             # Load cost up front so the headline total sits in the metric row
             # (consistent with the History tab); the full breakdown appears
@@ -351,9 +356,10 @@ def render(settings):
                             + legend_html(order_present, cmap) + '</div>',
                             unsafe_allow_html=True,
                         )
+                    n_clusters = len([c for c in order_present if c != "other"])
                     st.markdown(
                         '<div class="fig-cap"><span class="runin">Fig. 1. </span>'
-                        'Six discrete clusters with minimal bleed: visual '
+                        f'{n_clusters} clusters with minimal bleed: visual '
                         'evidence the axis carves cleanly.</div>',
                         unsafe_allow_html=True,
                     )

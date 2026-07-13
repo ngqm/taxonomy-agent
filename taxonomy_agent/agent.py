@@ -232,7 +232,7 @@ def run(
     base_url: str = "https://openrouter.ai/api/v1",
     temperature: float = 0.2,
     prose_revise: bool = False,
-) -> dict:
+) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
     Args:
