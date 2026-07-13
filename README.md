@@ -106,6 +106,20 @@ python -m pytest tests/
 The suite stubs the judge, so it runs offline in a few seconds without an API
 key.
 
+## Reproducing the paper
+
+The evaluation harness reproduces the benchmark numbers:
+
+```bash
+pip install -e ".[eval]"
+python -m taxonomy_agent.eval --corpus 20ng \
+    --methods taxonomy_agent,bertopic,lda --seeds 42,43,44 \
+    --instruction "Identify the topic of each text."
+```
+
+Paper-specific analyses and cached results live in
+[`paper/data/`](paper/data/), documented in its README.
+
 ## Citation
 
 ```bibtex
