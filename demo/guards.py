@@ -14,6 +14,7 @@ import streamlit as st
 
 HOSTED_MAX_ROWS = 2000          # largest corpus a reviewer may load
 HOSTED_MAX_INSTRUCTION = 500    # instruction is a short grouping directive
+HOSTED_COOLDOWN_S = 90          # min seconds between launches in one session
 
 # Lightweight content guard for the hosted goal instruction. It should be a
 # short text-grouping directive; reject over-long input, obvious prompt

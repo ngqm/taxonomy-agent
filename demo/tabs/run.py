@@ -321,9 +321,19 @@ def render(settings):
         elif (os.environ.get("TAXONOMY_DEMO_HOSTED")
               and _instruction_block_reason(instruction)):
             st.error(_instruction_block_reason(instruction))
+        elif (os.environ.get("TAXONOMY_DEMO_HOSTED")
+              and ss.get("last_launch_ts")
+              and (time.time() - ss.last_launch_ts) < HOSTED_COOLDOWN_S):
+            wait_s = int(HOSTED_COOLDOWN_S - (time.time() - ss.last_launch_ts))
+            st.error(
+                f"The hosted demo allows one run every {HOSTED_COOLDOWN_S} "
+                f"seconds per session. Please wait {wait_s}s, or clone the repo "
+                f"to run without limits."
+            )
         else:
             ss.log_lines = []
             ss.running = True
+            ss.last_launch_ts = time.time()
 
             # Hosted demo: cap corpus size and iterations so no single public
             # run can run away on cost or container time.
