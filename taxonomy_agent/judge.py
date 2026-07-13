@@ -2,11 +2,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable
 
 import requests
+
+logger = logging.getLogger("taxonomy_agent.judge")
 
 
 class JudgeAuthError(RuntimeError):
@@ -58,7 +61,7 @@ class Judge:
             body = resp.json()
             content = body["choices"][0]["message"]["content"]
         except (ValueError, KeyError, IndexError, TypeError) as e:
-            print(f"[judge malformed body] {e}")
+            logger.warning(f"[judge malformed body] {e}")
             return None
         if self.usage_sink is not None:
             try:
@@ -66,7 +69,7 @@ class Judge:
                 usage["http_status"] = resp.status_code
                 self.usage_sink(usage)
             except Exception as e:  # never let accounting break a call
-                print(f"[judge usage_sink error] {e}")
+                logger.warning(f"[judge usage_sink error] {e}")
         return content
 
     def call(self, prompt: str, max_tokens: int = 400,
@@ -88,23 +91,23 @@ class Judge:
                     ) from e
                 if status == 429:
                     if rate_attempt >= len(rate_backoff):
-                        print(f"[judge rate-limited after {rate_attempt} retries] {e}")
+                        logger.warning(f"[judge rate-limited after {rate_attempt} retries] {e}")
                         return None
                     time.sleep(rate_backoff[rate_attempt])
                     rate_attempt += 1
                     continue
                 if status is not None and 500 <= status < 600:
                     if server_retry_used:
-                        print(f"[judge 5xx after retry] {e}")
+                        logger.warning(f"[judge 5xx after retry] {e}")
                         return None
                     server_retry_used = True
                     time.sleep(1.0)
                     continue
-                print(f"[judge HTTP error] {e}")
+                logger.warning(f"[judge HTTP error] {e}")
                 return None
             except requests.exceptions.RequestException as e:
                 if net_retry_used:
-                    print(f"[judge network error after retry] {e}")
+                    logger.warning(f"[judge network error after retry] {e}")
                     return None
                 net_retry_used = True
                 time.sleep(1.0)
@@ -113,7 +116,7 @@ class Judge:
                 # Anything that slipped past the request layer (e.g. mocks
                 # raising bare RuntimeError) gets one retry, then None.
                 if net_retry_used:
-                    print(f"[judge error after retry] {e}")
+                    logger.warning(f"[judge error after retry] {e}")
                     return None
                 net_retry_used = True
                 time.sleep(1.0)
@@ -138,12 +141,12 @@ class Judge:
                 try:
                     reply = fut.result()
                 except Exception as e:
-                    print(f"[judge parallel error] {e}")
+                    logger.warning(f"[judge parallel error] {e}")
                     reply = None
                 out[i] = reply
                 if on_reply is not None:
                     try:
                         on_reply(i, reply)
                     except Exception as e:
-                        print(f"[judge on_reply error] {e}")
+                        logger.warning(f"[judge on_reply error] {e}")
         return out

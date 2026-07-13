@@ -19,6 +19,7 @@ import json
 import os
 import shutil
 import subprocess
+import logging
 import sys
 from pathlib import Path
 
@@ -363,6 +364,10 @@ SUBCOMMANDS = {
 
 
 def main() -> None:
+    # Surface the library's logger on stdout so CLI and hosted-app runs (which
+    # tail the subprocess output) show progress; the message text is unchanged.
+    logging.basicConfig(level=logging.INFO, format="%(message)s",
+                        stream=sys.stdout)
     if len(sys.argv) > 1 and sys.argv[1] in SUBCOMMANDS:
         SUBCOMMANDS[sys.argv[1]](sys.argv[2:])
         return

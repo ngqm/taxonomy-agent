@@ -4,6 +4,7 @@ from __future__ import annotations
 import csv
 import datetime
 import json
+import logging
 import os
 import uuid
 from pathlib import Path
@@ -17,6 +18,8 @@ from .cost import CostTracker
 from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
 from .tools import make_tools
+
+logger = logging.getLogger("taxonomy_agent")
 
 
 def _normalize_items(raw: Iterable) -> list[dict]:
@@ -311,9 +314,9 @@ def run(
     os.makedirs(output_dir, exist_ok=True)
 
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    print(f"[taxonomy_agent] items={len(items_list)} run_id={run_id}")
-    print(f"[taxonomy_agent] orchestrator={orchestrator_model}, judge={judge_model}")
-    print(f"[taxonomy_agent] output_dir={output_dir}")
+    logger.info(f"[taxonomy_agent] items={len(items_list)} run_id={run_id}")
+    logger.info(f"[taxonomy_agent] orchestrator={orchestrator_model}, judge={judge_model}")
+    logger.info(f"[taxonomy_agent] output_dir={output_dir}")
 
     # Write meta.json so the UI's Runs tab can list the run before
     # finalize_classify writes taxonomy.json. Status is updated at the end.
@@ -420,7 +423,7 @@ def run(
             cost.write()  # refresh cost.json each agent step
     except Exception as e:
         stream_error = e
-        print(f"[taxonomy_agent] orchestrator stream raised: {e!r} — flushing "
+        logger.warning(f"[taxonomy_agent] orchestrator stream raised: {e!r} — flushing "
               f"partial state and exiting.")
 
     artifact_path = os.path.join(output_dir, "taxonomy.json")
@@ -429,7 +432,7 @@ def run(
         with open(artifact_path) as f:
             out["artifact"] = json.load(f)
         out["status"] = "ok"
-        print(f"[taxonomy_agent] done → {artifact_path}")
+        logger.info(f"[taxonomy_agent] done → {artifact_path}")
     else:
         # The orchestrator may have walked off without calling finalize_classify
         # (e.g. monotonic-add loops that never trip the don't-fit threshold).
@@ -445,16 +448,16 @@ def run(
                 out["status"] = "ok"
                 out["auto_finalized"] = True
                 auto_finalized = True
-                print(f"[taxonomy_agent] orchestrator did not call "
+                logger.info(f"[taxonomy_agent] orchestrator did not call "
                       f"finalize_classify; auto-finalized against the current "
                       f"on-disk taxonomy → {artifact_path}")
         except Exception as ff_err:
-            print(f"[taxonomy_agent] auto-finalize fallback raised: {ff_err!r}")
+            logger.warning(f"[taxonomy_agent] auto-finalize fallback raised: {ff_err!r}")
         if not auto_finalized:
             out["status"] = "incomplete" if stream_error is None else "error"
             if stream_error is not None:
                 out["error"] = repr(stream_error)
-            print(f"[taxonomy_agent] WARNING: no artifact at {artifact_path}. "
+            logger.warning(f"[taxonomy_agent] WARNING: no artifact at {artifact_path}. "
                   f"Status={out['status']}. The orchestrator may have hit the "
                   f"recursion limit, the classify budget, or an LLM error "
                   f"mid-run, and the auto-finalize fallback could not produce "
@@ -465,7 +468,7 @@ def run(
     if out.get("status") == "ok" and _mostly_judge_errors(out.get("artifact") or {}):
         out["status"] = "degraded"
         art = out["artifact"]
-        print(f"[taxonomy_agent] WARNING: {art.get('n_judge_errors')}/"
+        logger.warning(f"[taxonomy_agent] WARNING: {art.get('n_judge_errors')}/"
               f"{art.get('n_items')} judge calls failed; the labels are "
               f"unreliable (status=degraded). Check the judge model id and "
               f"OPENROUTER_API_KEY.")
@@ -480,11 +483,11 @@ def run(
         json.dump(meta, f, indent=2)
 
     if cost_snapshot["total_usd"] is not None:
-        print(f"[taxonomy_agent] cost: ${cost_snapshot['total_usd']:.4f} "
+        logger.info(f"[taxonomy_agent] cost: ${cost_snapshot['total_usd']:.4f} "
               f"(orch={cost_snapshot['orchestrator']['n_calls']} calls, "
               f"judge={cost_snapshot['judge']['n_calls']} calls)")
     else:
-        print(f"[taxonomy_agent] tokens recorded; USD unknown for one or both "
+        logger.info(f"[taxonomy_agent] tokens recorded; USD unknown for one or both "
               f"models (not in cost.MODEL_PRICES). See {output_dir}/cost.json.")
 
     return RunResult(out)

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import os
 import sys
 
@@ -11,6 +12,8 @@ from .runner import benchmark
 
 
 def main(argv: list[str] | None = None) -> int:
+    logging.basicConfig(level=logging.INFO, format="%(message)s",
+                        stream=sys.stdout)
     p = argparse.ArgumentParser(prog="taxonomy_agent.eval")
     p.add_argument("--corpus", default="20ng")
     p.add_argument("--methods", default="taxonomy_agent,bertopic,topicgpt_style,single_shot",
