@@ -443,7 +443,9 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 n_other += 1
             results.append({"item_id": it["id"], "category": cat, "rationale": rat[:400]})
         n_scored = len(sel) - n_judge_errors
-        rate = n_other / max(1, n_scored)
+        # No successful classifications means the rate carries no signal; report
+        # 1.0 (fully unfit) so a total judge failure never reads as convergence.
+        rate = (n_other / n_scored) if n_scored > 0 else 1.0
         _append_trace(trace_path, run_id, "classify", {
             "taxonomy_snapshot": taxonomy, "results": results,
             "dont_fit_rate": rate, "n_coerced": n_coerced,

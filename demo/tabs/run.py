@@ -17,6 +17,29 @@ import streamlit as st
 from demo import *  # noqa: F401,F403
 
 
+def _count_active_runs() -> int:
+    """Number of runs whose subprocess is still alive, by ``run.pid`` liveness
+    across every run directory under the runs root. Dead/stale pid files are
+    ignored, so this doubles as the reaper for orphaned runs."""
+    root = Path(DEFAULT_RUNS_ROOT)
+    if not root.exists():
+        return 0
+    alive = 0
+    for pid_file in root.rglob("run.pid"):
+        try:
+            pid = int(pid_file.read_text().strip())
+        except (ValueError, OSError):
+            continue
+        try:
+            os.kill(pid, 0)          # probe: raises if the process is gone
+        except ProcessLookupError:
+            continue                 # dead → not counted
+        except PermissionError:
+            pass                     # alive, owned by another user
+        alive += 1
+    return alive
+
+
 def render(settings):
     ss = st.session_state
     (api_key, orchestrator, judge, max_iters, min_iters, threshold,
@@ -336,6 +359,13 @@ def render(settings):
                 f"The hosted demo allows one run every {HOSTED_COOLDOWN_S} "
                 f"seconds per session. Please wait {wait_s}s, or clone the repo "
                 f"to run without limits."
+            )
+        elif (os.environ.get("TAXONOMY_DEMO_HOSTED")
+              and _count_active_runs() >= HOSTED_MAX_CONCURRENT):
+            st.error(
+                "The demo is busy running other visitors' jobs right now "
+                f"({HOSTED_MAX_CONCURRENT} at once). Please try again shortly, "
+                "or clone the repo to run locally without limits."
             )
         else:
             ss.log_lines = []

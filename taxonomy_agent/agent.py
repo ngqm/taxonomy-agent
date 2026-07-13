@@ -212,6 +212,15 @@ class RunResult(dict):
         return cls(out)
 
 
+def _mostly_judge_errors(artifact: dict, threshold: float = 0.5) -> bool:
+    """True when judge failures dominate the run, so the labels are unreliable
+    and the near-zero don't-fit rate is a false ``converged`` signal rather than
+    real coverage (e.g. a bad judge model id or a provider outage)."""
+    n_items = artifact.get("n_items") or 0
+    n_err = artifact.get("n_judge_errors") or 0
+    return n_items > 0 and n_err >= threshold * n_items
+
+
 def run(
     items: Union[str, Path, Iterable[dict]],
     instruction: str,
@@ -452,6 +461,14 @@ def run(
                   f"a taxonomy either (likely an empty taxonomy state). "
                   f"Partial state is in {output_dir}/taxonomy_state.json and "
                   f"{output_dir}/classifications.jsonl.")
+
+    if out.get("status") == "ok" and _mostly_judge_errors(out.get("artifact") or {}):
+        out["status"] = "degraded"
+        art = out["artifact"]
+        print(f"[taxonomy_agent] WARNING: {art.get('n_judge_errors')}/"
+              f"{art.get('n_items')} judge calls failed; the labels are "
+              f"unreliable (status=degraded). Check the judge model id and "
+              f"OPENROUTER_API_KEY.")
 
     cost.write()
     cost_snapshot = cost.snapshot()

@@ -60,3 +60,12 @@ def test_save_csv(tmp_path):
     lines = p.read_text().splitlines()
     assert lines[0] == "id,text,category,rationale,definition"
     assert len(lines) == 4  # header + 3 rows
+
+
+def test_mostly_judge_errors_flags_degraded_runs():
+    from taxonomy_agent.agent import _mostly_judge_errors
+    assert _mostly_judge_errors({"n_items": 100, "n_judge_errors": 60}) is True
+    assert _mostly_judge_errors({"n_items": 100, "n_judge_errors": 50}) is True
+    assert _mostly_judge_errors({"n_items": 100, "n_judge_errors": 5}) is False
+    assert _mostly_judge_errors({"n_items": 0, "n_judge_errors": 0}) is False
+    assert _mostly_judge_errors({}) is False
