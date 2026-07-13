@@ -16,7 +16,7 @@ from .theme import stat_ledger_html  # shared serif KPI-strip (no circular dep)
 
 PACKAGE_DIR = Path(__file__).resolve().parent.parent  # repo root (app dir)
 PROJECT_ROOT = PACKAGE_DIR.parent
-EXAMPLE_DIR = PACKAGE_DIR / "example"
+EXAMPLE_DIR = PACKAGE_DIR / "taxonomy_agent" / "example"
 # Write UI-launched runs inside the app directory so they are both writable
 # and discoverable on a hosted deploy (where PROJECT_ROOT is outside the repo).
 DEFAULT_RUNS_ROOT = PACKAGE_DIR / "taxonomy_runs"

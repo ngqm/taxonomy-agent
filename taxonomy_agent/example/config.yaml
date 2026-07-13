@@ -2,9 +2,9 @@
 # Any CLI flag overrides its value here.
 
 # ── REQUIRED ────────────────────────────────────────────────────────────────
-input: example/items.jsonl     # balanced 48-item slice of DarkBench (6 dark-pattern classes)
-instruction_file: example/instruction.txt   # OR set `instruction:` inline
-output_dir: example/out
+input: taxonomy_agent/example/items.jsonl     # balanced 48-item slice of DarkBench (6 dark-pattern classes)
+instruction_file: taxonomy_agent/example/instruction.txt   # OR set `instruction:` inline
+output_dir: taxonomy_run
 
 # Inline instruction (use INSTEAD of instruction_file):
 # instruction: |

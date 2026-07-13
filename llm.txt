@@ -19,7 +19,8 @@ directory. No key is needed for `--dry-run` eval or for `taxonomy inspect`.
 ## Commands
 
 ```bash
-# Bundled 5-item demo (~30s, needs a key). Good first call to confirm wiring.
+# Bundled demo: a balanced 48-item DarkBench slice (a few cents, needs a key).
+# Good first call to confirm wiring.
 taxonomy demo
 
 # Discover a taxonomy in your own JSONL corpus.
@@ -40,13 +41,14 @@ taxonomy ui                              # extra args forward to streamlit
 taxonomy --config my.yaml                # keys: input, instruction, output_dir, orchestrator, judge, ...
 ```
 
-## Input format
+## Input formats
 
-JSONL, one object per line, with at least a `text` field (an `id` is recommended):
+A path to a `.jsonl`, `.json`, or `.csv` file, or (in the Python API) a list of
+strings or `{"id", "text"}` dicts. Ids are assigned by position when absent.
 
-```json
-{"id": "ex-001", "text": "the document text to be grouped"}
-```
+- `.jsonl` — one object (or bare string) per line: `{"id": "ex-001", "text": "..."}`
+- `.json`  — an array of objects or strings
+- `.csv`   — a `text` column, with an optional `id` column
 
 ## Output artifacts (written to the output dir, streamed during the run)
 
@@ -59,19 +61,28 @@ JSONL, one object per line, with at least a `text` field (an `id` is recommended
 ## Programmatic API
 
 ```python
-from taxonomy_agent import run
+from taxonomy_agent import run, RunResult
 result = run(
-    items="corpus.jsonl",                # path or an iterable of {"text": ...} dicts
+    items="corpus.csv",                  # a list of strings, a list of {"id","text"}
+                                         # dicts, or a .jsonl / .json / .csv path
     instruction="Group by manipulation type",
     output_dir="out/",
     orchestrator_model="deepseek/deepseek-v4-flash",
     judge_model="deepseek/deepseek-v4-flash",
     min_iterations=3, converge_below=0.10, probe_size=20, size_hint="4-10",
 )
+result.definitions          # {category: definition}
+result.classifications      # [{id, text, category, rationale}, ...]
+result.to_dataframe()       # id, text, category, rationale, definition
+result.save_csv("labels.csv")
+result.cost_usd             # OpenRouter spend, in USD
+
+RunResult.from_dir("out/")  # reload a finished run offline, no re-spend
 ```
 
 The loop stops when the judge's don't-fit rate on a fresh probe falls below
-`converge_below`, after at least `min_iterations` probes.
+`converge_below`, after at least `min_iterations` probes. See
+`notebooks/quickstart.ipynb` for a runnable walkthrough.
 
 ## Evaluation harness
 

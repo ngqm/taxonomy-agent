@@ -1,7 +1,7 @@
 """CLI for taxonomy_agent.
 
 Quick start:
-    taxonomy demo                          # bundled 5-item demo, ~30 s
+    taxonomy demo                          # bundled 48-item DarkBench slice
     taxonomy run corpus.jsonl              # sensible defaults; cheap models
     taxonomy run corpus.jsonl -g "Goal"    # positional corpus + goal flag
     taxonomy run --quality corpus.jsonl    # Sonnet orchestrator for better quality
@@ -93,7 +93,8 @@ def _cmd_demo(argv: list[str]) -> None:
     instruction = instr_path.read_text().strip()
     orchestrator = (DEFAULT_ORCHESTRATOR_QUALITY if args.quality
                     else DEFAULT_ORCHESTRATOR_CHEAP)
-    print(f"[demo] corpus={items_path} (5 items)")
+    n_items = sum(1 for line in items_path.open() if line.strip())
+    print(f"[demo] corpus={items_path} ({n_items} items)")
     print(f"[demo] orchestrator={orchestrator}")
     print(f"[demo] judge={DEFAULT_JUDGE}")
     print(f"[demo] output={out}")
