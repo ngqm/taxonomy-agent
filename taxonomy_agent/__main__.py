@@ -212,16 +212,20 @@ def _cmd_inspect(argv: list[str]) -> None:
         print(f"=== run {rd.name} ===")
         print("(no meta.json — run may be in progress or pre-2026 layout)")
 
+    def _usd(v):
+        # total_usd / usd are legitimately None when pricing is unknown and no
+        # native cost was returned; never format None with :.4f.
+        return f"USD {v:.4f}" if isinstance(v, (int, float)) else "USD (unknown)"
+
     if cost_path.exists():
         cost = json.loads(cost_path.read_text())
-        total = cost.get("total_usd", 0)
         orch = cost.get("orchestrator", {})
         judge = cost.get("judge", {})
-        print(f"\ncost:         USD {total:.4f}")
+        print(f"\ncost:         {_usd(cost.get('total_usd'))}")
         if orch:
-            print(f"  orchestrator: USD {orch.get('usd', 0):.4f} ({orch.get('n_calls', 0)} calls)")
+            print(f"  orchestrator: {_usd(orch.get('usd'))} ({orch.get('n_calls', 0)} calls)")
         if judge:
-            print(f"  judge:        USD {judge.get('usd', 0):.4f} ({judge.get('n_calls', 0)} calls)")
+            print(f"  judge:        {_usd(judge.get('usd'))} ({judge.get('n_calls', 0)} calls)")
     else:
         print("\ncost:         (no cost.json)")
 
