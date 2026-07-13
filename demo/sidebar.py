@@ -93,9 +93,12 @@ def render_sidebar() -> Settings:
                 st.caption("✓ Loaded from your `OPENROUTER_API_KEY`.")
             else:
                 st.caption("⚠ Not set. Runs will fail until you add a key.")
+            _hosted = bool(os.environ.get("TAXONOMY_DEMO_HOSTED"))
+            _orch_opts = HOSTED_ORCHESTRATOR_OPTIONS if _hosted else ORCHESTRATOR_OPTIONS
+            _judge_opts = HOSTED_JUDGE_OPTIONS if _hosted else JUDGE_OPTIONS
             orch_choice = st.selectbox(
                 "Orchestrator model",
-                ORCHESTRATOR_OPTIONS,
+                _orch_opts,
                 index=0,
                 help="Strong model: tool-calling + reasoning.",
             )
@@ -111,7 +114,7 @@ def render_sidebar() -> Settings:
 
             judge_choice = st.selectbox(
                 "Judge model",
-                JUDGE_OPTIONS,
+                _judge_opts,
                 index=0,
                 help="Cheap, fast model for the bulk classification work.",
             )

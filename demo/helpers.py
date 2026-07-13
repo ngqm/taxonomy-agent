@@ -408,6 +408,17 @@ JUDGE_OPTIONS = [
     "Custom…",
 ]
 
+# The hosted demo runs on a shared key, so it only offers inexpensive models and
+# no Custom… field. These lists are also the server-side allowlist enforced in
+# run.py; anything outside them is coerced to the default before a run launches.
+HOSTED_ORCHESTRATOR_OPTIONS = ["deepseek/deepseek-v4-flash"]
+HOSTED_JUDGE_OPTIONS = [
+    "deepseek/deepseek-v4-flash",
+    "meta-llama/llama-3.3-70b-instruct",
+    "google/gemini-2.5-flash",
+    "mistralai/mistral-small",
+]
+
 
 PRESETS: dict[str, dict | None] = {
     "Custom": None,

@@ -95,8 +95,11 @@ def render(settings):
     st.markdown('<div class="step-head"><span class="step-num">2</span>'
                 '<span class="step-label">Items</span></div>',
                 unsafe_allow_html=True)
+    _sources = ["Upload file", "Paste", "File path", "Use example"]
+    if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+        _sources.remove("File path")  # no arbitrary server-path reads on the demo
     src = st.segmented_control(
-        "Source", ["Upload file", "Paste", "File path", "Use example"],
+        "Source", _sources,
         default="Upload file", key="source_seg",
         help="Where to read the items the agent should classify. Accepts "
              "JSONL / JSON / CSV: a `text` field (or column) per item, with an "
@@ -178,16 +181,20 @@ def render(settings):
              "Blank = no target; the orchestrator decides.",
     )
 
-    st.markdown('<div class="step-head"><span class="step-num">4</span>'
-                '<span class="step-label">Output</span></div>',
-                unsafe_allow_html=True)
-    output_dir_in = st.text_input(
-        "Output directory (leave blank for auto)",
-        value="",
-        placeholder="taxonomy_runs / run-<timestamp>",
-        help="Defaults to `taxonomy_runs/run_<current timestamp>/` at the "
-             "moment you click Start run.",
-    )
+    if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+        # Hosted runs always auto-name under the runs root; no user-chosen path.
+        output_dir_in = ""
+    else:
+        st.markdown('<div class="step-head"><span class="step-num">4</span>'
+                    '<span class="step-label">Output</span></div>',
+                    unsafe_allow_html=True)
+        output_dir_in = st.text_input(
+            "Output directory (leave blank for auto)",
+            value="",
+            placeholder="taxonomy_runs / run-<timestamp>",
+            help="Defaults to `taxonomy_runs/run_<current timestamp>/` at the "
+                 "moment you click Start run.",
+        )
 
     # ── Cost / time estimate ────────────────────────────────────────────────
     n_items_known = _count_items(items_path)
@@ -335,6 +342,26 @@ def render(settings):
             ss.running = True
             ss.last_launch_ts = time.time()
 
+            # Hosted demo: authoritative server-side guards. The sidebar and the
+            # source picker restrict these in the UI, but a crafted request must
+            # not route the shared key to an expensive model or read an arbitrary
+            # server file, so enforce both here regardless of what was submitted.
+            if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+                if orchestrator not in HOSTED_ORCHESTRATOR_OPTIONS:
+                    orchestrator = "deepseek/deepseek-v4-flash"
+                if judge not in HOSTED_JUDGE_OPTIONS:
+                    judge = "deepseek/deepseek-v4-flash"
+                _ip = Path(items_path).resolve()
+                _ok_roots = (Path(tempfile.gettempdir()).resolve(),
+                             EXAMPLE_DIR.resolve())
+                if not any(_ip == r or r in _ip.parents for r in _ok_roots):
+                    ss.running = False
+                    st.error(
+                        "The hosted demo reads items only from upload, paste, or "
+                        "the example. Clone the repo to load a server file path."
+                    )
+                    st.stop()
+
             # Hosted demo: cap corpus size and iterations so no single public
             # run can run away on cost or container time.
             if os.environ.get("TAXONOMY_DEMO_HOSTED"):
@@ -362,6 +389,12 @@ def render(settings):
                 DEFAULT_RUNS_ROOT / time.strftime("run_%Y%m%d_%H%M%S")
             )
             out_abs = str(Path(output_dir).expanduser().resolve())
+            if os.environ.get("TAXONOMY_DEMO_HOSTED"):
+                # Confine writes to the runs root; never an arbitrary server path.
+                _runs_root = Path(DEFAULT_RUNS_ROOT).resolve()
+                if not (Path(out_abs) == _runs_root
+                        or _runs_root in Path(out_abs).parents):
+                    out_abs = str(_runs_root / time.strftime("run_%Y%m%d_%H%M%S"))
             cmd = [
                 sys.executable, "-u", "-m", "taxonomy_agent",
                 "--input", items_path,
