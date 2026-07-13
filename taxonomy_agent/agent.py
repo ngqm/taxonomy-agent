@@ -303,6 +303,14 @@ def run(
                                     or pool_limit <= 0):
         raise ValueError(f"pool_limit must be None or a positive int, got "
                          f"{pool_limit!r}")
+    if max_iterations < 1:
+        raise ValueError(f"max_iterations must be ≥ 1, got {max_iterations}")
+    if probe_size < 1:
+        raise ValueError(f"probe_size must be ≥ 1, got {probe_size}")
+    if concurrency < 1:
+        raise ValueError(f"concurrency must be ≥ 1, got {concurrency}")
+    if not 0.0 <= converge_below <= 1.0:
+        raise ValueError(f"converge_below must be in [0, 1], got {converge_below}")
 
     items_list = _load_items(items)
     if pool_limit is not None and pool_limit > 0:
