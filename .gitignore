@@ -132,8 +132,7 @@ eval_data/*_pre_anon.jsonl.bak
 # Unauthorized advice-prompt corpus from a prior session.
 eval_data/advice_prompts.jsonl
 
-# Vendor zip dropped on the project root; the unpacked acl.sty and
-# acl_natbib.bst live under paper/ and are tracked.
+# Vendor zip occasionally dropped on the project root.
 Association_for_Computational_Linguistics__ACL__conference.zip
 
 # scratch output dir from the quickstart notebook / demo runs
