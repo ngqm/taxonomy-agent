@@ -136,25 +136,8 @@ eval_data/advice_prompts.jsonl
 # acl_natbib.bst live under paper/ and are tracked.
 Association_for_Computational_Linguistics__ACL__conference.zip
 
-# LaTeX intermediates from local Overleaf-mirror compiles.
-paper/*.aux
-paper/*.bbl
-paper/*.blg
-paper/*.log
-paper/*.out
-paper/*.toc
-paper/*.synctex.gz
-# Compiled PDFs, the plaintext export, and the submission tarball are all
-# regenerated from the LaTeX sources; keep them out of the repo. (Tracked
-# data logs under paper/data/*.txt are unaffected by these top-level globs.)
-paper/*.pdf
-paper/*.tar.gz
-paper/paper_draft.txt
-
 # scratch output dir from the quickstart notebook / demo runs
 out/
 
-# Keep the paper (LaTeX source, figures, slides, audit docs) out of the public
-# repo; keep only paper/data/ (reproduction scripts + result JSONs).
-/paper/*
-!/paper/data/
+# The paper is not part of the public repo.
+/paper/

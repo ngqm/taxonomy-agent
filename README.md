@@ -106,7 +106,7 @@ python -m pytest tests/
 The suite stubs the judge, so it runs offline in a few seconds without an API
 key.
 
-## Reproducing the paper
+## Reproducing the benchmarks
 
 The evaluation harness reproduces the benchmark numbers:
 
@@ -117,8 +117,7 @@ python -m taxonomy_agent.eval --corpus 20ng \
     --instruction "Identify the topic of each text."
 ```
 
-Paper-specific analyses and cached results live in
-[`paper/data/`](paper/data/), documented in its README.
+It writes `results.json` with purity, NMI, ARI, and cost per method and seed.
 
 ## Citation
 
