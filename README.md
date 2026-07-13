@@ -1,5 +1,10 @@
 # TaxonomyAgent
 
+[![CI](https://github.com/ngqm/taxonomy-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/ngqm/taxonomy-agent/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Live demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://ngqm--taxonomyagent.modal.run)
+
 TaxonomyAgent discovers an interpretable taxonomy over an unlabelled text
 corpus along an axis you choose, then labels every item against it. An
 orchestrator LLM proposes typed edits to a working taxonomy while a cheaper
