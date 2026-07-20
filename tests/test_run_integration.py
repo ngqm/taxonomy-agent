@@ -191,3 +191,37 @@ def test_run_seed_makes_sampling_reproducible(patched, tmp_path):
 
     assert captured["a"] == captured["b"]   # same seed reproduces the sample
     assert captured["a"] != captured["c"]   # different seed changes it
+
+
+def test_finalize_dedups_identical_items(patched, tmp_path):
+    """Items with identical content are labelled once: the judge is paid per
+    distinct item, but every item still gets a row."""
+    items = [{"id": str(i), "text": "AAA" if i % 2 == 0 else "BBB"}
+             for i in range(6)]
+    seen = {}
+
+    class _CountingJudge:
+        def __init__(self, *a, **k):
+            pass
+
+        def call(self, *a, **k):
+            return json.dumps({"category": "cat_a", "rationale": "x"})
+
+        def parallel(self, prompts, on_reply=None, **k):
+            seen["n_prompts"] = len(prompts)
+            out = []
+            for i, _ in enumerate(prompts):
+                rep = json.dumps({"category": "cat_a", "rationale": "x"})
+                out.append(rep)
+                if on_reply is not None:
+                    on_reply(i, rep)
+            return out
+
+    patched.setattr(agent_mod, "create_react_agent", _fake_agent_factory())
+    patched.setattr(agent_mod, "Judge", _CountingJudge)
+    result = run(items, "g", str(tmp_path), api_key="fake", min_iterations=0)
+
+    assert result.status == "ok"
+    assert len(result.classifications) == 6          # every item labelled
+    assert {c["id"] for c in result.classifications} == {str(i) for i in range(6)}
+    assert seen["n_prompts"] == 2                     # judge paid twice, not six times

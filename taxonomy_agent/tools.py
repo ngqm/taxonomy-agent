@@ -558,23 +558,44 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         # labels arrived; the consolidated taxonomy.json is written only after
         # the parallel batch completes successfully. Truncate any stale file
         # from a previous attempt before we start writing.
+        # Deduplicate by item content (everything except the arbitrary id):
+        # items with the same text and metadata receive the same label, so the
+        # judge is paid once per distinct item instead of once per duplicate.
+        # The id appears in the prompt only as a reference; it does not affect
+        # the category. Rows are still streamed per item, expanded across each
+        # group of duplicates.
+        def _dedup_key(it: dict) -> str:
+            return json.dumps({k: v for k, v in it.items() if k != "id"},
+                              sort_keys=True)
+
+        groups: dict[str, list[int]] = {}
+        for i, it in enumerate(items):
+            groups.setdefault(_dedup_key(it), []).append(i)
+        group_indices = list(groups.values())
+        unique_prompts = [prompts[idxs[0]] for idxs in group_indices]
+
         open(classifications_jsonl, "w").close()
         write_lock = threading.Lock()
 
-        def _on_reply(idx: int, rep: str | None) -> None:
-            it = items[idx]
+        def _label(rep: str | None):
             if rep is None:
-                cat, rat = "other", JUDGE_ERROR_RATIONALE
-            else:
-                parsed = _parse_json_block(rep)
-                cat, rat = _coerce_category(parsed, taxonomy)
-            row = {**it, "category": cat, "rationale": rat}
+                return "other", JUDGE_ERROR_RATIONALE
+            return _coerce_category(_parse_json_block(rep), taxonomy)
+
+        def _on_reply(u_idx: int, rep: str | None) -> None:
+            cat, rat = _label(rep)
             with write_lock:
                 with open(classifications_jsonl, "a") as f:
-                    f.write(json.dumps(row) + "\n")
+                    for i in group_indices[u_idx]:
+                        f.write(json.dumps(
+                            {**items[i], "category": cat, "rationale": rat}) + "\n")
 
-        replies = judge.parallel(prompts, concurrency=concurrency * 2,
-                                 max_tokens=300, on_reply=_on_reply)
+        unique_replies = judge.parallel(unique_prompts, concurrency=concurrency * 2,
+                                        max_tokens=300, on_reply=_on_reply)
+        replies: list[str | None] = [None] * len(items)
+        for u_idx, rep in enumerate(unique_replies):
+            for i in group_indices[u_idx]:
+                replies[i] = rep
         classifications: list[dict] = []
         category_counts: dict[str, int] = {}
         n_coerced = 0
