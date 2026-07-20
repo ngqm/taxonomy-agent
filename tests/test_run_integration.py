@@ -111,3 +111,46 @@ def test_run_validates_params(tmp_path):
                 dict(max_iterations=0), dict(converge_below=1.5)]:
         with pytest.raises(ValueError):
             run(_items(), "x", str(tmp_path), api_key="fake", **bad)
+
+
+def test_run_recovery_reuses_streamed_classifications(patched, tmp_path):
+    """A finalize that streamed every row but never wrote taxonomy.json should
+    be recovered from classifications.jsonl WITHOUT re-paying the judge."""
+    items = _items(4)
+
+    def _factory(llm, tools, prompt=None, **k):
+        by_name = {t.name: t for t in tools}
+
+        class _A:
+            def stream(self, inputs, config=None, **k):
+                by_name["revise_taxonomy"].invoke({"operations": [
+                    {"op": "add", "name": "cat_a", "description": "A"},
+                    {"op": "add", "name": "cat_b", "description": "B"}]})
+                with open(tmp_path / "classifications.jsonl", "w") as f:
+                    for it in items:
+                        f.write(json.dumps(
+                            {**it, "category": "cat_a", "rationale": "streamed"}) + "\n")
+                return iter(())
+
+        return _A()
+
+    class _BoomJudge:
+        def __init__(self, *a, **k):
+            pass
+
+        def call(self, *a, **k):
+            raise AssertionError("judge must not be called during reuse recovery")
+
+        def parallel(self, *a, **k):
+            raise AssertionError("judge must not be called during reuse recovery")
+
+    patched.setattr(agent_mod, "create_react_agent", _factory)
+    patched.setattr(agent_mod, "Judge", _BoomJudge)
+
+    result = run(items, "Group.", str(tmp_path), api_key="fake", min_iterations=0)
+
+    assert result.status == "ok"
+    assert result.get("auto_finalized") is True
+    assert len(result.classifications) == 4
+    assert all(c["category"] == "cat_a" for c in result.classifications)
+    assert (tmp_path / "taxonomy.json").exists()

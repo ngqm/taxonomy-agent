@@ -613,6 +613,44 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             f"category_counts={json.dumps(category_counts, indent=2)}"
         )
 
+    def _artifact_from_streamed_classifications() -> dict | None:
+        """Rebuild the finalize artifact from a complete classifications.jsonl,
+        or None if the file is missing, unreadable, incomplete, or references a
+        category not in the current taxonomy (so a stale/partial file is never
+        mistaken for a finished run)."""
+        if not os.path.exists(classifications_jsonl):
+            return None
+        try:
+            with open(classifications_jsonl) as f:
+                rows = [json.loads(line) for line in f if line.strip()]
+        except (ValueError, OSError):
+            return None
+        want_ids = {it["id"] for it in items}
+        valid = {c["name"] for c in state.taxonomy} | {"other"}
+        if (len(rows) != len(items)
+                or {r.get("id") for r in rows} != want_ids
+                or not all(r.get("category") in valid for r in rows)):
+            return None
+        category_counts: dict[str, int] = {}
+        n_coerced = n_judge_errors = 0
+        for r in rows:
+            category_counts[r["category"]] = category_counts.get(r["category"], 0) + 1
+            rat = r.get("rationale", "")
+            if rat == JUDGE_ERROR_RATIONALE:
+                n_judge_errors += 1
+            elif rat.startswith("[coerced from invented label"):
+                n_coerced += 1
+        return {
+            "run_id": run_id,
+            "n_items": len(items),
+            "n_coerced": n_coerced,
+            "n_judge_errors": n_judge_errors,
+            "taxonomy": state.taxonomy,
+            "final_prompt": "(recovered from streamed classifications.jsonl)",
+            "category_counts": category_counts,
+            "classifications": rows,
+        }
+
     def force_finalize_with_default_prompt() -> dict | None:
         """Fallback path for when the orchestrator stream ends without ever
         calling `finalize_classify`. Bypasses the `min_iterations` check
@@ -622,6 +660,18 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         check whether `taxonomy.json` already exists before calling this."""
         if not state.taxonomy:
             return None
+
+        # If a complete set of streamed labels already exists on disk (a
+        # finalize that wrote every row but was interrupted before consolidating
+        # taxonomy.json), rebuild the artifact from it rather than paying the
+        # judge to relabel the whole corpus a second time.
+        reused = _artifact_from_streamed_classifications()
+        if reused is not None:
+            with open(artifact_path, "w") as f:
+                json.dump(reused, f, indent=2)
+            state.finalized_at = state.taxonomy
+            return reused
+
         default_prompt = (
             "Pick the single category from the list that best describes the "
             "item. Reply only with a JSON object: "
