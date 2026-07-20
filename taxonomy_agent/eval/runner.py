@@ -100,6 +100,7 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
                                       "anthropic/claude-sonnet-4.6"),
             judge_model=model,
             api_key=api_key,
+            seed=seed,
             **passthrough,
         )
         wall_time_s = time.time() - t0

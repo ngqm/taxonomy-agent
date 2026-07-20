@@ -140,6 +140,8 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--threshold", type=float, default=0.10)
     p.add_argument("--probe-size", type=int, default=20)
     p.add_argument("--concurrency", type=int, default=8)
+    p.add_argument("--seed", type=int, default=42,
+                   help="RNG seed for reproducible probe sampling.")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -176,6 +178,7 @@ def _cmd_run(argv: list[str]) -> None:
         probe_size=args.probe_size,
         concurrency=args.concurrency,
         size_hint=args.size_hint or None,
+        seed=args.seed,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -313,6 +316,8 @@ def _cmd_legacy(argv: list[str]) -> None:
                    default=cfg.get("recursion_limit", 80))
     p.add_argument("--concurrency", type=int,
                    default=cfg.get("concurrency", 8))
+    p.add_argument("--seed", type=int, default=cfg.get("seed", 42),
+                   help="RNG seed for reproducible probe sampling")
     p.add_argument("--size-hint",
                    default=cfg.get("size_hint", "4-10"),
                    help="Target taxonomy size for the orchestrator prompt "
@@ -356,6 +361,7 @@ def _cmd_legacy(argv: list[str]) -> None:
         concurrency=args.concurrency,
         size_hint=args.size_hint,
         category_focus=args.category_focus,
+        seed=args.seed,
     )
 
 

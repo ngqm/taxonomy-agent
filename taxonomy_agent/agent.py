@@ -244,6 +244,7 @@ def run(
     base_url: str = "https://openrouter.ai/api/v1",
     temperature: float = 0.2,
     prose_revise: bool = False,
+    seed: int = 42,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -279,6 +280,9 @@ def run(
         api_key: defaults to OPENROUTER_API_KEY env var.
         base_url: OpenRouter base URL.
         temperature: orchestrator sampling temperature.
+        seed: seeds the probe-sampling RNG so a run is reproducible given the
+            same corpus and models (with temperature 0). Vary it for independent
+            replicates.
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -340,6 +344,7 @@ def run(
         "category_focus": category_focus,
         "min_iterations": min_iterations,
         "prose_revise": prose_revise,
+        "seed": seed,
         "status": "running",
     }
     with open(meta_path, "w") as f:
@@ -357,7 +362,7 @@ def run(
     )
     tools, force_finalize = make_tools(
         items_list, run_id, output_dir, judge,
-        concurrency=concurrency, max_iters=max_iterations,
+        concurrency=concurrency, seed=seed, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
     )
 

@@ -154,3 +154,40 @@ def test_run_recovery_reuses_streamed_classifications(patched, tmp_path):
     assert len(result.classifications) == 4
     assert all(c["category"] == "cat_a" for c in result.classifications)
     assert (tmp_path / "taxonomy.json").exists()
+
+
+def _sampled_ids(reply: str):
+    import re
+    return json.loads(re.search(r"item_ids = (\[.*\])", reply).group(1))
+
+
+def test_run_seed_makes_sampling_reproducible(patched, tmp_path):
+    """run() threads its seed into probe sampling: same seed -> same sample,
+    different seed -> different sample."""
+    items = _items(12)
+    captured: dict[str, list] = {}
+
+    def _make_factory(tag):
+        def _factory(llm, tools, prompt=None, **k):
+            by_name = {t.name: t for t in tools}
+
+            class _A:
+                def stream(self, inputs, config=None, **k):
+                    captured[tag] = _sampled_ids(
+                        by_name["sample_items"].invoke({"k": 4}))
+                    by_name["revise_taxonomy"].invoke({"operations": [
+                        {"op": "add", "name": "c", "description": "c"}]})
+                    by_name["finalize_classify"].invoke({"final_prompt": "x"})
+                    return iter(())
+
+            return _A()
+        return _factory
+
+    for tag, seed in [("a", 7), ("b", 7), ("c", 99)]:
+        d = tmp_path / tag
+        d.mkdir()
+        patched.setattr(agent_mod, "create_react_agent", _make_factory(tag))
+        run(items, "g", str(d), api_key="fake", min_iterations=0, seed=seed)
+
+    assert captured["a"] == captured["b"]   # same seed reproduces the sample
+    assert captured["a"] != captured["c"]   # different seed changes it
