@@ -270,14 +270,19 @@ class RunResult(dict):
         ax1.set_title("Taxonomy size over iterations", loc="left")
         ax1.grid(True, linestyle=":", alpha=0.5)
         ax1.margins(x=0.02)
-        if len(clf):
-            ax2.plot(clf["step"], clf["dont_fit_rate"] * 100.0,
-                     marker="o", color=accent)
+        rates = (clf["dont_fit_rate"] * 100.0).tolist() if len(clf) else []
+        if rates:
+            ax2.plot(clf["step"], rates, marker="o", color=accent)
         ax2.set_ylabel("don't-fit rate (%)")
         ax2.set_xlabel("trace step")
         ax2.set_title("Judge don't-fit rate over iterations", loc="left")
         ax2.grid(True, linestyle=":", alpha=0.5)
-        ax2.set_ylim(bottom=0)
+        # Don't-fit is a rate in [0, 100]; keep a floor on the axis so trivial
+        # sub-threshold noise (e.g. one judge error nudging 5.0% to 5.3%) is not
+        # amplified into a dramatic swing. 25% comfortably contains the converged
+        # regime (the default converge threshold is 10%); the axis still expands
+        # for runs whose don't-fit spikes higher.
+        ax2.set_ylim(0, max(25.0, (max(rates) * 1.1) if rates else 0.0))
         if save_path:
             fig.savefig(save_path, dpi=150, bbox_inches="tight")
         return fig
