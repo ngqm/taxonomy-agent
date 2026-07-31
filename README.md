@@ -53,7 +53,16 @@ result.definitions            # {category: definition}
 result.to_dataframe()         # id, text, category, rationale, definition
 result.save_csv("labels.csv")
 result.cost_usd               # OpenRouter spend, in USD
+
+result.iteration_stats()      # per-iteration DataFrame: categories, don't-fit rate, ...
+result.plot_iterations()      # matplotlib figure of those statistics over the run
 ```
+
+`iteration_stats()` reads the run's `trace.jsonl` and returns one row per loop
+event (step, kind, category count, don't-fit rate, proposed count, judge
+errors). `plot_iterations()` renders the taxonomy size and don't-fit rate over
+the iterations and returns a matplotlib `Figure` (`pip install
+'taxonomy-agent[viz]'` for matplotlib; pass `save_path=` to write it to disk).
 
 `orchestrator_model` and `judge_model` are independent and each accept any
 OpenRouter model slug (`provider/model`). Both default to

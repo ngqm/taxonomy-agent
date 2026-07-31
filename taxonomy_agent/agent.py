@@ -190,6 +190,98 @@ class RunResult(dict):
         self.to_dataframe().to_csv(path, index=False)
         return path
 
+    def iteration_stats(self):
+        """Per-event statistics over the discovery loop, parsed from the run's
+        ``trace.jsonl`` and returned as a ``pandas.DataFrame`` ordered by step.
+
+        One row per trace event, with columns:
+
+        - ``step``            position in the trace (0-based).
+        - ``kind``            ``"novelties"``, ``"revise"``, or ``"classify"``.
+        - ``n_categories``    size of the working taxonomy after this event,
+          carried forward across events that leave it unchanged so the column is
+          a continuous series (``revise`` sets it from the applied edits;
+          ``classify`` from the snapshot it labelled against).
+        - ``dont_fit_rate``   the judge's don't-fit fraction on a ``classify``
+          probe (``None`` for other event kinds) — the signal the loop converges
+          on.
+        - ``n_proposed``      candidate names a ``novelties`` probe proposed.
+        - ``n_judge_errors``  judge-call failures recorded on the event.
+
+        Raises ``FileNotFoundError`` when the run directory has no
+        ``trace.jsonl`` (e.g. the object was built by :meth:`from_dir` on a run
+        whose trace was not kept)."""
+        import pandas as pd
+        output_dir = self.get("output_dir")
+        if not output_dir:
+            raise FileNotFoundError(
+                "this RunResult has no output_dir, so its trace cannot be found.")
+        trace_path = Path(output_dir) / "trace.jsonl"
+        if not trace_path.exists():
+            raise FileNotFoundError(f"no trace.jsonl in {output_dir!r}.")
+        events = [json.loads(ln) for ln in trace_path.read_text().splitlines()
+                  if ln.strip()]
+        rows = []
+        running = 0
+        for i, e in enumerate(events):
+            kind = e.get("kind")
+            if kind == "revise" and isinstance(e.get("taxonomy_after"), list):
+                running = len(e["taxonomy_after"])
+            elif kind == "classify" and isinstance(e.get("taxonomy_snapshot"), list):
+                running = len(e["taxonomy_snapshot"])
+            proposed = e.get("proposed")
+            rows.append({
+                "step": i,
+                "kind": kind,
+                "n_categories": running,
+                "dont_fit_rate": e.get("dont_fit_rate"),
+                "n_proposed": len(proposed) if isinstance(proposed, list) else None,
+                "n_judge_errors": e.get("n_judge_errors"),
+            })
+        return pd.DataFrame(rows, columns=[
+            "step", "kind", "n_categories", "dont_fit_rate",
+            "n_proposed", "n_judge_errors"])
+
+    def plot_iterations(self, save_path: Union[str, None] = None):
+        """Plot the discovery loop's dynamics over its iterations and return the
+        matplotlib ``Figure``: the number of categories after each trace step
+        (top panel) and the judge's don't-fit rate at each ``classify`` probe
+        (bottom panel).
+
+        Reads the same data as :meth:`iteration_stats`. Pass ``save_path`` to
+        also write the figure to disk (format inferred from the extension, e.g.
+        ``.png`` / ``.pdf`` / ``.svg``). Requires matplotlib
+        (``pip install matplotlib`` or ``pip install 'taxonomy-agent[viz]'``)."""
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError as e:  # pragma: no cover - exercised only without mpl
+            raise ImportError(
+                "plot_iterations needs matplotlib. Install it with "
+                "`pip install matplotlib` (or `pip install "
+                "'taxonomy-agent[viz]'`).") from e
+        df = self.iteration_stats()
+        clf = df[(df["kind"] == "classify") & df["dont_fit_rate"].notna()]
+        accent = "#1E4C6E"
+        fig, (ax1, ax2) = plt.subplots(
+            2, 1, figsize=(7.0, 5.5), sharex=True, constrained_layout=True)
+        ax1.step(df["step"], df["n_categories"], where="post",
+                 marker="o", color=accent)
+        ax1.set_ylabel("categories")
+        ax1.set_title("Taxonomy size over iterations", loc="left")
+        ax1.grid(True, linestyle=":", alpha=0.5)
+        ax1.margins(x=0.02)
+        if len(clf):
+            ax2.plot(clf["step"], clf["dont_fit_rate"] * 100.0,
+                     marker="o", color=accent)
+        ax2.set_ylabel("don't-fit rate (%)")
+        ax2.set_xlabel("trace step")
+        ax2.set_title("Judge don't-fit rate over iterations", loc="left")
+        ax2.grid(True, linestyle=":", alpha=0.5)
+        ax2.set_ylim(bottom=0)
+        if save_path:
+            fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        return fig
+
     @classmethod
     def from_dir(cls, output_dir: Union[str, Path]) -> "RunResult":
         """Reload a finished run from its ``output_dir`` without re-spending.

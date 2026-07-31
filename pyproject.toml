@@ -50,7 +50,8 @@ Demo = "https://ngqm--taxonomyagent.modal.run"
 
 [project.optional-dependencies]
 eval = ["scikit-learn>=1.1", "numpy>=1.23"]
-dev = ["pytest>=7.0", "scikit-learn>=1.1", "numpy>=1.23"]
+viz = ["matplotlib>=3.5"]
+dev = ["pytest>=7.0", "scikit-learn>=1.1", "numpy>=1.23", "matplotlib>=3.5"]
 
 [project.scripts]
 # After `pip install -e .` from this directory, `taxonomy ui` and
