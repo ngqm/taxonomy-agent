@@ -1,19 +1,31 @@
 cff-version: 1.2.0
-title: "TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery"
+title: "TaxonomyAgent: An Agent for Iterative Taxonomy Discovery"
 message: "If you use this software, please cite it as below."
 authors:
   - family-names: Nguyen
     given-names: Quang Minh
     affiliation: KAIST
     email: qm.nguyen@kaist.ac.kr
+  - family-names: Ahmed
+    given-names: Uzair
+    affiliation: KAIST
+    email: uziahmd@kaist.ac.kr
+  - family-names: Kim
+    given-names: Taegyoon
+    affiliation: KAIST
+    email: taegyoon@kaist.ac.kr
 repository-code: "https://github.com/ngqm/taxonomy-agent"
 license: MIT
 preferred-citation:
   type: generic
-  title: "TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery"
+  title: "TaxonomyAgent: An Agent for Iterative Taxonomy Discovery"
   authors:
     - family-names: Nguyen
       given-names: Quang Minh
+    - family-names: Ahmed
+      given-names: Uzair
+    - family-names: Kim
+      given-names: Taegyoon
   year: 2026
   url: "https://ngqm--taxonomyagent.modal.run"
   notes: "Preprint. Not peer reviewed."

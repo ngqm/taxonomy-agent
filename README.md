@@ -123,8 +123,8 @@ It writes `results.json` with purity, NMI, ARI, and cost per method and seed.
 
 ```bibtex
 @misc{nguyen2026taxonomyagent,
-  title  = {TaxonomyAgent: Iterative LLM-Driven Taxonomy Discovery},
-  author = {Nguyen, Quang Minh},
+  title  = {TaxonomyAgent: An Agent for Iterative Taxonomy Discovery},
+  author = {Nguyen, Quang Minh and Ahmed, Uzair and Kim, Taegyoon},
   year   = {2026},
   note   = {Preprint},
   howpublished = {\url{https://ngqm--taxonomyagent.modal.run}}
