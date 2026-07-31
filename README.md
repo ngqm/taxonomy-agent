@@ -65,6 +65,34 @@ use a different OpenAI-compatible endpoint, also pass `base_url=`.
 `RunResult.from_dir("out/")` reloads a completed run offline. See
 `notebooks/quickstart.ipynb` for a runnable walkthrough.
 
+#### Parameters
+
+`items`, `instruction`, and `output_dir` are required; everything else is an
+optional keyword argument with a sensible default:
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `orchestrator_model` | `deepseek/deepseek-v4-flash` | LLM that drives the discovery loop (proposes and revises categories). |
+| `judge_model` | `deepseek/deepseek-v4-flash` | LLM that labels each item against the taxonomy. |
+| `max_iterations` | `10` | Hard cap on the number of discovery rounds. |
+| `min_iterations` | `3` | Minimum judge rounds before the run may finalize; guards against stopping on a lucky early probe. Must be `<= max_iterations`. |
+| `converge_below` | `0.10` | Early-stop threshold: finish once the fraction of items that fit no category falls below this (`0.10` = 10%). |
+| `probe_size` | `20` | Number of items sampled per discovery probe. |
+| `size_hint` | `"4–10"` | Free-form target taxonomy size given to the orchestrator; `None` or `""` means no target. |
+| `category_focus` | `None` | Optional sentence describing what the categories should capture (e.g. "the reasoning strategy each chain of thought uses"). |
+| `concurrency` | `8` | Number of parallel judge calls. |
+| `pool_limit` | `None` | Cap the number of items used (handy for smoke tests); `None` uses all of them. |
+| `seed` | `42` | Seeds probe sampling for reproducibility; vary it for independent replicates. |
+| `temperature` | `0.2` | Orchestrator sampling temperature. |
+| `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
+| `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
+| `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
+
+The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
+`--min-iters`, `--threshold`, `--probe-size`, `--concurrency`, `--seed`,
+`--orchestrator`, `--judge`, `--size`; see `taxonomy run --help`). Run
+`help(run)` in Python for the full docstring.
+
 ### Command line
 
 ```bash
