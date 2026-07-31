@@ -57,10 +57,10 @@ result.cost_usd               # OpenRouter spend, in USD
 
 `orchestrator_model` and `judge_model` are independent and each accept any
 OpenRouter model slug (`provider/model`). Both default to
-`deepseek/deepseek-v4-flash`, so you can omit them for the cheap-both setup; a
-common alternative pairs a stronger orchestrator with the cheap judge, for
-example `orchestrator_model="anthropic/claude-sonnet-4.6"`. To use a different
-OpenAI-compatible endpoint, also pass `base_url=`.
+`deepseek/deepseek-v4-flash`, so you can omit them to run both roles on that
+inexpensive model; a common alternative pairs a stronger orchestrator with the
+cheap judge, for example `orchestrator_model="anthropic/claude-sonnet-4.6"`. To
+use a different OpenAI-compatible endpoint, also pass `base_url=`.
 
 `RunResult.from_dir("out/")` reloads a completed run offline. See
 `notebooks/quickstart.ipynb` for a runnable walkthrough.
