@@ -41,9 +41,12 @@ from taxonomy_agent import run
 
 result = run(
     items=["first text", "second text"],   # or {id, text} dicts, or a
-                                            # .jsonl / .json / .csv path
+                                            # .jsonl / .json / .csv file path
     instruction="Group these prompts by the manipulation tactic each uses.",
     output_dir="out/",
+    orchestrator_model="deepseek/deepseek-v4-flash",  # drives the loop
+    judge_model="deepseek/deepseek-v4-flash",         # labels each item
+    api_key="sk-or-...",   # or set OPENROUTER_API_KEY in the environment
 )
 
 result.definitions            # {category: definition}
@@ -51,6 +54,13 @@ result.to_dataframe()         # id, text, category, rationale, definition
 result.save_csv("labels.csv")
 result.cost_usd               # OpenRouter spend, in USD
 ```
+
+`orchestrator_model` and `judge_model` are independent and each accept any
+OpenRouter model slug (`provider/model`). Both default to
+`deepseek/deepseek-v4-flash`, so you can omit them for the cheap-both setup; a
+common alternative pairs a stronger orchestrator with the cheap judge, for
+example `orchestrator_model="anthropic/claude-sonnet-4.6"`. To use a different
+OpenAI-compatible endpoint, also pass `base_url=`.
 
 `RunResult.from_dir("out/")` reloads a completed run offline. See
 `notebooks/quickstart.ipynb` for a runnable walkthrough.
@@ -71,7 +81,7 @@ taxonomy ui      # or: streamlit run app.py
 ## Input formats
 
 The library and the CLI accept a list of strings, a list of `{id, text}`
-dictionaries, or a path to a file:
+dictionaries, or a path to a local file (URLs are not fetched):
 
 - `.jsonl` — one JSON object, or a bare string, per line
 - `.json` — an array of objects or strings
