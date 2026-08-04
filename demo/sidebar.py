@@ -146,14 +146,14 @@ def render_sidebar() -> Settings:
             max_iters = _numrow(
                 "Max iterations", 1, 50, 10,
                 "Hard ceiling on revise/probe rounds. The orchestrator may "
-                "converge sooner if the don't-fit threshold is met.")
+                "converge sooner if the unmatched-rate threshold is met.")
             min_iters = _numrow(
                 "Min iterations", 0, 50, 3,
                 "Floor on classify_with_judge rounds before convergence is "
                 "allowed. Prevents premature finalize on a lucky early probe. "
                 "Must be ≤ max iterations.")
             threshold = st.slider(
-                "Don't-fit threshold", 0.0, 0.5, 0.10, 0.01,
+                "Unmatched-rate threshold", 0.0, 0.5, 0.10, 0.01,
                 help="Stop when fewer than this fraction of a fresh probe falls outside the taxonomy.",
             )
             probe_size = _numrow(

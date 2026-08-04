@@ -99,14 +99,14 @@ def test_iteration_stats_parses_trace(tmp_path):
     r = RunResult({"output_dir": str(tmp_path)})
     df = r.iteration_stats()
     assert list(df.columns) == [
-        "step", "kind", "n_categories", "dont_fit_rate",
+        "step", "kind", "n_categories", "unmatched_rate",
         "n_proposed", "n_judge_errors"]
     assert len(df) == 5
     # categories: 0 until the revise at step 2, then carried forward at 3.
     assert df["n_categories"].tolist() == [0, 0, 3, 3, 3]
     # don't-fit only on classify events; falls across the two probes.
     classify = df[df["kind"] == "classify"]
-    assert classify["dont_fit_rate"].tolist() == [0.20, 0.05]
+    assert classify["unmatched_rate"].tolist() == [0.20, 0.05]
     # novelty proposals counted; second probe proposed three names.
     assert df.loc[df["kind"] == "novelties", "n_proposed"].tolist() == [0, 3]
 

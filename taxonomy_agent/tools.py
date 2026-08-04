@@ -22,7 +22,7 @@ ESCAPE_HATCH_SUFFIX = (
 
 # Sentinel rationale prefix for items where the judge call itself failed
 # (network/HTTP/timeout after retry). These are NOT genuine misfits — they
-# must be excluded from the don't-fit rate, not folded into "other".
+# must be excluded from the unmatched rate, not folded into "other".
 JUDGE_ERROR_RATIONALE = "[judge call failed]"
 
 # Prefix `_coerce_category` stamps on the rationale when the judge returned a

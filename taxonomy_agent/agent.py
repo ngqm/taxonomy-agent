@@ -202,9 +202,10 @@ class RunResult(dict):
           carried forward across events that leave it unchanged so the column is
           a continuous series (``revise`` sets it from the applied edits;
           ``classify`` from the snapshot it labelled against).
-        - ``dont_fit_rate``   the judge's don't-fit fraction on a ``classify``
-          probe (``None`` for other event kinds) — the signal the loop converges
-          on.
+        - ``unmatched_rate``  the fraction of a ``classify`` probe the judge
+          could place in no category (``None`` for other event kinds) — the
+          signal the loop converges on. Read from the trace's ``dont_fit_rate``
+          field, which keeps its name for backward-compatibility.
         - ``n_proposed``      candidate names a ``novelties`` probe proposed.
         - ``n_judge_errors``  judge-call failures recorded on the event.
 
@@ -234,18 +235,18 @@ class RunResult(dict):
                 "step": i,
                 "kind": kind,
                 "n_categories": running,
-                "dont_fit_rate": e.get("dont_fit_rate"),
+                "unmatched_rate": e.get("dont_fit_rate"),
                 "n_proposed": len(proposed) if isinstance(proposed, list) else None,
                 "n_judge_errors": e.get("n_judge_errors"),
             })
         return pd.DataFrame(rows, columns=[
-            "step", "kind", "n_categories", "dont_fit_rate",
+            "step", "kind", "n_categories", "unmatched_rate",
             "n_proposed", "n_judge_errors"])
 
     def plot_iterations(self, save_path: Union[str, None] = None):
         """Plot the discovery loop's dynamics over its iterations and return the
         matplotlib ``Figure``: the number of categories after each trace step
-        (top panel) and the judge's don't-fit rate at each ``classify`` probe
+        (top panel) and the judge's unmatched rate at each ``classify`` probe
         (bottom panel).
 
         Reads the same data as :meth:`iteration_stats`. Pass ``save_path`` to
@@ -260,7 +261,7 @@ class RunResult(dict):
                 "`pip install matplotlib` (or `pip install "
                 "'taxonomy-agent[viz]'`).") from e
         df = self.iteration_stats()
-        clf = df[(df["kind"] == "classify") & df["dont_fit_rate"].notna()]
+        clf = df[(df["kind"] == "classify") & df["unmatched_rate"].notna()]
         accent = "#1E4C6E"
         fig, (ax1, ax2) = plt.subplots(
             2, 1, figsize=(7.0, 5.5), sharex=True, constrained_layout=True)
@@ -270,18 +271,18 @@ class RunResult(dict):
         ax1.set_title("Taxonomy size over iterations", loc="left")
         ax1.grid(True, linestyle=":", alpha=0.5)
         ax1.margins(x=0.02)
-        rates = (clf["dont_fit_rate"] * 100.0).tolist() if len(clf) else []
+        rates = (clf["unmatched_rate"] * 100.0).tolist() if len(clf) else []
         if rates:
             ax2.plot(clf["step"], rates, marker="o", color=accent)
-        ax2.set_ylabel("don't-fit rate (%)")
+        ax2.set_ylabel("unmatched rate (%)")
         ax2.set_xlabel("trace step")
-        ax2.set_title("Judge don't-fit rate over iterations", loc="left")
+        ax2.set_title("Judge unmatched rate over iterations", loc="left")
         ax2.grid(True, linestyle=":", alpha=0.5)
-        # Don't-fit is a rate in [0, 100]; keep a floor on the axis so trivial
+        # The unmatched rate is in [0, 100]; keep a floor on the axis so trivial
         # sub-threshold noise (e.g. one judge error nudging 5.0% to 5.3%) is not
         # amplified into a dramatic swing. 25% comfortably contains the converged
         # regime (the default converge threshold is 10%); the axis still expands
-        # for runs whose don't-fit spikes higher.
+        # for runs whose unmatched rate spikes higher.
         ax2.set_ylim(0, max(25.0, (max(rates) * 1.1) if rates else 0.0))
         if save_path:
             fig.savefig(save_path, dpi=150, bbox_inches="tight")
@@ -314,7 +315,7 @@ class RunResult(dict):
 
 def _mostly_judge_errors(artifact: dict, threshold: float = 0.5) -> bool:
     """True when judge failures dominate the run, so the labels are unreliable
-    and the near-zero don't-fit rate is a false ``converged`` signal rather than
+    and the near-zero unmatched rate is a false ``converged`` signal rather than
     real coverage (e.g. a bad judge model id or a provider outage)."""
     n_items = artifact.get("n_items") or 0
     n_err = artifact.get("n_judge_errors") or 0
@@ -360,7 +361,7 @@ def run(
             before `finalize_classify` is allowed. Guards against premature
             convergence on a lucky early probe. Default 3. Must be ≤
             max_iterations.
-        converge_below: don't-fit rate threshold for early stop (0.10 = 10%).
+        converge_below: unmatched rate threshold for early stop (0.10 = 10%).
         probe_size: K — number of items per discovery probe batch.
         pool_limit: optional cap on items used (smoke testing).
         recursion_limit: LangGraph's cap on agent super-steps.
@@ -547,7 +548,7 @@ def run(
         logger.info(f"[taxonomy_agent] done → {artifact_path}")
     else:
         # The orchestrator may have walked off without calling finalize_classify
-        # (e.g. monotonic-add loops that never trip the don't-fit threshold).
+        # (e.g. monotonic-add loops that never trip the unmatched-rate threshold).
         # If we have a non-empty taxonomy on disk, label the corpus against it
         # ourselves so the run produces a usable artifact instead of returning
         # incomplete. The classify-budget floor is bypassed because we are

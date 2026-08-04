@@ -186,7 +186,7 @@ def render(settings):
                  "value": f"${total_usd:.2f}" if total_usd is not None else "—",
                  "sub": f"≈ ${_per_item:.4f} / item" if _per_item is not None else ""},
                 {"label": "Uncategorized", "value": _uncat_val,
-                 "sub": (f"{n_coerced_v / n_items_v:.1%} don't-fit"
+                 "sub": (f"{n_coerced_v / n_items_v:.1%} unmatched"
                          if isinstance(n_items_v, int) and n_items_v
                          else "coerced to ‘other’"),
                  "title": "Items the judge could not fit any discovered "

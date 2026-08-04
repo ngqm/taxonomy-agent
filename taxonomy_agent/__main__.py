@@ -305,7 +305,7 @@ def _cmd_legacy(argv: list[str]) -> None:
                         "premature convergence on a lucky early probe.")
     p.add_argument("--threshold", type=float,
                    default=cfg.get("threshold", 0.10),
-                   help="Don't-fit rate for early stop (default 0.10 = 10%%)")
+                   help="Unmatched rate for early stop (default 0.10 = 10%%)")
     p.add_argument("--probe-size", type=int,
                    default=cfg.get("probe_size", 20),
                    help="K — items per discovery probe batch")

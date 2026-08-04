@@ -209,7 +209,7 @@ def _render_progress(box, trace_path: "Path", max_iters, start_ts: float,
                      done: bool = False) -> None:
     """A one-line live progress bar for an in-flight run: how many orchestrator
     iterations (revise calls) have happened out of the budget, how many
-    categories exist so far, the latest don't-fit rate, and elapsed time.
+    categories exist so far, the latest unmatched rate, and elapsed time.
     Reads trace.jsonl, which the agent appends to as it goes."""
     import time as _time
     n_rev = 0
@@ -246,7 +246,7 @@ def _render_progress(box, trace_path: "Path", max_iters, start_ts: float,
     if n_cats is not None:
         parts.append(f"{n_cats} categories")
     if last_df is not None:
-        parts.append(f"don't-fit {last_df:.0%}")
+        parts.append(f"unmatched {last_df:.0%}")
     parts.append(f"elapsed {mm:d}:{ss_:02d}")
     box.progress(frac, text="  ·  ".join(parts))
 
@@ -257,7 +257,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
     Each event is a row in trace.jsonl: a `novelties` call (judge proposes
     new category names from items that did not fit), a `revise` call (the
     orchestrator applies a list of typed edits), or a `classify` call (the
-    judge labels a fresh probe of items and reports the don't-fit rate).
+    judge labels a fresh probe of items and reports the unmatched rate).
     We render them in chronological order, with each event as one card so a
     reviewer or demo visitor can see the loop converging in concrete terms.
     """
@@ -290,7 +290,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
         st.markdown(stat_ledger_html([
             {"label": "Events", "value": str(len(events))},
             {"label": "Revise calls", "value": str(len(revise_events))},
-            {"label": "Final don't-fit",
+            {"label": "Final unmatched",
              "value": (f"{final_dont_fit:.0%}"
                        if final_dont_fit is not None else "—")},
         ], value_size=32), unsafe_allow_html=True)
@@ -338,7 +338,7 @@ def _render_iteration_trace(box, trace_path: "Path") -> None:
                 bar = "█" * int(round((rate or 0) * 20))
                 pad = "░" * (20 - len(bar))
                 st.markdown(
-                    f"`{i:02d}` · **classify** probe: don't-fit "
+                    f"`{i:02d}` · **classify** probe: unmatched "
                     f"{rate_str}  `{bar}{pad}`"
                 )
             else:
