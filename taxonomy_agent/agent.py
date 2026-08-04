@@ -342,6 +342,7 @@ def run(
     temperature: float = 0.2,
     prose_revise: bool = False,
     seed: int = 42,
+    initial_taxonomy: list[dict] | None = None,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -461,6 +462,7 @@ def run(
         items_list, run_id, output_dir, judge,
         concurrency=concurrency, seed=seed, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
+        initial_taxonomy=initial_taxonomy,
     )
 
     llm = ChatOpenAI(

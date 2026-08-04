@@ -102,6 +102,38 @@ The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--orchestrator`, `--judge`, `--size`; see `taxonomy run --help`). Run
 `help(run)` in Python for the full docstring.
 
+#### Refining a taxonomy with feedback
+
+Not happy with the result? Steer it in natural language instead of re-running
+from scratch. `refine()` interprets your feedback into typed edits (`add`,
+`rename`, `edit`, `merge`, `split`, `drop`), applies them, and re-labels only
+the items an edit could have moved:
+
+```python
+from taxonomy_agent import refine
+
+# Natural language: interpreted into edits by a cheap judge call.
+better = refine(result, "merge the two flattery categories and split 'harmful' by severity")
+
+# Or apply exact edits directly — no LLM, fully deterministic.
+better = refine(result, operations=[
+    {"op": "rename", "old_name": "sycophancy", "new_name": "flattery"},
+    {"op": "merge",  "into": "manipulation", "from": ["sneaking", "brand_bias"]},
+])
+
+better.definitions        # the revised taxonomy
+better.to_dataframe()     # re-labelled items
+better["refine"]          # the feedback, applied ops, and how many items were re-labelled
+```
+
+`refine()` accepts a `RunResult` or a run directory and writes a **new** run
+(the original is untouched). It's cheap because a rename or merge is a pure
+relabel with **no** judge calls; an `add` re-judges only the `other` bucket; a
+`drop` / `split` / `edit` re-judges just that category's items. Control this with
+`reclassify=`: `"affected"` (default), `"all"` (relabel everything), or `"none"`
+(deterministic relabels only). Open-ended feedback ("too fine-grained") warm-
+starts a short re-discovery loop from the current taxonomy.
+
 ### Command line
 
 ```bash

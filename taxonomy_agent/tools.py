@@ -309,7 +309,8 @@ def _apply_ops_loose(state: _TaxonomyState,
 def make_tools(items: list[dict], run_id: str, output_dir: str,
                judge,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
-               min_iterations: int = 0, prose_revise: bool = False):
+               min_iterations: int = 0, prose_revise: bool = False,
+               initial_taxonomy: list[dict] | None = None):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -318,7 +319,11 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
     `min_iterations` is a floor on the number of `classify_with_judge` calls
     required before `finalize_classify` is allowed — guards against premature
     convergence on a lucky early probe. 0 means no floor (used at the tool
-    layer in tests). `run()` defaults this to 3."""
+    layer in tests). `run()` defaults this to 3.
+
+    `initial_taxonomy` seeds the working taxonomy so the orchestrator starts
+    from an existing category set (used by `refine()` to warm-start from a prior
+    run) instead of the empty default."""
     pool_by_id = {it["id"]: it for it in items}
     rng = random.Random(seed)
     # Cap classify_with_judge calls so a runaway orchestrator can't loop past
@@ -327,6 +332,8 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
     # 3× max_iters gives headroom; the floor of 8 keeps smoke tests usable.
     classify_budget = max(8, 3 * max_iters)
     state = _TaxonomyState()
+    if initial_taxonomy:
+        state.taxonomy = [dict(c) for c in initial_taxonomy]
 
     trace_path = os.path.join(output_dir, "trace.jsonl")
     artifact_path = os.path.join(output_dir, "taxonomy.json")
