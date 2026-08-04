@@ -25,6 +25,20 @@ ESCAPE_HATCH_SUFFIX = (
 # must be excluded from the don't-fit rate, not folded into "other".
 JUDGE_ERROR_RATIONALE = "[judge call failed]"
 
+# Prefix `_coerce_category` stamps on the rationale when the judge returned a
+# label outside the taxonomy. Named so the count of coerced rows has one home
+# (see `is_coerced_rationale` / `summarize_rows`) instead of a repeated literal.
+COERCED_RATIONALE_PREFIX = "[coerced from invented label"
+
+# The classification instruction used when the caller has none of its own — the
+# auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
+# receives the orchestrator's own prompt instead.
+DEFAULT_CLASSIFY_PROMPT = (
+    "Pick the single category from the list that best describes the item. "
+    "Reply only with a JSON object: "
+    "{\"category\": <name or \"other\">, \"rationale\": <one or two sentences>}."
+)
+
 
 def _format_item(item: dict, idx: int) -> str:
     """Render one item for the judge: id, then any non-text/id metadata, then the text."""
@@ -89,7 +103,62 @@ def _coerce_category(parsed: Any, taxonomy: list[dict]) -> tuple[str, str]:
         return canonical, rat
     if raw.lower() == "other":
         return "other", rat
-    return "other", f"[coerced from invented label '{raw}'] {rat}"
+    return "other", f"{COERCED_RATIONALE_PREFIX} '{raw}'] {rat}"
+
+
+def is_coerced_rationale(rationale: str) -> bool:
+    """True if `_coerce_category` stamped this rationale as an out-of-taxonomy
+    (coerced) label. Single home for the sentinel-prefix check."""
+    return isinstance(rationale, str) and rationale.startswith(COERCED_RATIONALE_PREFIX)
+
+
+def build_classify_prompt(instruction: str, tax_str: str, item: dict) -> str:
+    """The judge prompt that labels one `item` against the taxonomy rendered in
+    `tax_str`. `instruction` already carries any escape-hatch suffix. Shared by
+    the discovery-loop classifiers and `refine()` so the layout stays identical."""
+    return (f"{instruction}\n\n## Categories\n{tax_str}\n\n"
+            f"## Item to classify\n{_format_item(item, 1)}")
+
+
+def summarize_rows(rows: list[dict]) -> tuple[dict, int, int]:
+    """Roll classification rows up into `(category_counts, n_coerced,
+    n_judge_errors)` by inspecting each row's category and rationale sentinel."""
+    counts: dict[str, int] = {}
+    n_coerced = n_judge_errors = 0
+    for r in rows:
+        counts[r["category"]] = counts.get(r["category"], 0) + 1
+        rat = r.get("rationale", "")
+        if rat == JUDGE_ERROR_RATIONALE:
+            n_judge_errors += 1
+        elif is_coerced_rationale(rat):
+            n_coerced += 1
+    return counts, n_coerced, n_judge_errors
+
+
+def build_artifact(run_id: str, rows: list[dict], taxonomy: list[dict],
+                   final_prompt: str) -> dict:
+    """Assemble the canonical `taxonomy.json` artifact from classification rows.
+    Single owner of the artifact schema, shared by `finalize_classify`, the
+    streamed-recovery path, and `refine()`."""
+    counts, n_coerced, n_judge_errors = summarize_rows(rows)
+    return {
+        "run_id": run_id,
+        "n_items": len(rows),
+        "n_coerced": n_coerced,
+        "n_judge_errors": n_judge_errors,
+        "taxonomy": taxonomy,
+        "final_prompt": final_prompt,
+        "category_counts": counts,
+        "classifications": rows,
+    }
+
+
+def write_taxonomy_state(path: str, taxonomy: list[dict],
+                         n_classify_calls: int = 0) -> None:
+    """Persist the working taxonomy + classify-call count to `taxonomy_state.json`."""
+    with open(path, "w") as f:
+        json.dump({"taxonomy": taxonomy, "n_classify_calls": n_classify_calls},
+                  f, indent=2)
 
 
 def _append_trace(trace_path: str, run_id: str, kind: str, payload: dict) -> None:
@@ -344,9 +413,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
     def _write_taxonomy_state() -> None:
         """Persist the current working taxonomy so a crashed run still has the
         latest categories on disk, not just buried in trace.jsonl."""
-        with open(state_path, "w") as f:
-            json.dump({"taxonomy": state.taxonomy,
-                       "n_classify_calls": state.classify_calls}, f, indent=2)
+        write_taxonomy_state(state_path, state.taxonomy, state.classify_calls)
 
     @tool
     def sample_items(k: int) -> str:
@@ -427,10 +494,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         state.classify_calls += 1
         tax_str = _format_taxonomy(taxonomy)
         hardened = classify_prompt.strip() + ESCAPE_HATCH_SUFFIX
-        prompts = [
-            f"{hardened}\n\n## Categories\n{tax_str}\n\n## Item to classify\n{_format_item(it, 1)}"
-            for it in sel
-        ]
+        prompts = [build_classify_prompt(hardened, tax_str, it) for it in sel]
         replies = judge.parallel(prompts, concurrency=concurrency, max_tokens=300)
         results = []
         n_other = 0
@@ -444,7 +508,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 continue
             parsed = _parse_json_block(rep)
             cat, rat = _coerce_category(parsed, taxonomy)
-            if rat.startswith("[coerced from invented label"):
+            if is_coerced_rationale(rat):
                 n_coerced += 1
             if cat == "other":
                 n_other += 1
@@ -555,10 +619,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                     f"If you genuinely want to relabel, revise the taxonomy first.")
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
-        prompts = [
-            f"{hardened}\n\n## Categories\n{tax_str}\n\n## Item to classify\n{_format_item(it, 1)}"
-            for it in items
-        ]
+        prompts = [build_classify_prompt(hardened, tax_str, it) for it in items]
 
         # Stream per-item rows to classifications.jsonl as the judge returns
         # them. If the process is killed mid-finalize, the user keeps whatever
@@ -604,31 +665,10 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             for i in group_indices[u_idx]:
                 replies[i] = rep
         classifications: list[dict] = []
-        category_counts: dict[str, int] = {}
-        n_coerced = 0
-        n_judge_errors = 0
         for it, rep in zip(items, replies):
-            if rep is None:
-                n_judge_errors += 1
-                cat, rat = "other", JUDGE_ERROR_RATIONALE
-            else:
-                parsed = _parse_json_block(rep)
-                cat, rat = _coerce_category(parsed, taxonomy)
-                if rat.startswith("[coerced from invented label"):
-                    n_coerced += 1
-            row = {**it, "category": cat, "rationale": rat}
-            classifications.append(row)
-            category_counts[cat] = category_counts.get(cat, 0) + 1
-        artifact = {
-            "run_id": run_id,
-            "n_items": len(items),
-            "n_coerced": n_coerced,
-            "n_judge_errors": n_judge_errors,
-            "taxonomy": taxonomy,
-            "final_prompt": final_prompt,
-            "category_counts": category_counts,
-            "classifications": classifications,
-        }
+            cat, rat = _label(rep)
+            classifications.append({**it, "category": cat, "rationale": rat})
+        artifact = build_artifact(run_id, classifications, taxonomy, final_prompt)
         with open(artifact_path, "w") as f:
             json.dump(artifact, f, indent=2)
         # Snapshot the taxonomy that this artifact reflects. `_apply_ops`
@@ -637,8 +677,9 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         state.finalized_at = taxonomy
         return (
             f"Wrote {artifact_path}\n"
-            f"n_items={len(items)} (n_coerced={n_coerced}, n_judge_errors={n_judge_errors})\n"
-            f"category_counts={json.dumps(category_counts, indent=2)}"
+            f"n_items={artifact['n_items']} (n_coerced={artifact['n_coerced']}, "
+            f"n_judge_errors={artifact['n_judge_errors']})\n"
+            f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
         )
 
     def _artifact_from_streamed_classifications() -> dict | None:
@@ -659,25 +700,8 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 or {r.get("id") for r in rows} != want_ids
                 or not all(r.get("category") in valid for r in rows)):
             return None
-        category_counts: dict[str, int] = {}
-        n_coerced = n_judge_errors = 0
-        for r in rows:
-            category_counts[r["category"]] = category_counts.get(r["category"], 0) + 1
-            rat = r.get("rationale", "")
-            if rat == JUDGE_ERROR_RATIONALE:
-                n_judge_errors += 1
-            elif rat.startswith("[coerced from invented label"):
-                n_coerced += 1
-        return {
-            "run_id": run_id,
-            "n_items": len(items),
-            "n_coerced": n_coerced,
-            "n_judge_errors": n_judge_errors,
-            "taxonomy": state.taxonomy,
-            "final_prompt": "(recovered from streamed classifications.jsonl)",
-            "category_counts": category_counts,
-            "classifications": rows,
-        }
+        return build_artifact(run_id, rows, state.taxonomy,
+                              "(recovered from streamed classifications.jsonl)")
 
     def force_finalize_with_default_prompt() -> dict | None:
         """Fallback path for when the orchestrator stream ends without ever
@@ -700,18 +724,12 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             state.finalized_at = state.taxonomy
             return reused
 
-        default_prompt = (
-            "Pick the single category from the list that best describes the "
-            "item. Reply only with a JSON object: "
-            "{\"category\": <name or \"other\">, "
-            "\"rationale\": <one or two sentences>}."
-        )
         original_floor = state.classify_calls
         try:
             # Force the floor check to pass by temporarily reporting we have
             # already met it. (state is a closure; finalize_classify reads it.)
             state.classify_calls = max(state.classify_calls, min_iterations)
-            finalize_classify.invoke(default_prompt)
+            finalize_classify.invoke(DEFAULT_CLASSIFY_PROMPT)
         finally:
             state.classify_calls = original_floor
         if not os.path.exists(artifact_path):

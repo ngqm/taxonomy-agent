@@ -30,12 +30,15 @@ import uuid
 from pathlib import Path
 from typing import Union
 
+from dotenv import load_dotenv
+
 from .agent import RunResult, run
 from .cost import CostTracker
 from .judge import Judge
-from .tools import (ESCAPE_HATCH_SUFFIX, JUDGE_ERROR_RATIONALE, _TaxonomyState,
-                    _apply_ops, _coerce_category, _format_item,
-                    _format_taxonomy, _parse_json_block)
+from .tools import (DEFAULT_CLASSIFY_PROMPT, ESCAPE_HATCH_SUFFIX,
+                    JUDGE_ERROR_RATIONALE, _TaxonomyState, _apply_ops,
+                    _coerce_category, _format_taxonomy, _parse_json_block,
+                    build_artifact, build_classify_prompt, write_taxonomy_state)
 
 # The interpreter is a single cheap LLM call. It either emits concrete typed
 # edits or declares the request open-ended (needing re-discovery). Keeping both
@@ -75,9 +78,8 @@ def _load_run(run_or_dir: Union["RunResult", str, Path]) -> dict:
     else:
         res = RunResult.from_dir(run_or_dir)
         output_dir = str(run_or_dir)
-    artifact = res.get("artifact") or {}
-    taxonomy = artifact.get("taxonomy") or []
-    rows = artifact.get("classifications") or []
+    taxonomy = res.taxonomy
+    rows = res.classifications
     if not taxonomy or not rows:
         raise ValueError(
             "refine needs a completed run with a taxonomy and classifications; "
@@ -162,10 +164,10 @@ def _replay_labels(rows: list[dict], operations: list[dict],
 
 def _reclassify(rows: list[dict], items: list[dict], new_taxonomy: list[dict],
                 operations: list[dict], judge: "Judge", *, reclassify: str,
-                concurrency: int) -> tuple[list[dict], int, int]:
-    """Produce the refined classification rows. Deterministically-relabelled
-    items keep their prior rationale; re-judged items get a fresh label. Returns
-    (rows, n_coerced, n_judge_errors)."""
+                concurrency: int) -> tuple[list[dict], int]:
+    """Produce the refined classification rows and how many changed.
+    Deterministically-relabelled items keep their prior rationale; re-judged
+    items get a fresh label from the judge."""
     new_names = {c["name"] for c in new_taxonomy}
     det, need = _replay_labels(rows, operations, new_names, reclassify)
 
@@ -173,36 +175,27 @@ def _reclassify(rows: list[dict], items: list[dict], new_taxonomy: list[dict],
     to_judge = [i for i, flag in enumerate(need) if flag]
     if to_judge:
         tax_str = _format_taxonomy(new_taxonomy)
-        base = ("Pick the single category from the list that best describes the "
-                "item. Reply only with a JSON object: "
-                "{\"category\": <name or \"other\">, \"rationale\": "
-                "<one or two sentences>}." + ESCAPE_HATCH_SUFFIX)
-        prompts = [
-            f"{base}\n\n## Categories\n{tax_str}\n\n## Item to classify\n"
-            f"{_format_item(items[i], 1)}"
-            for i in to_judge
-        ]
+        instruction = DEFAULT_CLASSIFY_PROMPT + ESCAPE_HATCH_SUFFIX
+        prompts = [build_classify_prompt(instruction, tax_str, items[i])
+                   for i in to_judge]
         replies = judge.parallel(prompts, concurrency=concurrency, max_tokens=300)
         for i, rep in zip(to_judge, replies):
-            if rep is None:
-                judged[i] = ("other", JUDGE_ERROR_RATIONALE)
-            else:
-                judged[i] = _coerce_category(_parse_json_block(rep), new_taxonomy)
+            judged[i] = (("other", JUDGE_ERROR_RATIONALE) if rep is None
+                         else _coerce_category(_parse_json_block(rep), new_taxonomy))
 
     out_rows: list[dict] = []
-    n_coerced = n_judge_errors = 0
-    for i, (row, item) in enumerate(zip(rows, items)):
+    n_changed = 0
+    for i, row in enumerate(rows):
         if i in judged:
             cat, rat = judged[i]
         else:
             cat = det[i] if det[i] is not None else "other"
             rat = row.get("rationale", "")
-        if rat == JUDGE_ERROR_RATIONALE:
-            n_judge_errors += 1
-        elif isinstance(rat, str) and rat.startswith("[coerced from invented label"):
-            n_coerced += 1
-        out_rows.append({**item, "category": cat, "rationale": rat})
-    return out_rows, n_coerced, n_judge_errors
+        new_row = {**row, "category": cat, "rationale": rat}
+        out_rows.append(new_row)
+        if row.get("category") != cat or row.get("rationale") != rat:
+            n_changed += 1
+    return out_rows, n_changed
 
 
 def _default_refined_dir(source_dir: Union[str, None]) -> str:
@@ -253,6 +246,7 @@ def refine(run_or_dir: Union["RunResult", str, Path], feedback: str | None = Non
     if (feedback is None) == (operations is None):
         raise ValueError("pass exactly one of `feedback` or `operations`.")
 
+    load_dotenv(override=False)  # match run(): honour a project .env
     api_key = api_key or os.getenv("OPENROUTER_API_KEY")
     if not api_key:
         raise RuntimeError("OPENROUTER_API_KEY missing. Pass api_key= or set the env var.")
@@ -266,66 +260,52 @@ def refine(run_or_dir: Union["RunResult", str, Path], feedback: str | None = Non
     judge = Judge(api_key, judge_model, base_url=base_url,
                   usage_sink=cost.add_judge_usage)
 
-    # Decide the edits.
+    # Decide the edits. Explicit `operations` skip the interpreter entirely;
+    # natural-language feedback is interpreted into typed edits, or — when it's
+    # open-ended — into guidance that warm-starts a short re-discovery loop.
     if operations is not None:
-        interp = {"operations": operations}
+        ops = operations
     else:
         interp = interpret_feedback(feedback, loaded["taxonomy"], judge)
+        if interp.get("open_ended"):
+            instr = (loaded["instruction"] or "Group these texts.").strip()
+            instr = (f"{instr}\n\nRefine the taxonomy per this feedback: "
+                     f"{interp['guidance']}")
+            return run(
+                items=loaded["items"], instruction=instr, output_dir=out_dir,
+                orchestrator_model=orchestrator_model, judge_model=judge_model,
+                api_key=api_key, base_url=base_url, concurrency=concurrency,
+                initial_taxonomy=loaded["taxonomy"], **run_kwargs)
+        ops = interp["operations"]
 
-    # Open-ended feedback: warm-start a short discovery loop from the current
-    # taxonomy with the guidance appended to the instruction.
-    if interp.get("open_ended"):
-        guidance = interp["guidance"]
-        instr = (loaded["instruction"] or "Group these texts.").strip()
-        instr = f"{instr}\n\nRefine the taxonomy per this feedback: {guidance}"
-        return run(
-            items=loaded["items"], instruction=instr, output_dir=out_dir,
-            orchestrator_model=orchestrator_model, judge_model=judge_model,
-            api_key=api_key, base_url=base_url, concurrency=concurrency,
-            initial_taxonomy=loaded["taxonomy"], **run_kwargs)
-
-    ops = interp["operations"]
     st = _TaxonomyState()
     st.taxonomy = [dict(c) for c in loaded["taxonomy"]]
     new_taxonomy, op_log = _apply_ops(st, ops)
 
-    out_rows, n_coerced, n_judge_errors = _reclassify(
+    out_rows, n_changed = _reclassify(
         loaded["rows"], loaded["items"], new_taxonomy, ops, judge,
         reclassify=reclassify, concurrency=concurrency)
 
-    category_counts: dict[str, int] = {}
-    for r in out_rows:
-        category_counts[r["category"]] = category_counts.get(r["category"], 0) + 1
-
+    # Persist the refined run through the same artifact/state writers the main
+    # loop uses, so its output directory is shape-identical to a run().
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    artifact = {
-        "run_id": run_id,
-        "n_items": len(out_rows),
-        "n_coerced": n_coerced,
-        "n_judge_errors": n_judge_errors,
-        "taxonomy": new_taxonomy,
-        "final_prompt": "(refined from a prior run)",
-        "category_counts": category_counts,
-        "classifications": out_rows,
-    }
+    artifact = build_artifact(run_id, out_rows, new_taxonomy,
+                              "(refined from a prior run)")
     artifact_path = os.path.join(out_dir, "taxonomy.json")
     with open(artifact_path, "w") as f:
         json.dump(artifact, f, indent=2)
     with open(os.path.join(out_dir, "classifications.jsonl"), "w") as f:
         for r in out_rows:
             f.write(json.dumps(r) + "\n")
-    with open(os.path.join(out_dir, "taxonomy_state.json"), "w") as f:
-        json.dump({"taxonomy": new_taxonomy, "n_classify_calls": 0}, f, indent=2)
+    write_taxonomy_state(os.path.join(out_dir, "taxonomy_state.json"), new_taxonomy)
 
-    n_judged = sum(1 for r_old, r_new in zip(loaded["rows"], out_rows)
-                   if r_old.get("category") != r_new.get("category")
-                   or r_old.get("rationale") != r_new.get("rationale"))
     cost.write()
     snapshot = cost.snapshot()
+    now = datetime.datetime.now().isoformat(timespec="seconds")
     meta = {
         "run_id": run_id,
-        "started_at": datetime.datetime.now().isoformat(timespec="seconds"),
-        "finished_at": datetime.datetime.now().isoformat(timespec="seconds"),
+        "started_at": now,
+        "finished_at": now,
         "instruction": loaded["instruction"],
         "n_items_input": len(out_rows),
         "orchestrator_model": orchestrator_model,
@@ -349,7 +329,7 @@ def refine(run_or_dir: Union["RunResult", str, Path], feedback: str | None = Non
             "operations": ops,
             "op_log": op_log,
             "reclassify": reclassify,
-            "n_reclassified": n_judged,
+            "n_reclassified": n_changed,
             "refined_from": loaded["output_dir"],
         },
     })

@@ -15,7 +15,7 @@ Public API:
 The package is fully self-contained — no imports from outside the folder.
 """
 from .agent import run, RunResult
-from .refine import refine, interpret_feedback
+from .refinement import refine, interpret_feedback
 
 __all__ = ["run", "RunResult", "refine", "interpret_feedback"]
 __version__ = "0.1.0"

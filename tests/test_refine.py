@@ -7,16 +7,12 @@ separately, with the LLM stubbed."""
 from __future__ import annotations
 
 import json
-import sys
 
 import pytest
 
 from taxonomy_agent import RunResult
-from taxonomy_agent.refine import refine, interpret_feedback
-
-# `taxonomy_agent.refine` the attribute is the exported function (it shadows the
-# submodule), so reach the module through sys.modules to monkeypatch its Judge/run.
-refine_mod = sys.modules["taxonomy_agent.refine"]
+from taxonomy_agent import refinement as refine_mod
+from taxonomy_agent.refinement import refine, interpret_feedback
 
 
 class _StubJudge:
