@@ -321,8 +321,13 @@ def test_finalize_judge_errors_recorded(items5, make_tool_set, tmp_path):
 
     artifact = json.load(open(os.path.join(str(tmp_path), "taxonomy.json")))
     assert artifact["n_judge_errors"] > 0
-    err_rows = [c for c in artifact["classifications"]
-                if c["rationale"] == JUDGE_ERROR_RATIONALE]
+    # The summary artifact no longer embeds per-item rows — they stream to
+    # classifications.jsonl so a million-item run keeps taxonomy.json small.
+    assert "classifications" not in artifact
+    rows = [json.loads(l) for l
+            in open(os.path.join(str(tmp_path), "classifications.jsonl"))
+            if l.strip()]
+    err_rows = [c for c in rows if c["rationale"] == JUDGE_ERROR_RATIONALE]
     assert len(err_rows) == artifact["n_judge_errors"]
 
 
@@ -464,6 +469,65 @@ def test_finalize_truncates_stale_classifications_jsonl(items5, make_tool_set, t
     lines = open(jsonl_path).read().strip().splitlines()
     assert len(lines) == 5
     assert not any('"id": "stale"' in l for l in lines)
+
+
+def test_finalize_labels_in_bounded_chunks(items50, make_tool_set, tmp_path,
+                                            monkeypatch):
+    """finalize must fan the corpus out in FINALIZE_CHUNK-sized batches so peak
+    memory stays flat at scale — every item is still labelled, counts are still
+    correct, and the judge is invoked once per chunk rather than once overall."""
+    import taxonomy_agent.tools as tools_mod
+    monkeypatch.setattr(tools_mod, "FINALIZE_CHUNK", 10)
+    batch_sizes = []
+
+    def parallel(prompts, **k):
+        batch_sizes.append(len(prompts))
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    t = make_tool_set(items50, lambda *a, **k: None, parallel)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["finalize"].invoke({"final_prompt": "p"})
+
+    # 50 distinct items / chunk 10 → five judge batches, none larger than 10.
+    assert batch_sizes == [10, 10, 10, 10, 10]
+    rows = [json.loads(l) for l
+            in open(os.path.join(str(tmp_path), "classifications.jsonl"))
+            if l.strip()]
+    assert len(rows) == 50
+    artifact = json.load(open(os.path.join(str(tmp_path), "taxonomy.json")))
+    assert artifact["n_items"] == 50
+    assert artifact["category_counts"] == {"a": 50}
+
+
+def test_finalize_dedupes_across_chunks(make_tool_set, tmp_path, monkeypatch):
+    """Deduplication happens before chunking, so identical items collapse to one
+    judge call no matter which chunk boundary they straddle, and every duplicate
+    still gets its own streamed row."""
+    import taxonomy_agent.tools as tools_mod
+    monkeypatch.setattr(tools_mod, "FINALIZE_CHUNK", 2)
+    # Six items, three distinct texts (each appears twice); with chunk size 2
+    # the three groups span two judge batches.
+    items = [{"id": str(i), "text": f"item {i % 3}"} for i in range(6)]
+    total_prompts = []
+
+    def parallel(prompts, **k):
+        total_prompts.append(len(prompts))
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    t = make_tool_set(items, lambda *a, **k: None, parallel)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["finalize"].invoke({"final_prompt": "p"})
+
+    assert sum(total_prompts) == 3          # one judge call per distinct item
+    rows = [json.loads(l) for l
+            in open(os.path.join(str(tmp_path), "classifications.jsonl"))
+            if l.strip()]
+    assert len(rows) == 6                    # every duplicate still labelled
+    assert {r["id"] for r in rows} == {str(i) for i in range(6)}
+    artifact = json.load(open(os.path.join(str(tmp_path), "taxonomy.json")))
+    assert artifact["category_counts"] == {"a": 6}
 
 
 # === _coerce_category (case-insensitive + escape hatches) ===

@@ -2,11 +2,11 @@
 persistent taxonomy, so the agent never has to pass the taxonomy by argument."""
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import random
 import re
-import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
@@ -29,6 +29,12 @@ JUDGE_ERROR_RATIONALE = "[judge call failed]"
 # label outside the taxonomy. Named so the count of coerced rows has one home
 # (see `is_coerced_rationale` / `summarize_rows`) instead of a repeated literal.
 COERCED_RATIONALE_PREFIX = "[coerced from invented label"
+
+# finalize_classify labels the corpus one bounded batch of distinct items at a
+# time so peak memory stays flat as the corpus grows: a million-item run never
+# holds a million prompt strings (or reply strings) alive at once, only one
+# chunk's worth. Small corpora finish in a single chunk, unchanged.
+FINALIZE_CHUNK = 2000
 
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
@@ -135,22 +141,38 @@ def summarize_rows(rows: list[dict]) -> tuple[dict, int, int]:
     return counts, n_coerced, n_judge_errors
 
 
-def build_artifact(run_id: str, rows: list[dict], taxonomy: list[dict],
-                   final_prompt: str) -> dict:
-    """Assemble the canonical `taxonomy.json` artifact from classification rows.
-    Single owner of the artifact schema, shared by `finalize_classify`, the
-    streamed-recovery path, and `refine()`."""
-    counts, n_coerced, n_judge_errors = summarize_rows(rows)
+def build_artifact_from_counts(run_id: str, taxonomy: list[dict],
+                               final_prompt: str, *, n_items: int,
+                               category_counts: dict, n_coerced: int,
+                               n_judge_errors: int) -> dict:
+    """Assemble the `taxonomy.json` summary artifact from already-rolled-up
+    counts. The per-item rows are deliberately NOT embedded — they live in
+    `classifications.jsonl` — so the artifact stays O(number of categories)
+    even for a million-item corpus and can be read without loading every row.
+    Single owner of the artifact schema."""
     return {
         "run_id": run_id,
-        "n_items": len(rows),
+        "n_items": n_items,
         "n_coerced": n_coerced,
         "n_judge_errors": n_judge_errors,
         "taxonomy": taxonomy,
         "final_prompt": final_prompt,
-        "category_counts": counts,
-        "classifications": rows,
+        "category_counts": category_counts,
     }
+
+
+def build_artifact(run_id: str, rows: list[dict], taxonomy: list[dict],
+                   final_prompt: str) -> dict:
+    """Summarize classification `rows` into the `taxonomy.json` artifact.
+    Convenience wrapper over `build_artifact_from_counts` for callers that
+    already hold every row in memory (`refine()` and the streamed-recovery
+    path); the rows themselves are persisted separately to
+    `classifications.jsonl`."""
+    counts, n_coerced, n_judge_errors = summarize_rows(rows)
+    return build_artifact_from_counts(
+        run_id, taxonomy, final_prompt, n_items=len(rows),
+        category_counts=counts, n_coerced=n_coerced,
+        n_judge_errors=n_judge_errors)
 
 
 def write_taxonomy_state(path: str, taxonomy: list[dict],
@@ -619,56 +641,62 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                     f"If you genuinely want to relabel, revise the taxonomy first.")
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
-        prompts = [build_classify_prompt(hardened, tax_str, it) for it in items]
 
-        # Stream per-item rows to classifications.jsonl as the judge returns
-        # them. If the process is killed mid-finalize, the user keeps whatever
-        # labels arrived; the consolidated taxonomy.json is written only after
-        # the parallel batch completes successfully. Truncate any stale file
-        # from a previous attempt before we start writing.
         # Deduplicate by item content (everything except the arbitrary id):
-        # items with the same text and metadata receive the same label, so the
+        # items with identical text and metadata get the same label, so the
         # judge is paid once per distinct item instead of once per duplicate.
-        # The id appears in the prompt only as a reference; it does not affect
-        # the category. Rows are still streamed per item, expanded across each
-        # group of duplicates.
+        # Hash the content so the group map stays small (~40 bytes/key) even at
+        # a corpus of millions; the id is a reference in the prompt only and
+        # never affects the category.
         def _dedup_key(it: dict) -> str:
-            return json.dumps({k: v for k, v in it.items() if k != "id"},
+            blob = json.dumps({k: v for k, v in it.items() if k != "id"},
                               sort_keys=True)
+            return hashlib.sha1(blob.encode("utf-8")).hexdigest()
 
         groups: dict[str, list[int]] = {}
         for i, it in enumerate(items):
             groups.setdefault(_dedup_key(it), []).append(i)
         group_indices = list(groups.values())
-        unique_prompts = [prompts[idxs[0]] for idxs in group_indices]
-
-        open(classifications_jsonl, "w").close()
-        write_lock = threading.Lock()
+        groups = None  # release the key map before the (larger) judge phase
 
         def _label(rep: str | None):
             if rep is None:
                 return "other", JUDGE_ERROR_RATIONALE
             return _coerce_category(_parse_json_block(rep), taxonomy)
 
-        def _on_reply(u_idx: int, rep: str | None) -> None:
-            cat, rat = _label(rep)
-            with write_lock:
-                with open(classifications_jsonl, "a") as f:
-                    for i in group_indices[u_idx]:
+        # Label the distinct items in bounded chunks so peak memory is one
+        # chunk's worth of prompts and replies, not the whole corpus. Truncate
+        # any stale file from a previous attempt, then append each chunk's rows
+        # as it returns — a crash mid-finalize keeps a prefix of real labels on
+        # disk, and the consolidated taxonomy.json summary is written only after
+        # every chunk succeeds. Counts are rolled up incrementally for the same
+        # reason: nothing ever holds the full row set in memory.
+        open(classifications_jsonl, "w").close()
+        counts: dict[str, int] = {}
+        n_coerced = n_judge_errors = 0
+        for start in range(0, len(group_indices), FINALIZE_CHUNK):
+            chunk = group_indices[start:start + FINALIZE_CHUNK]
+            chunk_prompts = [
+                build_classify_prompt(hardened, tax_str, items[g[0]]) for g in chunk]
+            chunk_replies = judge.parallel(
+                chunk_prompts, concurrency=concurrency * 2, max_tokens=300)
+            with open(classifications_jsonl, "a") as f:
+                for g, rep in zip(chunk, chunk_replies):
+                    cat, rat = _label(rep)
+                    n = len(g)
+                    if rat == JUDGE_ERROR_RATIONALE:
+                        n_judge_errors += n
+                    elif is_coerced_rationale(rat):
+                        n_coerced += n
+                    counts[cat] = counts.get(cat, 0) + n
+                    for i in g:
                         f.write(json.dumps(
                             {**items[i], "category": cat, "rationale": rat}) + "\n")
 
-        unique_replies = judge.parallel(unique_prompts, concurrency=concurrency * 2,
-                                        max_tokens=300, on_reply=_on_reply)
-        replies: list[str | None] = [None] * len(items)
-        for u_idx, rep in enumerate(unique_replies):
-            for i in group_indices[u_idx]:
-                replies[i] = rep
-        classifications: list[dict] = []
-        for it, rep in zip(items, replies):
-            cat, rat = _label(rep)
-            classifications.append({**it, "category": cat, "rationale": rat})
-        artifact = build_artifact(run_id, classifications, taxonomy, final_prompt)
+        artifact = build_artifact_from_counts(
+            run_id, taxonomy, final_prompt, n_items=len(items),
+            category_counts=counts, n_coerced=n_coerced,
+            n_judge_errors=n_judge_errors)
         with open(artifact_path, "w") as f:
             json.dump(artifact, f, indent=2)
         # Snapshot the taxonomy that this artifact reflects. `_apply_ops`
@@ -686,22 +714,42 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         """Rebuild the finalize artifact from a complete classifications.jsonl,
         or None if the file is missing, unreadable, incomplete, or references a
         category not in the current taxonomy (so a stale/partial file is never
-        mistaken for a finished run)."""
+        mistaken for a finished run). Streams the file and rolls counts up as it
+        goes, so recovering a million-row run never holds every row in memory."""
         if not os.path.exists(classifications_jsonl):
-            return None
-        try:
-            with open(classifications_jsonl) as f:
-                rows = [json.loads(line) for line in f if line.strip()]
-        except (ValueError, OSError):
             return None
         want_ids = {it["id"] for it in items}
         valid = {c["name"] for c in state.taxonomy} | {"other"}
-        if (len(rows) != len(items)
-                or {r.get("id") for r in rows} != want_ids
-                or not all(r.get("category") in valid for r in rows)):
+        seen_ids: set = set()
+        counts: dict[str, int] = {}
+        n_rows = n_coerced = n_judge_errors = 0
+        try:
+            with open(classifications_jsonl) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    r = json.loads(line)
+                    cat = r.get("category")
+                    if cat not in valid:
+                        return None
+                    n_rows += 1
+                    seen_ids.add(r.get("id"))
+                    counts[cat] = counts.get(cat, 0) + 1
+                    rat = r.get("rationale", "")
+                    if rat == JUDGE_ERROR_RATIONALE:
+                        n_judge_errors += 1
+                    elif is_coerced_rationale(rat):
+                        n_coerced += 1
+        except (ValueError, OSError):
             return None
-        return build_artifact(run_id, rows, state.taxonomy,
-                              "(recovered from streamed classifications.jsonl)")
+        if n_rows != len(items) or seen_ids != want_ids:
+            return None
+        return build_artifact_from_counts(
+            run_id, state.taxonomy,
+            "(recovered from streamed classifications.jsonl)",
+            n_items=n_rows, category_counts=counts, n_coerced=n_coerced,
+            n_judge_errors=n_judge_errors)
 
     def force_finalize_with_default_prompt() -> dict | None:
         """Fallback path for when the orchestrator stream ends without ever
