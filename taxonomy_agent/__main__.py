@@ -142,6 +142,14 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--seed", type=int, default=42,
                    help="RNG seed for reproducible probe sampling.")
+    p.add_argument("--finalize", choices=["judge", "cascade"], default="judge",
+                   help="How to label the corpus: 'judge' (LLM per item) or "
+                        "'cascade' (embedding classifier for the confident "
+                        "majority, judge only the tail — needs the [scale] "
+                        "extra).")
+    p.add_argument("--cascade-coverage", type=float, default=0.85,
+                   help="With --finalize cascade, fraction of items to accept "
+                        "from the cheap classifier (rest go to the judge).")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -179,6 +187,8 @@ def _cmd_run(argv: list[str]) -> None:
         concurrency=args.concurrency,
         size_hint=args.size_hint or None,
         seed=args.seed,
+        finalize=args.finalize,
+        cascade_coverage=args.cascade_coverage,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
