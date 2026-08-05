@@ -21,6 +21,38 @@ EXAMPLE_DIR = PACKAGE_DIR / "taxonomy_agent" / "example"
 # and discoverable on a hosted deploy (where PROJECT_ROOT is outside the repo).
 DEFAULT_RUNS_ROOT = PACKAGE_DIR / "taxonomy_runs"
 
+# Cap on how many per-item rows the Inspect tab pulls for its visual features
+# (representative examples, corpus map). The taxonomy + counts summarize
+# instantly from taxonomy.json regardless of corpus size; only these O(N)
+# visuals read rows, and they sample rather than choke on a million-row run.
+MAP_SAMPLE_CAP = 5000
+
+
+def load_run_rows(run_dir, artifact, limit: int | None = None) -> list[dict]:
+    """Per-item classification rows for a run: embedded in the artifact (older
+    runs) or streamed from `classifications.jsonl` (current runs, whose
+    `taxonomy.json` keeps only the summary). `limit` caps how many rows are read
+    so the Inspect visuals stay responsive on a very large corpus."""
+    embedded = (artifact or {}).get("classifications")
+    if embedded:
+        return list(embedded[:limit]) if limit else list(embedded)
+    path = Path(run_dir) / "classifications.jsonl"
+    if not path.exists():
+        return []
+    rows: list[dict] = []
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except ValueError:
+                continue
+            if limit and len(rows) >= limit:
+                break
+    return rows
+
 
 def _discover_runs_roots() -> list[Path]:
     """Return every `*_runs/` directory under the project root *or* the

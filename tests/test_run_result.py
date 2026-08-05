@@ -62,6 +62,40 @@ def test_save_csv(tmp_path):
     assert len(lines) == 4  # header + 3 rows
 
 
+def test_streams_classifications_from_jsonl_when_artifact_has_no_rows(tmp_path):
+    """A current run's taxonomy.json holds only the summary; the per-item rows
+    live in classifications.jsonl. RunResult must read them from there so
+    .classifications / .to_dataframe / .save_csv all work without the artifact
+    embedding a single row (the shape a million-item run produces)."""
+    import csv as _csv
+
+    (tmp_path / "taxonomy.json").write_text(_json.dumps({
+        "run_id": "r", "n_items": 2, "n_coerced": 0, "n_judge_errors": 0,
+        "taxonomy": [{"name": "sycophancy", "description": "Flattery."}],
+        "category_counts": {"sycophancy": 2},
+    }))
+    (tmp_path / "classifications.jsonl").write_text(
+        _json.dumps({"id": "a", "text": "you're right!",
+                     "category": "sycophancy", "rationale": "agrees"}) + "\n"
+        + _json.dumps({"id": "b", "text": "so smart",
+                       "category": "sycophancy", "rationale": "flatters"}) + "\n")
+
+    r = RunResult.from_dir(tmp_path)
+    assert "classifications" not in (r.get("artifact") or {})
+    # Streamed access: iterator, materialized list, and dataframe all agree.
+    assert [c["id"] for c in r.iter_classifications()] == ["a", "b"]
+    assert len(r.classifications) == 2
+    df = r.to_dataframe()
+    assert df["definition"].tolist() == ["Flattery.", "Flattery."]
+
+    out = tmp_path / "labels.csv"
+    r.save_csv(str(out))
+    with open(out, newline="") as f:
+        got = list(_csv.DictReader(f))
+    assert [row["id"] for row in got] == ["a", "b"]
+    assert got[0]["definition"] == "Flattery."
+
+
 def test_mostly_judge_errors_flags_degraded_runs():
     from taxonomy_agent.agent import _mostly_judge_errors
     assert _mostly_judge_errors({"n_items": 100, "n_judge_errors": 60}) is True

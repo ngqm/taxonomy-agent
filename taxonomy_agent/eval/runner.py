@@ -118,8 +118,11 @@ def _run_method(method: str, items: list[dict], seed: int, instruction: str,
         cost_usd = (rrun.get("cost") or {}).get("total_usd", 0.0) or 0.0
         return {
             "taxonomy": artifact["taxonomy"],
+            # Per-item rows now live in classifications.jsonl, not embedded in
+            # the summary artifact; RunResult streams them from whichever source
+            # is present (embedded for older runs, the jsonl for current ones).
             "assignments": [{"id": c["id"], "category": c["category"]}
-                            for c in artifact["classifications"]],
+                            for c in rrun.iter_classifications()],
             "cost_usd": cost_usd,
             "wall_time_s": wall_time_s,
         }

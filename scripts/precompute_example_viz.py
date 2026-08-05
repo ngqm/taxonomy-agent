@@ -40,7 +40,13 @@ def main() -> int:
 
     for run in runs:
         art = json.loads((run / "taxonomy.json").read_text())
-        rows = art.get("classifications", []) or []
+        # Current runs keep per-item rows in classifications.jsonl, not embedded
+        # in the summary artifact; fall back to it (older runs still embed them).
+        rows = art.get("classifications") or []
+        if not rows and (run / "classifications.jsonl").exists():
+            rows = [json.loads(l) for l
+                    in (run / "classifications.jsonl").read_text().splitlines()
+                    if l.strip()]
         texts = [(r.get("text") or "")[:2000] for r in rows]
         cats = [r.get("category") or "other" for r in rows]
         if not any(texts):

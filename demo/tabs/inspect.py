@@ -197,7 +197,7 @@ def render(settings):
             # representative.json shipped with the run (no embedding model
             # needed — this is what keeps the deployed demo light); otherwise
             # embed live; otherwise fall back to first-seen items.
-            _all_rows = art.get("classifications", []) or []
+            _all_rows = load_run_rows(cand_path, art, limit=MAP_SAMPLE_CAP)
             _ex_texts = [(r.get("text") or "").strip() for r in _all_rows]
             _ex_cats = [r.get("category") or "other" for r in _all_rows]
             examples_by_cat: dict = {}
@@ -276,14 +276,17 @@ def render(settings):
                     unsafe_allow_html=True,
                 )
 
-            rows = art.get("classifications", []) or []
+            rows = load_run_rows(cand_path, art, limit=MAP_SAMPLE_CAP)
+            _n_total = art.get("n_items") or len(rows)
 
             # ── Corpus map: 2D projection of every item, coloured by its
             # discovered category. Well-separated colours = clean taxonomy.
             if rows and len(rows) >= 5 and any((r.get("text") or "").strip() for r in rows):
+                _map_sub = (f"{len(rows)} of {_n_total} items (sampled)"
+                            if len(rows) < _n_total else f"{len(rows)} items")
                 st.markdown(section_header_html(
                     "Corpus Map",
-                    f"{len(rows)} items · UMAP · MiniLM embeddings",
+                    f"{_map_sub} · UMAP · MiniLM embeddings",
                 ), unsafe_allow_html=True)
                 st.markdown(
                     '<div class="page-subtitle" style="font-size:15px;margin:0 0 12px;">'
@@ -433,6 +436,11 @@ def render(settings):
 
             if rows:
                 st.subheader("Classifications")
+                if len(rows) < _n_total:
+                    st.caption(
+                        f"Previewing the first {len(rows):,} of {_n_total:,} "
+                        f"rows. Use the classifications.jsonl download below for "
+                        f"the complete labels.")
                 df = pd.DataFrame(rows)
                 # Give the category filter more width so its chips truncate less
                 # (narrow columns force BaseWeb to ellipsis-clip long category
@@ -458,11 +466,15 @@ def render(settings):
                      "and per-category counts.",
             )
             if rows:
+                _capped = len(rows) < _n_total
                 csv_bytes = pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
                 dl[1].download_button(
-                    "classifications.csv", csv_bytes,
+                    "classifications.csv" + (" (preview)" if _capped else ""),
+                    csv_bytes,
                     file_name="classifications.csv", mime="text/csv",
-                    help="One row per item: id, assigned category, and text.",
+                    help=("First {:,} rows only; the .jsonl download has all "
+                          "{:,}.".format(len(rows), _n_total) if _capped
+                          else "One row per item: id, assigned category, and text."),
                 )
             clf_path = cand_path / "classifications.jsonl"
             if clf_path.exists():

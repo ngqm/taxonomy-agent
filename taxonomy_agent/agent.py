@@ -157,12 +157,39 @@ class RunResult(dict):
         """Map of each category name to its one-line definition."""
         return {t.get("name"): t.get("description", "") for t in self.taxonomy}
 
+    def iter_classifications(self) -> Iterable[dict]:
+        """Yield each classified item — its original fields plus the assigned
+        ``category`` and the judge's ``rationale`` — one at a time.
+
+        Reads embedded rows if the artifact carries them (older runs, and the
+        in-memory objects built by tests), otherwise streams
+        ``classifications.jsonl`` from the run directory. The streaming path is
+        what lets a million-row run be exported or iterated without ever holding
+        every row in memory at once."""
+        art = self.get("artifact") or {}
+        embedded = art.get("classifications")
+        if embedded is not None:
+            yield from embedded
+            return
+        output_dir = self.get("output_dir")
+        if not output_dir:
+            return
+        path = Path(output_dir) / "classifications.jsonl"
+        if not path.exists():
+            return
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    yield json.loads(line)
+
     @property
     def classifications(self) -> list[dict]:
         """Every item with its assigned ``category`` and the judge's
         ``rationale`` (alongside the item's original fields, e.g. ``id`` /
-        ``text``)."""
-        return (self.get("artifact") or {}).get("classifications", [])
+        ``text``), materialized into a list. For a very large corpus, prefer
+        :meth:`iter_classifications` (or :meth:`save_csv`), which stream."""
+        return list(self.iter_classifications())
 
     @property
     def category_counts(self) -> dict[str, int]:
@@ -180,14 +207,30 @@ class RunResult(dict):
             "category": c.get("category"),
             "rationale": c.get("rationale"),
             "definition": defs.get(c.get("category"), ""),
-        } for c in self.classifications]
+        } for c in self.iter_classifications()]
         return pd.DataFrame(
             rows, columns=["id", "text", "category", "rationale", "definition"])
 
     def save_csv(self, path: str) -> str:
         """Write the per-item table (with rationales and definitions) to
-        ``path`` as CSV and return the path."""
-        self.to_dataframe().to_csv(path, index=False)
+        ``path`` as CSV and return the path.
+
+        Streams row by row straight from :meth:`iter_classifications`, so a
+        million-row run exports without first materializing a DataFrame of the
+        whole corpus in memory."""
+        defs = self.definitions
+        cols = ["id", "text", "category", "rationale", "definition"]
+        with open(path, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
+            w.writeheader()
+            for c in self.iter_classifications():
+                w.writerow({
+                    "id": c.get("id"),
+                    "text": c.get("text"),
+                    "category": c.get("category"),
+                    "rationale": c.get("rationale"),
+                    "definition": defs.get(c.get("category"), ""),
+                })
         return path
 
     def iteration_stats(self):
