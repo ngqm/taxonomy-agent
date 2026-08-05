@@ -95,6 +95,21 @@ def build_prototypes(examples, tax_names, embed_fn, descriptions=None):
     return names, mat
 
 
+def _pred_margin(sims, names):
+    """From a ``(batch, n_prototypes)`` cosine matrix, return ``(preds,
+    margins)``: the nearest prototype name per row and its top1-minus-top2
+    margin (the raw similarity when there is only one prototype)."""
+    if sims.shape[1] == 1:
+        idx = np.zeros(sims.shape[0], dtype=int)
+        margin = sims[:, 0]
+    else:
+        order = np.argsort(-sims, axis=1)
+        idx = order[:, 0]
+        rows = np.arange(sims.shape[0])
+        margin = sims[rows, order[:, 0]] - sims[rows, order[:, 1]]
+    return [names[j] for j in idx], margin.astype(np.float32)
+
+
 def assign(names, matrix, texts, embed_fn):
     """Nearest prototype by cosine for each text, with a top1-minus-top2 margin
     as a cheap confidence signal. Returns ``(preds, margins)``; with a single
@@ -104,17 +119,43 @@ def assign(names, matrix, texts, embed_fn):
     if not names:
         return ["other"] * n, np.zeros(n, dtype=np.float32)
     X = np.asarray(embed_fn(texts), dtype=np.float32)
-    sims = X @ matrix.T
-    if matrix.shape[0] == 1:
-        idx = np.zeros(n, dtype=int)
-        margin = sims[:, 0]
-    else:
-        order = np.argsort(-sims, axis=1)
-        idx = order[:, 0]
-        rows = np.arange(n)
-        margin = sims[rows, order[:, 0]] - sims[rows, order[:, 1]]
-    preds = [names[j] for j in idx]
-    return preds, margin.astype(np.float32)
+    return _pred_margin(X @ matrix.T, names)
+
+
+def assign_streaming(names, matrix, text_iter, embed_fn, batch_size=1024):
+    """Like :func:`assign` but embeds an *iterable* of texts one batch at a
+    time, so only one batch of embedding vectors is ever held in memory — the
+    full corpus is never materialized as text or as an ``N x dim`` array.
+
+    Returns ``(preds, margins)`` for every text in order: ``preds`` a list of
+    prototype names, ``margins`` a float32 array. The only retained
+    per-item state is these two (a few bytes each), so a corpus of tens of
+    millions stays well within memory."""
+    preds: list[str] = []
+    margins: list[np.ndarray] = []
+    batch: list[str] = []
+
+    def flush():
+        if not batch:
+            return
+        if not names:
+            preds.extend(["other"] * len(batch))
+            margins.append(np.zeros(len(batch), dtype=np.float32))
+        else:
+            X = np.asarray(embed_fn(batch), dtype=np.float32)
+            p, m = _pred_margin(X @ matrix.T, names)
+            preds.extend(p)
+            margins.append(m)
+        batch.clear()
+
+    for t in text_iter:
+        batch.append(t)
+        if len(batch) >= batch_size:
+            flush()
+    flush()
+    marg = (np.concatenate(margins) if margins
+            else np.zeros(0, dtype=np.float32))
+    return preds, marg
 
 
 def confident_mask(margins, coverage):

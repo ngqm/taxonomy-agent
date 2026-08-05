@@ -68,6 +68,19 @@ def test_confident_mask_keeps_top_coverage():
     assert not cascade.confident_mask(m, 0.0).any()
 
 
+def test_assign_streaming_matches_assign_across_batches():
+    names, mat = cascade.build_prototypes(
+        [("AAA", "a"), ("BBB", "b")], ["a", "b"], fake_embed)
+    texts = ["AAA 1", "BBB 2", "neutral 3", "AAA 4", "BBB 5"]
+    p_full, m_full = cascade.assign(names, mat, texts, fake_embed)
+    # batch_size=2 forces multiple flushes across a boundary.
+    p_str, m_str = cascade.assign_streaming(names, mat, iter(texts), fake_embed,
+                                            batch_size=2)
+    assert p_str == p_full
+    assert np.allclose(m_str, m_full)
+    assert len(p_str) == 5
+
+
 # ── finalize_mode='cascade' end to end ──────────────────────────────────────
 
 def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
@@ -123,6 +136,38 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     assert "classifications" not in art
     assert art["n_items"] == 10
     assert sum(art["category_counts"].values()) == 10
+
+
+def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path):
+    """Identical items in the low-confidence tail are judged once, then the
+    label is expanded to every duplicate."""
+    items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(4)]
+             + [{"id": f"n{i}", "text": "the exact same neutral text"}
+                for i in range(4)])       # 4 identical tail items
+
+    judge_batches = []
+
+    def parallel(prompts, **k):
+        judge_batches.append(len(prompts))
+        return ['{"category": "cat_a", "rationale": "r"}' if "AAA" in p
+                else '{"category": "cat_a", "rationale": "tail"}' for p in prompts]
+
+    t = make_tool_set(items, lambda *a, **k: None, parallel,
+                      finalize_mode="cascade", cascade_coverage=0.5,
+                      embed_fn=fake_embed)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "cat_a", "description": "aaa"}]})
+    t["classify"].invoke({"item_ids": ["a0", "a1"], "classify_prompt": "p"})
+    judge_batches.clear()
+
+    t["finalize"].invoke({"final_prompt": "p"})
+    # The 4 identical tail items collapse to a single judge call.
+    assert sum(judge_batches) == 1
+    rows = [json.loads(l) for l
+            in open(os.path.join(str(tmp_path), "classifications.jsonl")) if l.strip()]
+    assert len(rows) == 8
+    tail_rows = [r for r in rows if r["id"].startswith("n")]
+    assert len(tail_rows) == 4 and all(r["category"] == "cat_a" for r in tail_rows)
 
 
 def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):

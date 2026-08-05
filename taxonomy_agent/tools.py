@@ -43,6 +43,11 @@ CASCADE_RATIONALE_PREFIX = "[cascade: nearest-prototype;"
 # chunk's worth. Small corpora finish in a single chunk, unchanged.
 FINALIZE_CHUNK = 2000
 
+# The cascade embeds the corpus one batch of this many items at a time, so only
+# one batch of embedding vectors is ever resident — a 10M-item run never holds a
+# 10M x dim array (which would be tens of GB).
+EMBED_BATCH = 1024
+
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
 # receives the orchestrator's own prompt instead.
@@ -131,6 +136,16 @@ def build_classify_prompt(instruction: str, tax_str: str, item: dict) -> str:
     the discovery-loop classifiers and `refine()` so the layout stays identical."""
     return (f"{instruction}\n\n## Categories\n{tax_str}\n\n"
             f"## Item to classify\n{_format_item(item, 1)}")
+
+
+def _content_hash(item: dict) -> str:
+    """Stable hash of an item's content (every field except its id), so
+    identical items collapse to one judge call. Hashing keeps the dedup key
+    small (~40 bytes) even for a corpus of millions. The id is a reference in
+    the prompt only and never affects the label."""
+    blob = json.dumps({k: v for k, v in item.items() if k != "id"},
+                      sort_keys=True)
+    return hashlib.sha1(blob.encode("utf-8")).hexdigest()
 
 
 def summarize_rows(rows: list[dict]) -> tuple[dict, int, int]:
@@ -666,28 +681,40 @@ def make_tools(items, run_id: str, output_dir: str,
         targets = tax_names + (["other"] if has_other else [])
 
         names, protos = _casc.build_prototypes(examples, targets, embed, descriptions)
-        texts = [it.get("text") or "" for it in corpus]
-        preds, margins = _casc.assign(names, protos, texts, embed)
+        # Stream the corpus through the embedder one batch at a time — never
+        # materialize all texts or an N x dim embedding array. Only the per-item
+        # prediction + margin are retained (a few bytes each).
+        preds, margins = _casc.assign_streaming(
+            names, protos, (it.get("text") or "" for it in corpus),
+            embed, batch_size=EMBED_BATCH)
         keep = _casc.confident_mask(margins, cascade_coverage)
 
-        # Judge the low-confidence tail, chunked like the judge finalize.
+        # Judge the low-confidence tail, chunked; dedup identical tail items so
+        # the judge is paid once per distinct item there too.
         tail_idx = [i for i in range(len(corpus)) if not keep[i]]
         tail_label: dict[int, tuple[str, str]] = {}
         if tail_idx:
+            tail_groups: dict[str, list[int]] = {}
+            for i in tail_idx:
+                tail_groups.setdefault(_content_hash(corpus[i]), []).append(i)
+            reps = [g[0] for g in tail_groups.values()]
             tax_str = _format_taxonomy(taxonomy)
             hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
-            for s in range(0, len(tail_idx), FINALIZE_CHUNK):
-                chunk = tail_idx[s:s + FINALIZE_CHUNK]
+            rep_label: dict[int, tuple[str, str]] = {}
+            for s in range(0, len(reps), FINALIZE_CHUNK):
+                chunk = reps[s:s + FINALIZE_CHUNK]
                 prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
                            for i in chunk]
                 replies = judge.parallel(prompts, concurrency=concurrency * 2,
                                          max_tokens=300)
                 for i, rep in zip(chunk, replies):
-                    if rep is None:
-                        tail_label[i] = ("other", JUDGE_ERROR_RATIONALE)
-                    else:
-                        tail_label[i] = _coerce_category(
-                            _parse_json_block(rep), taxonomy)
+                    rep_label[i] = (("other", JUDGE_ERROR_RATIONALE) if rep is None
+                                    else _coerce_category(_parse_json_block(rep),
+                                                          taxonomy))
+            for g in tail_groups.values():
+                lab = rep_label[g[0]]
+                for i in g:
+                    tail_label[i] = lab
 
         # Stream every row (cheap or judged) in item order; roll counts up so
         # nothing accumulates the full row set in memory.
@@ -758,17 +785,9 @@ def make_tools(items, run_id: str, output_dir: str,
         # Deduplicate by item content (everything except the arbitrary id):
         # items with identical text and metadata get the same label, so the
         # judge is paid once per distinct item instead of once per duplicate.
-        # Hash the content so the group map stays small (~40 bytes/key) even at
-        # a corpus of millions; the id is a reference in the prompt only and
-        # never affects the category.
-        def _dedup_key(it: dict) -> str:
-            blob = json.dumps({k: v for k, v in it.items() if k != "id"},
-                              sort_keys=True)
-            return hashlib.sha1(blob.encode("utf-8")).hexdigest()
-
         groups: dict[str, list[int]] = {}
         for i, it in enumerate(corpus):
-            groups.setdefault(_dedup_key(it), []).append(i)
+            groups.setdefault(_content_hash(it), []).append(i)
         group_indices = list(groups.values())
         groups = None  # release the key map before the (larger) judge phase
 
