@@ -106,7 +106,7 @@ def test_op_split_no_changes_on_malformed_into():
 def test_state_defaults():
     s = _TaxonomyState()
     assert s.taxonomy == []
-    assert s.sampled_ids == set()
+    assert s.sampled_idx == set()
     assert s.finalized_at is None
     assert s.classify_calls == 0
 

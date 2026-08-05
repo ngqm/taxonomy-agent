@@ -183,6 +183,11 @@ dictionaries, or a path to a local file (URLs are not fetched):
 - `.json` — an array of objects or strings
 - `.csv` — a `text` column, with an optional `id` column
 
+A `.jsonl` path is read **out-of-core**: the file is indexed by byte offset and
+rows are loaded on demand (sampled by seek, streamed for the final labeling
+pass), so a corpus far larger than memory can be processed. The other inputs
+are loaded into memory.
+
 Identifiers are assigned by position when absent.
 
 ## Output

@@ -12,6 +12,8 @@ from typing import Any, Callable
 
 from langchain_core.tools import tool
 
+from .corpus import Corpus, InMemoryCorpus
+
 
 ESCAPE_HATCH_SUFFIX = (
     "\n\nIMPORTANT: If none of the listed categories applies to this item, "
@@ -210,9 +212,9 @@ class _TaxonomyState:
     """Per-run mutable state shared across the six tools via closure."""
     # Working taxonomy. Reassigned (not mutated in place) by `_apply_ops`.
     taxonomy: list[dict] = field(default_factory=list)
-    # Item ids handed out by `sample_items` so far. Used to bias subsequent
-    # probes toward unseen items; cleared when the pool is exhausted.
-    sampled_ids: set = field(default_factory=set)
+    # Corpus indices handed out by `sample_items` so far. Used to bias
+    # subsequent probes toward unseen items; cleared when the pool is exhausted.
+    sampled_idx: set = field(default_factory=set)
     # Snapshot of the taxonomy at the moment `finalize_classify` last ran.
     # `finalize` refuses to repeat work until the taxonomy actually changes.
     finalized_at: list[dict] | None = None
@@ -406,7 +408,7 @@ def _apply_ops_loose(state: _TaxonomyState,
     return tax, log
 
 
-def make_tools(items: list[dict], run_id: str, output_dir: str,
+def make_tools(items, run_id: str, output_dir: str,
                judge,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
                min_iterations: int = 0, prose_revise: bool = False,
@@ -425,8 +427,13 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
 
     `initial_taxonomy` seeds the working taxonomy so the orchestrator starts
     from an existing category set (used by `refine()` to warm-start from a prior
-    run) instead of the empty default."""
-    pool_by_id = {it["id"]: it for it in items}
+    run) instead of the empty default.
+
+    `items` may be a list of item dicts or a `Corpus` (e.g. a file-backed
+    `JsonlCorpus`); a list is wrapped so the tools only ever touch the corpus
+    through its length / index / id-lookup / iteration interface, never a
+    materialized dict of every item."""
+    corpus = items if isinstance(items, Corpus) else InMemoryCorpus(items)
     rng = random.Random(seed)
     # Cap classify_with_judge calls so a runaway orchestrator can't loop past
     # max_iters. The recommended loop runs ~2 classify calls per iteration
@@ -455,17 +462,20 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         Items returned by earlier calls are not repeated until the corpus is
         exhausted. At that point the history resets and the reply notes the
         wraparound; subsequent batches will overlap with prior ones."""
-        k = max(1, min(int(k), len(items)))
-        unseen = [it for it in items if it["id"] not in state.sampled_ids]
+        n = len(corpus)
+        k = max(1, min(int(k), n))
+        # Sample by index, not by scanning every item, so a file-backed corpus
+        # only reads the K rows it hands out.
+        unseen = [i for i in range(n) if i not in state.sampled_idx]
         note = ""
         if len(unseen) < k:
-            note = (f" (pool of {len(items)} exhausted — sampling history reset; "
+            note = (f" (pool of {n} exhausted — sampling history reset; "
                     f"expect overlap with prior probes)")
-            state.sampled_ids = set()
-            unseen = items
-        sampled = rng.sample(unseen, k)
-        for it in sampled:
-            state.sampled_ids.add(it["id"])
+            state.sampled_idx = set()
+            unseen = range(n)
+        chosen = rng.sample(unseen, k)
+        state.sampled_idx.update(chosen)
+        sampled = [corpus[i] for i in chosen]
         ids = [it["id"] for it in sampled]
         blocks = [_format_item(it, i) for i, it in enumerate(sampled, start=1)]
         return (
@@ -518,7 +528,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                     f"and the budget is 3× that). Call finalize_classify with "
                     f"the current taxonomy now, or stop.")
         deduped_ids = list(dict.fromkeys(item_ids))
-        sel = [pool_by_id[i] for i in deduped_ids if i in pool_by_id]
+        sel = [it for it in (corpus.get(i) for i in deduped_ids) if it is not None]
         if not sel:
             return "ERROR: no valid item_ids."
         taxonomy = state.taxonomy
@@ -585,7 +595,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         Returns the merged list (or an error string if every batch fails). Call
         `revise_taxonomy` afterwards to adopt any of the suggestions."""
         deduped_ids = list(dict.fromkeys(item_ids))
-        sel = [pool_by_id[i] for i in deduped_ids if i in pool_by_id]
+        sel = [it for it in (corpus.get(i) for i in deduped_ids) if it is not None]
         if not sel:
             return "ERROR: no valid item_ids."
         taxonomy = state.taxonomy
@@ -649,26 +659,26 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         # survived to the final taxonomy (plus "other").
         examples: list[tuple[str, str]] = []
         for iid, cat in state.probe_labels.items():
-            it = pool_by_id.get(iid)
+            it = corpus.get(iid)
             if it is not None and cat in valid:
                 examples.append((it.get("text") or "", cat))
         has_other = any(c == "other" for _, c in examples)
         targets = tax_names + (["other"] if has_other else [])
 
         names, protos = _casc.build_prototypes(examples, targets, embed, descriptions)
-        texts = [it.get("text") or "" for it in items]
+        texts = [it.get("text") or "" for it in corpus]
         preds, margins = _casc.assign(names, protos, texts, embed)
         keep = _casc.confident_mask(margins, cascade_coverage)
 
         # Judge the low-confidence tail, chunked like the judge finalize.
-        tail_idx = [i for i in range(len(items)) if not keep[i]]
+        tail_idx = [i for i in range(len(corpus)) if not keep[i]]
         tail_label: dict[int, tuple[str, str]] = {}
         if tail_idx:
             tax_str = _format_taxonomy(taxonomy)
             hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
             for s in range(0, len(tail_idx), FINALIZE_CHUNK):
                 chunk = tail_idx[s:s + FINALIZE_CHUNK]
-                prompts = [build_classify_prompt(hardened, tax_str, items[i])
+                prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
                            for i in chunk]
                 replies = judge.parallel(prompts, concurrency=concurrency * 2,
                                          max_tokens=300)
@@ -685,7 +695,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         counts: dict[str, int] = {}
         n_coerced = n_judge_errors = n_cheap = 0
         with open(classifications_jsonl, "a") as f:
-            for i, it in enumerate(items):
+            for i, it in enumerate(corpus):
                 if keep[i]:
                     cat = preds[i]
                     rat = f"{CASCADE_RATIONALE_PREFIX} margin={float(margins[i]):.3f}]"
@@ -700,16 +710,16 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 f.write(json.dumps({**it, "category": cat, "rationale": rat}) + "\n")
 
         artifact = build_artifact_from_counts(
-            run_id, taxonomy, final_prompt, n_items=len(items),
+            run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=counts, n_coerced=n_coerced,
             n_judge_errors=n_judge_errors)
         with open(artifact_path, "w") as f:
             json.dump(artifact, f, indent=2)
         state.finalized_at = taxonomy
-        n_judged = len(items) - n_cheap
+        n_judged = len(corpus) - n_cheap
         return (
             f"Wrote {artifact_path} (finalize_mode=cascade)\n"
-            f"n_items={len(items)}: {n_cheap} labelled by embedding prototypes, "
+            f"n_items={len(corpus)}: {n_cheap} labelled by embedding prototypes, "
             f"{n_judged} routed to the judge (coverage={cascade_coverage}); "
             f"n_judge_errors={n_judge_errors}\n"
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
@@ -757,7 +767,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             return hashlib.sha1(blob.encode("utf-8")).hexdigest()
 
         groups: dict[str, list[int]] = {}
-        for i, it in enumerate(items):
+        for i, it in enumerate(corpus):
             groups.setdefault(_dedup_key(it), []).append(i)
         group_indices = list(groups.values())
         groups = None  # release the key map before the (larger) judge phase
@@ -780,7 +790,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         for start in range(0, len(group_indices), FINALIZE_CHUNK):
             chunk = group_indices[start:start + FINALIZE_CHUNK]
             chunk_prompts = [
-                build_classify_prompt(hardened, tax_str, items[g[0]]) for g in chunk]
+                build_classify_prompt(hardened, tax_str, corpus[g[0]]) for g in chunk]
             chunk_replies = judge.parallel(
                 chunk_prompts, concurrency=concurrency * 2, max_tokens=300)
             with open(classifications_jsonl, "a") as f:
@@ -794,10 +804,10 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                     counts[cat] = counts.get(cat, 0) + n
                     for i in g:
                         f.write(json.dumps(
-                            {**items[i], "category": cat, "rationale": rat}) + "\n")
+                            {**corpus[i], "category": cat, "rationale": rat}) + "\n")
 
         artifact = build_artifact_from_counts(
-            run_id, taxonomy, final_prompt, n_items=len(items),
+            run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=counts, n_coerced=n_coerced,
             n_judge_errors=n_judge_errors)
         with open(artifact_path, "w") as f:
@@ -821,7 +831,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
         goes, so recovering a million-row run never holds every row in memory."""
         if not os.path.exists(classifications_jsonl):
             return None
-        want_ids = {it["id"] for it in items}
+        want_ids = {it["id"] for it in corpus}
         valid = {c["name"] for c in state.taxonomy} | {"other"}
         seen_ids: set = set()
         counts: dict[str, int] = {}
@@ -846,7 +856,7 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                         n_coerced += 1
         except (ValueError, OSError):
             return None
-        if n_rows != len(items) or seen_ids != want_ids:
+        if n_rows != len(corpus) or seen_ids != want_ids:
             return None
         return build_artifact_from_counts(
             run_id, state.taxonomy,

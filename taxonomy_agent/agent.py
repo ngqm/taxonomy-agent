@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
+from .corpus import Corpus, InMemoryCorpus, JsonlCorpus, _normalize_one
 from .cost import CostTracker
 from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
@@ -32,18 +33,8 @@ def _normalize_items(raw: Iterable) -> list[dict]:
     out: list[dict] = []
     seen: set[str] = set()
     for idx, obj in enumerate(raw, start=1):
-        if isinstance(obj, str):
-            item = {"id": f"item-{idx}", "text": obj}
-        elif isinstance(obj, dict):
-            if "text" not in obj:
-                raise ValueError(f"item {idx} has no 'text' field: {obj!r}")
-            item = dict(obj)
-            item["id"] = str(item.get("id", f"item-{idx}"))
-        else:
-            raise ValueError(
-                f"item {idx} must be a string or a dict, got "
-                f"{type(obj).__name__}")
-        if not str(item["text"]).strip():
+        item = _normalize_one(obj, idx)
+        if item is None:
             continue
         if item["id"] in seen:
             raise ValueError(f"duplicate id: {item['id']!r}")
@@ -121,6 +112,22 @@ def _load_items(items_or_path: Union[str, Path, Iterable]) -> list[dict]:
         return _normalize_items(raw)
 
     return _normalize_items(items_or_path)
+
+
+def open_corpus(items_or_path, pool_limit: int | None = None) -> Corpus:
+    """Return a :class:`Corpus` over the input, applying ``pool_limit`` if set.
+
+    A ``.jsonl`` file path is opened as a streaming ``JsonlCorpus`` (indexed by
+    byte offset, read on demand) so a corpus larger than memory can be labelled;
+    every other input (an in-memory iterable, or a ``.json`` / ``.csv`` path) is
+    loaded into an ``InMemoryCorpus``."""
+    if (isinstance(items_or_path, (str, Path))
+            and str(items_or_path).lower().endswith(".jsonl")):
+        return JsonlCorpus(items_or_path, pool_limit=pool_limit)
+    items = _load_items(items_or_path)
+    if pool_limit and pool_limit > 0:
+        items = items[:pool_limit]
+    return InMemoryCorpus(items)
 
 
 class RunResult(dict):
@@ -478,17 +485,15 @@ def run(
         raise ValueError(
             f"cascade_coverage must be in [0, 1], got {cascade_coverage}")
 
-    items_list = _load_items(items)
-    if pool_limit is not None and pool_limit > 0:
-        items_list = items_list[:pool_limit]
-    if not items_list:
+    corpus = open_corpus(items, pool_limit)
+    if len(corpus) == 0:
         raise ValueError("no items to classify.")
 
     output_dir = str(output_dir)
     os.makedirs(output_dir, exist_ok=True)
 
     run_id = f"run-{uuid.uuid4().hex[:8]}"
-    logger.info(f"[taxonomy_agent] items={len(items_list)} run_id={run_id}")
+    logger.info(f"[taxonomy_agent] items={len(corpus)} run_id={run_id}")
     logger.info(f"[taxonomy_agent] orchestrator={orchestrator_model}, judge={judge_model}")
     logger.info(f"[taxonomy_agent] output_dir={output_dir}")
 
@@ -499,7 +504,7 @@ def run(
         "run_id": run_id,
         "started_at": datetime.datetime.now().isoformat(timespec="seconds"),
         "instruction": instruction.strip(),
-        "n_items_input": len(items_list),
+        "n_items_input": len(corpus),
         "orchestrator_model": orchestrator_model,
         "judge_model": judge_model,
         "size_hint": size_hint,
@@ -523,7 +528,7 @@ def run(
         api_key, judge_model, base_url=base_url, usage_sink=cost.add_judge_usage,
     )
     tools, force_finalize = make_tools(
-        items_list, run_id, output_dir, judge,
+        corpus, run_id, output_dir, judge,
         concurrency=concurrency, seed=seed, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
         initial_taxonomy=initial_taxonomy,
@@ -552,7 +557,7 @@ def run(
     )
     sys_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         instruction=instruction.strip(),
-        n_items=len(items_list),
+        n_items=len(corpus),
         threshold=converge_below,
         probe_size=probe_size,
         max_iters=max_iterations,
