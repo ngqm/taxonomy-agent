@@ -10,6 +10,7 @@ a stateless **judge** labels one item at a time. Default model for both roles is
 
 ```bash
 pip install -e .                         # registers the `taxonomy` console script
+pip install -e ".[scale]"                # + sentence-transformers, for finalize=cascade
 echo 'OPENROUTER_API_KEY=sk-or-v1-...' > .env   # required for any real run
 ```
 
@@ -30,11 +31,12 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
 #   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
+#   --finalize cascade --cascade-coverage 0.85   # cheap labeling at scale (see below)
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
 
-# Launch the Streamlit demo UI (Run / History / Inspect / Compare tabs).
+# Launch the Streamlit demo UI (Start / Run / History / Inspect / Compare tabs).
 taxonomy ui                              # extra args forward to streamlit
 
 # Config-file run (same flags as `python -m taxonomy_agent`):
@@ -50,12 +52,20 @@ strings or `{"id", "text"}` dicts. Ids are assigned by position when absent.
 - `.json`  — an array of objects or strings
 - `.csv`   — a `text` column, with an optional `id` column
 
+A `.jsonl` path is read **out-of-core** (indexed by byte offset, rows loaded on
+demand), so a corpus far larger than memory can be processed; other inputs load
+into memory.
+
 ## Output artifacts (written to the output dir, streamed during the run)
 
-- `taxonomy.json`         — final taxonomy (categories with name + definition)
-- `classifications.jsonl` — per-item label, written row-by-row during finalisation
+- `taxonomy.json`         — compact summary: the taxonomy (name + definition per
+  category) and per-category counts. Does NOT embed per-item rows, so it stays
+  small at any corpus size.
+- `classifications.jsonl` — the per-item labels + rationales, one row per item,
+  streamed during finalisation. The source of truth `RunResult` reads.
 - `taxonomy_state.json`   — working taxonomy, rewritten after every revise (partial-progress safe)
-- `trace.jsonl`           — one row per tool call (novelties / revise / classify), with don't-fit rates
+- `trace.jsonl`           — one row per tool call (novelties / revise / classify),
+  with the unmatched rate (JSON field `dont_fit_rate`, kept for back-compat)
 - `cost.json`             — running spend, from OpenRouter's native usage.cost
 
 ## Programmatic API
@@ -72,17 +82,52 @@ result = run(
     min_iterations=3, converge_below=0.10, probe_size=20, size_hint="4-10",
 )
 result.definitions          # {category: definition}
-result.classifications      # [{id, text, category, rationale}, ...]
+result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)
+result.iter_classifications()  # generator — memory-safe for huge corpora
 result.to_dataframe()       # id, text, category, rationale, definition
-result.save_csv("labels.csv")
+result.save_csv("labels.csv")   # streams; no full DataFrame in memory
 result.cost_usd             # OpenRouter spend, in USD
+
+result.iteration_stats()    # per-iteration DataFrame: categories, unmatched rate, ...
+result.plot_iterations()    # matplotlib figure of the run's dynamics ([viz] extra)
 
 RunResult.from_dir("out/")  # reload a finished run offline, no re-spend
 ```
 
-The loop stops when the judge's don't-fit rate on a fresh probe falls below
-`converge_below`, after at least `min_iterations` probes. See
-`notebooks/quickstart.ipynb` for a runnable walkthrough.
+The loop stops when the judge's **unmatched rate** (fraction of a fresh probe it
+can place in no category) falls below `converge_below`, after at least
+`min_iterations` probes. See `notebooks/quickstart.ipynb` for a walkthrough.
+
+### Refine a taxonomy with feedback (no full re-run)
+
+```python
+from taxonomy_agent import refine
+better = refine(result, "merge the two flattery categories and split 'harmful' by severity")
+better = refine(result, operations=[                      # exact edits, no LLM
+    {"op": "rename", "old_name": "sycophancy", "new_name": "flattery"},
+    {"op": "merge",  "into": "manipulation", "from": ["sneaking", "brand_bias"]},
+])
+```
+`refine()` interprets natural-language feedback into typed edits (add / rename /
+edit / merge / split / drop) and re-labels only the items an edit could move
+(rename or merge = 0 judge calls). Open-ended feedback warm-starts a short
+re-discovery. Returns a new `RunResult`; the original is untouched.
+
+### Scaling to large corpora (`finalize="cascade"`)
+
+```python
+result = run(items, instruction, output_dir="out/",
+             finalize="cascade", cascade_coverage=0.85)   # needs the [scale] extra
+```
+Default `finalize="judge"` calls the LLM judge once per item — O(N). With
+`finalize="cascade"`, after discovery the corpus is embedded locally, one
+prototype is built per category by averaging the discovery probes the judge
+already labeled (free calibration), each item is assigned to its nearest
+prototype, and only the least-confident `1 - cascade_coverage` fraction is sent
+to the judge. Fidelity is corpus-dependent but degrades gracefully; on an
+embedding-separable corpus it reproduces ~98% of the full-judge labels while
+judging only ~20% of items. Everything (memory, throughput) stays bounded, so
+this is the path for millions of items.
 
 ## Evaluation harness
 
@@ -97,7 +142,7 @@ Writes `results.json` (+ `results.tex`) with purity, NMI, ARI, and cost per meth
 
 ## Where things live
 
-- `taxonomy_agent/`            — the library (agent loop, tools, judge, eval harness)
+- `taxonomy_agent/`            — the library (agent loop, tools, judge, cascade, corpus, eval)
 - `taxonomy_agent/eval/`       — benchmark driver, corpora loaders, baselines
 - `app.py` + `demo/`          — Streamlit app at repo root
 - `example_runs/`             — sample finished runs (load these in `taxonomy inspect`)
