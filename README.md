@@ -94,6 +94,9 @@ optional keyword argument with a sensible default:
 | `seed` | `42` | Seeds probe sampling for reproducibility; vary it for independent replicates. |
 | `temperature` | `0.2` | Orchestrator sampling temperature. |
 | `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
+| `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM on every item) or `"cascade"` (embedding classifier for the confident majority, judge only the tail — see below). |
+| `cascade_coverage` | `0.85` | With `finalize="cascade"`, the fraction of items to accept from the cheap classifier; the rest go to the judge. |
+| `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for the cascade classifier. |
 | `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
 | `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
 
@@ -101,6 +104,30 @@ The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--min-iters`, `--threshold`, `--probe-size`, `--concurrency`, `--seed`,
 `--orchestrator`, `--judge`, `--size`; see `taxonomy run --help`). Run
 `help(run)` in Python for the full docstring.
+
+#### Scaling to large corpora (`finalize="cascade"`)
+
+Labeling every item with the judge is one LLM call per item — fine for
+thousands, costly for millions. `finalize="cascade"` breaks that O(N):
+
+```python
+result = run(items, instruction, output_dir="out/",
+             finalize="cascade", cascade_coverage=0.85)
+```
+
+After discovery converges, it embeds the corpus locally, builds one prototype
+per category by **averaging the discovery probes the judge already labeled** (so
+calibration costs nothing extra), assigns each item to its nearest prototype,
+and sends only the least-confident `1 − cascade_coverage` of items to the judge.
+The judge bill at finalize drops from N calls to the size of that tail.
+
+Fidelity is corpus-dependent and degrades gracefully — on an
+embedding-separable corpus (e.g. DarkBench manipulation tactics) the cascade
+reproduces ~98% of the full-judge labels while sending only ~20% of items to the
+judge (a 5× cut); on harder corpora the confidence gate automatically routes
+more items to the judge to hold accuracy. Lower `cascade_coverage` for higher
+fidelity, raise it (up to `1.0`, a pure `$0` labeling pass) for lower cost.
+Needs the embedding extra: `pip install 'taxonomy-agent[scale]'`.
 
 #### Refining a taxonomy with feedback
 

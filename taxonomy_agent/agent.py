@@ -387,6 +387,9 @@ def run(
     prose_revise: bool = False,
     seed: int = 42,
     initial_taxonomy: list[dict] | None = None,
+    finalize: str = "judge",
+    cascade_coverage: float = 0.85,
+    embed_model: str = "all-MiniLM-L6-v2",
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -425,6 +428,18 @@ def run(
         seed: seeds the probe-sampling RNG so a run is reproducible given the
             same corpus and models (with temperature 0). Vary it for independent
             replicates.
+        finalize: how to label the full corpus once discovery converges.
+            "judge" (default) asks the LLM judge about every item — O(N) calls.
+            "cascade" labels the confident majority with an embedding classifier
+            (prototypes averaged from the discovery probes, which the judge
+            already labelled) and routes only the low-confidence tail to the
+            judge, cutting LLM calls sharply on large corpora. Needs the
+            `[scale]` extra (sentence-transformers).
+        cascade_coverage: with finalize="cascade", the fraction of items to
+            accept from the cheap classifier (highest confidence first); the
+            rest go to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge
+            entirely, 0.0 falls back to a full judge pass.
+        embed_model: sentence-transformers model id for the cascade classifier.
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -457,6 +472,11 @@ def run(
         raise ValueError(f"concurrency must be ≥ 1, got {concurrency}")
     if not 0.0 <= converge_below <= 1.0:
         raise ValueError(f"converge_below must be in [0, 1], got {converge_below}")
+    if finalize not in ("judge", "cascade"):
+        raise ValueError(f"finalize must be 'judge' or 'cascade', got {finalize!r}")
+    if not 0.0 <= cascade_coverage <= 1.0:
+        raise ValueError(
+            f"cascade_coverage must be in [0, 1], got {cascade_coverage}")
 
     items_list = _load_items(items)
     if pool_limit is not None and pool_limit > 0:
@@ -507,6 +527,8 @@ def run(
         concurrency=concurrency, seed=seed, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
         initial_taxonomy=initial_taxonomy,
+        finalize_mode=finalize, cascade_coverage=cascade_coverage,
+        embed_model=embed_model,
     )
 
     llm = ChatOpenAI(

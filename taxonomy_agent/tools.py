@@ -30,6 +30,11 @@ JUDGE_ERROR_RATIONALE = "[judge call failed]"
 # (see `is_coerced_rationale` / `summarize_rows`) instead of a repeated literal.
 COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 
+# Prefix stamped on rows labelled cheaply by the cascade's embedding classifier
+# (not the judge). Distinct from the coerced/judge-error sentinels so cascade
+# rows are never miscounted as either.
+CASCADE_RATIONALE_PREFIX = "[cascade: nearest-prototype;"
+
 # finalize_classify labels the corpus one bounded batch of distinct items at a
 # time so peak memory stays flat as the corpus grows: a million-item run never
 # holds a million prompt strings (or reply strings) alive at once, only one
@@ -213,6 +218,10 @@ class _TaxonomyState:
     finalized_at: list[dict] | None = None
     # Counter against the per-run classify budget (see `make_tools`).
     classify_calls: int = 0
+    # Item id -> judge label from the discovery probes (last write wins). These
+    # are items the judge already labelled while exploring, reused for free as
+    # calibration prototypes by finalize_mode="cascade".
+    probe_labels: dict = field(default_factory=dict)
 
 
 _OpHandler = Callable[[list[dict], dict], tuple[list[dict], dict]]
@@ -401,7 +410,9 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                judge,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
                min_iterations: int = 0, prose_revise: bool = False,
-               initial_taxonomy: list[dict] | None = None):
+               initial_taxonomy: list[dict] | None = None,
+               finalize_mode: str = "judge", cascade_coverage: float = 0.85,
+               embed_model: str = "all-MiniLM-L6-v2", embed_fn=None):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -536,6 +547,12 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                 n_other += 1
             results.append({"item_id": it["id"], "category": cat, "rationale": rat[:400]})
         n_scored = len(sel) - n_judge_errors
+        # Keep each probe's judge label as free calibration for a cascade
+        # finalize (skip failed calls). Labels are against the taxonomy at this
+        # moment; the cascade filters to categories that survive to the end.
+        for r in results:
+            if r["rationale"] != JUDGE_ERROR_RATIONALE:
+                state.probe_labels[r["item_id"]] = r["category"]
         # No successful classifications means the rate carries no signal; report
         # 1.0 (fully unfit) so a total judge failure never reads as convergence.
         rate = (n_other / n_scored) if n_scored > 0 else 1.0
@@ -614,6 +631,90 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
                     f"Raw replies:\n{raw_glimpse}")
         return json.dumps(proposals, indent=2)
 
+    def _cascade_finalize(final_prompt: str) -> str:
+        """finalize_mode='cascade': label the confident majority with an
+        embedding classifier (prototypes averaged from the discovery probes the
+        judge already paid for) and route only the low-confidence tail to the
+        judge. Produces the same compact taxonomy.json + streamed
+        classifications.jsonl as the judge path, so everything downstream is
+        unchanged."""
+        from . import cascade as _casc
+        taxonomy = state.taxonomy
+        embed = embed_fn or _casc.load_embedder(embed_model)
+
+        tax_names = [c["name"] for c in taxonomy]
+        descriptions = {c["name"]: c.get("description", "") for c in taxonomy}
+        valid = set(tax_names) | {"other"}
+        # Probes we already paid the judge for, kept only for categories that
+        # survived to the final taxonomy (plus "other").
+        examples: list[tuple[str, str]] = []
+        for iid, cat in state.probe_labels.items():
+            it = pool_by_id.get(iid)
+            if it is not None and cat in valid:
+                examples.append((it.get("text") or "", cat))
+        has_other = any(c == "other" for _, c in examples)
+        targets = tax_names + (["other"] if has_other else [])
+
+        names, protos = _casc.build_prototypes(examples, targets, embed, descriptions)
+        texts = [it.get("text") or "" for it in items]
+        preds, margins = _casc.assign(names, protos, texts, embed)
+        keep = _casc.confident_mask(margins, cascade_coverage)
+
+        # Judge the low-confidence tail, chunked like the judge finalize.
+        tail_idx = [i for i in range(len(items)) if not keep[i]]
+        tail_label: dict[int, tuple[str, str]] = {}
+        if tail_idx:
+            tax_str = _format_taxonomy(taxonomy)
+            hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
+            for s in range(0, len(tail_idx), FINALIZE_CHUNK):
+                chunk = tail_idx[s:s + FINALIZE_CHUNK]
+                prompts = [build_classify_prompt(hardened, tax_str, items[i])
+                           for i in chunk]
+                replies = judge.parallel(prompts, concurrency=concurrency * 2,
+                                         max_tokens=300)
+                for i, rep in zip(chunk, replies):
+                    if rep is None:
+                        tail_label[i] = ("other", JUDGE_ERROR_RATIONALE)
+                    else:
+                        tail_label[i] = _coerce_category(
+                            _parse_json_block(rep), taxonomy)
+
+        # Stream every row (cheap or judged) in item order; roll counts up so
+        # nothing accumulates the full row set in memory.
+        open(classifications_jsonl, "w").close()
+        counts: dict[str, int] = {}
+        n_coerced = n_judge_errors = n_cheap = 0
+        with open(classifications_jsonl, "a") as f:
+            for i, it in enumerate(items):
+                if keep[i]:
+                    cat = preds[i]
+                    rat = f"{CASCADE_RATIONALE_PREFIX} margin={float(margins[i]):.3f}]"
+                    n_cheap += 1
+                else:
+                    cat, rat = tail_label[i]
+                    if rat == JUDGE_ERROR_RATIONALE:
+                        n_judge_errors += 1
+                    elif is_coerced_rationale(rat):
+                        n_coerced += 1
+                counts[cat] = counts.get(cat, 0) + 1
+                f.write(json.dumps({**it, "category": cat, "rationale": rat}) + "\n")
+
+        artifact = build_artifact_from_counts(
+            run_id, taxonomy, final_prompt, n_items=len(items),
+            category_counts=counts, n_coerced=n_coerced,
+            n_judge_errors=n_judge_errors)
+        with open(artifact_path, "w") as f:
+            json.dump(artifact, f, indent=2)
+        state.finalized_at = taxonomy
+        n_judged = len(items) - n_cheap
+        return (
+            f"Wrote {artifact_path} (finalize_mode=cascade)\n"
+            f"n_items={len(items)}: {n_cheap} labelled by embedding prototypes, "
+            f"{n_judged} routed to the judge (coverage={cascade_coverage}); "
+            f"n_judge_errors={n_judge_errors}\n"
+            f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
+        )
+
     @tool
     def finalize_classify(final_prompt: str) -> str:
         """Have the judge label every item in the corpus against the current
@@ -639,6 +740,8 @@ def make_tools(items: list[dict], run_id: str, output_dir: str,
             return (f"ERROR: finalize_classify already ran with this taxonomy. "
                     f"The artifact at {artifact_path} is up to date — stop here. "
                     f"If you genuinely want to relabel, revise the taxonomy first.")
+        if finalize_mode == "cascade":
+            return _cascade_finalize(final_prompt)
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
 
