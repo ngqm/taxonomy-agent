@@ -10,7 +10,11 @@ import os
 
 import pytest
 
-from taxonomy_agent.tools import JUDGE_ERROR_RATIONALE, _coerce_category
+import random
+
+from taxonomy_agent.tools import (JUDGE_ERROR_RATIONALE,
+                                  REJECTION_SAMPLE_MIN_N, _coerce_category,
+                                  _rejection_sample_indices)
 
 
 def _ids_from_sample(out: str) -> list[str]:
@@ -42,6 +46,38 @@ def test_sample_clamps_to_pool_size(items5, null_judge, make_tool_set):
     t = make_tool_set(items5, *null_judge)
     out = t["sample"].invoke({"k": 100})
     assert len(_ids_from_sample(out)) == 5
+
+
+# === _rejection_sample_indices (bounded-memory sampling on huge corpora) ===
+
+def test_rejection_sampler_falls_back_below_threshold():
+    # Small corpus -> None, so the caller keeps its exact enumerate path.
+    assert _rejection_sample_indices(
+        random.Random(0), 1000, 10, lambda i: False, 0) is None
+
+
+def test_rejection_sampler_falls_back_when_excluded_majority():
+    n = REJECTION_SAMPLE_MIN_N + 1
+    assert _rejection_sample_indices(
+        random.Random(0), n, 5, lambda i: True, n // 2 + 1) is None
+
+
+def test_rejection_sampler_draws_distinct_unseen_on_large_n():
+    n = REJECTION_SAMPLE_MIN_N + 1
+    excluded = set(range(100))            # a sparse minority
+    got = _rejection_sample_indices(
+        random.Random(1), n, 50, excluded.__contains__, len(excluded))
+    assert len(got) == 50
+    assert len(set(got)) == 50            # distinct
+    assert all(0 <= i < n and i not in excluded for i in got)
+
+
+def test_rejection_sampler_is_deterministic_in_rng():
+    n = REJECTION_SAMPLE_MIN_N + 1
+    a = _rejection_sample_indices(random.Random(7), n, 30, lambda i: False, 0)
+    b = _rejection_sample_indices(random.Random(7), n, 30, lambda i: False, 0)
+    c = _rejection_sample_indices(random.Random(8), n, 30, lambda i: False, 0)
+    assert a == b and a != c
 
 
 # === classify_with_judge (bugs 3 + 6) ===

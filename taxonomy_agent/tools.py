@@ -57,6 +57,11 @@ VAL_MIN_REJUDGE = 40
 VAL_CAP = 200
 VAL_LOW_FIDELITY = 0.80          # below this, warn that cheap labels are noisy
 
+# Above this corpus size, draw sample indices by rejection instead of building a
+# full n-length index list — so sampling a corpus of millions stays O(k) memory,
+# not O(n). Below it, the list is small enough that enumeration is simplest.
+REJECTION_SAMPLE_MIN_N = 100_000
+
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
 # receives the orchestrator's own prompt instead.
@@ -176,6 +181,28 @@ def _group_by_content(indexed_items) -> list[list[int]]:
     for i, it in indexed_items:
         groups.setdefault(_content_hash(it), []).append(i)
     return list(groups.values())
+
+
+def _rejection_sample_indices(rng, n, k, is_excluded, n_excluded):
+    """Draw `k` distinct indices in `[0, n)` for which `is_excluded(i)` is
+    False, by rejection sampling — so a huge corpus never materializes an
+    n-length index pool. Returns `None` (telling the caller to use its own
+    enumerate-then-sample path) unless the corpus is large AND the excluded
+    items are a minority, the only regime where rejection both matters and
+    stays cheap (each draw is accepted with probability > 1/2, so the expected
+    work is O(k)). The caller must guarantee at least `k` eligible indices.
+    Deterministic given `rng`."""
+    if n <= REJECTION_SAMPLE_MIN_N or n_excluded > n // 2:
+        return None
+    chosen, picked = [], set()
+    while len(chosen) < k:
+        i = rng.randrange(n)
+        if i in picked:
+            continue
+        picked.add(i)
+        if not is_excluded(i):
+            chosen.append(i)
+    return chosen
 
 
 class _CountRollup:
@@ -537,16 +564,18 @@ def make_tools(items, run_id: str, output_dir: str,
         wraparound; subsequent batches will overlap with prior ones."""
         n = len(corpus)
         k = max(1, min(int(k), n))
-        # Sample by index, not by scanning every item, so a file-backed corpus
-        # only reads the K rows it hands out.
-        unseen = [i for i in range(n) if i not in state.sampled_idx]
         note = ""
-        if len(unseen) < k:
+        if n - len(state.sampled_idx) < k:
             note = (f" (pool of {n} exhausted — sampling history reset; "
                     f"expect overlap with prior probes)")
             state.sampled_idx = set()
-            unseen = range(n)
-        chosen = rng.sample(unseen, k)
+        # Sample by index, not by scanning every item, so a file-backed corpus
+        # only reads the K rows it hands out — and on a huge corpus we draw by
+        # rejection rather than materializing an n-length unseen list.
+        seen = state.sampled_idx
+        chosen = _rejection_sample_indices(rng, n, k, seen.__contains__, len(seen))
+        if chosen is None:
+            chosen = rng.sample([i for i in range(n) if i not in seen], k)
         state.sampled_idx.update(chosen)
         sampled = [corpus[i] for i in chosen]
         ids = [it["id"] for it in sampled]
@@ -743,14 +772,21 @@ def make_tools(items, run_id: str, output_dir: str,
         rejudged_ids: list[str] = []            # clean final-taxonomy labels
         if calibration_size > 0:
             rng_c = random.Random(seed)
-            order = list(range(len(corpus)))
-            rng_c.shuffle(order)
-            picked = []
-            for i in order:
-                if corpus.id_at(i) not in cal:
-                    picked.append(i)
-                    if len(picked) >= calibration_size:
-                        break
+            # Every id in `cal` is a distinct corpus id, so exactly
+            # len(corpus) - len(cal) items are eligible to re-judge.
+            target = min(calibration_size, len(corpus) - len(cal))
+            picked = _rejection_sample_indices(
+                rng_c, len(corpus), target,
+                lambda i: corpus.id_at(i) in cal, len(cal))
+            if picked is None:                  # small corpus: enumerate + shuffle
+                order = list(range(len(corpus)))
+                rng_c.shuffle(order)
+                picked = []
+                for i in order:
+                    if corpus.id_at(i) not in cal:
+                        picked.append(i)
+                        if len(picked) >= calibration_size:
+                            break
             for i, rep in _judge_index_replies(picked, tax_str, hardened):
                 cat, rat = _label_reply(rep, taxonomy)
                 if rat == JUDGE_ERROR_RATIONALE:        # skip failed calls
