@@ -21,6 +21,9 @@ from __future__ import annotations
 import numpy as np
 
 
+DEFAULT_FINETUNE_MODEL = "distilbert-base-uncased"
+
+
 def _batched(iterable, n):
     batch = []
     for x in iterable:
@@ -35,11 +38,10 @@ def _batched(iterable, n):
 class PrototypeClassifier:
     """Nearest class-mean on frozen embeddings — no training."""
 
-    def __init__(self, embed_fn, targets, descriptions=None, batch_size=1024):
+    def __init__(self, embed_fn, targets, descriptions=None):
         self.embed_fn = embed_fn
         self.targets = list(targets)
         self.descriptions = descriptions
-        self.batch_size = batch_size
         self.names, self.mat = [], None
 
     def fit(self, texts, labels):
@@ -48,17 +50,16 @@ class PrototypeClassifier:
             list(zip(texts, labels)), self.targets, self.embed_fn,
             self.descriptions)
 
-    def predict(self, text_iter, batch_size=None):
+    def predict(self, text_iter, batch_size=1024):
         from . import cascade
         return cascade.assign_streaming(
-            self.names, self.mat, text_iter, self.embed_fn,
-            batch_size or self.batch_size)
+            self.names, self.mat, text_iter, self.embed_fn, batch_size)
 
 
 class FinetuneClassifier:
     """Fine-tune a BERT-family encoder end to end on the calibration set."""
 
-    def __init__(self, base_model="distilbert-base-uncased", epochs=4, lr=5e-5,
+    def __init__(self, base_model=DEFAULT_FINETUNE_MODEL, epochs=4, lr=5e-5,
                  batch_size=16, max_len=256, seed=42):
         self.base_model = base_model
         self.epochs = epochs
@@ -75,14 +76,14 @@ class FinetuneClassifier:
                                   AutoTokenizer)
         texts, labels = list(texts), list(labels)
         self.labels_ = sorted(set(labels))
+        if len(self.labels_) < 2:
+            return                    # single class → predict() returns it constant
         l2i = {lbl: i for i, lbl in enumerate(self.labels_)}
         torch.manual_seed(self.seed)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.tok = AutoTokenizer.from_pretrained(self.base_model)
         self.model = AutoModelForSequenceClassification.from_pretrained(
-            self.base_model, num_labels=max(2, len(self.labels_))).to(self.device)
-        if len(self.labels_) < 2:
-            return                    # single class → predict constant
+            self.base_model, num_labels=len(self.labels_)).to(self.device)
         y = torch.tensor([l2i[lbl] for lbl in labels])
         opt = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
         self.model.train()
@@ -126,13 +127,11 @@ class FinetuneClassifier:
 
 
 def make_classifier(kind, *, embed_fn=None, targets=None, descriptions=None,
-                    finetune_model="distilbert-base-uncased", epochs=4,
-                    seed=42, batch_size=1024):
+                    finetune_model=DEFAULT_FINETUNE_MODEL, epochs=4, seed=42):
     """Construct the cascade classifier. ``prototype`` needs ``embed_fn``;
     ``finetune`` tokenizes raw text and ignores it."""
     if kind == "prototype":
-        return PrototypeClassifier(embed_fn, targets or [], descriptions,
-                                   batch_size)
+        return PrototypeClassifier(embed_fn, targets or [], descriptions)
     if kind == "finetune":
         return FinetuneClassifier(finetune_model, epochs=epochs, seed=seed)
     raise ValueError(f"unknown classifier {kind!r} "

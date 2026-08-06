@@ -32,10 +32,10 @@ JUDGE_ERROR_RATIONALE = "[judge call failed]"
 # (see `is_coerced_rationale` / `summarize_rows`) instead of a repeated literal.
 COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 
-# Prefix stamped on rows labelled cheaply by the cascade's embedding classifier
-# (not the judge). Distinct from the coerced/judge-error sentinels so cascade
-# rows are never miscounted as either.
-CASCADE_RATIONALE_PREFIX = "[cascade: nearest-prototype;"
+# Prefix stamped on rows labelled cheaply by the cascade classifier (not the
+# judge); the classifier kind follows in the rationale. Distinct from the
+# coerced/judge-error sentinels so cascade rows are never miscounted as either.
+CASCADE_RATIONALE_PREFIX = "[cascade:"
 
 # finalize_classify labels the corpus one bounded batch of distinct items at a
 # time so peak memory stays flat as the corpus grows: a million-item run never
@@ -148,6 +148,27 @@ def _content_hash(item: dict) -> str:
     return hashlib.sha1(blob.encode("utf-8")).hexdigest()
 
 
+def _label_reply(rep: str | None, taxonomy: list[dict]) -> tuple[str, str]:
+    """Map a judge reply to `(category, rationale)`: a failed call (`rep is
+    None`) becomes `("other", JUDGE_ERROR_RATIONALE)`; any other reply is parsed
+    and coerced to the taxonomy. Shared by every judge-labelling site."""
+    if rep is None:
+        return "other", JUDGE_ERROR_RATIONALE
+    return _coerce_category(_parse_json_block(rep), taxonomy)
+
+
+def _group_by_content(indexed_items) -> list[list[int]]:
+    """Group `(corpus_index, item)` pairs by item content so identical items are
+    judged once. Callers pass a sequential scan (e.g. `enumerate(corpus)`, or a
+    filtered generator) so a file-backed corpus is read straight through rather
+    than seeked per item. Returns one list of indices per distinct-content
+    group, in first-appearance order."""
+    groups: dict[str, list[int]] = {}
+    for i, it in indexed_items:
+        groups.setdefault(_content_hash(it), []).append(i)
+    return list(groups.values())
+
+
 def summarize_rows(rows: list[dict]) -> tuple[dict, int, int]:
     """Roll classification rows up into `(category_counts, n_coerced,
     n_judge_errors)` by inspecting each row's category and rationale sentinel."""
@@ -235,13 +256,10 @@ class _TaxonomyState:
     finalized_at: list[dict] | None = None
     # Counter against the per-run classify budget (see `make_tools`).
     classify_calls: int = 0
-    # Item id -> judge label from the discovery probes (last write wins). These
-    # are items the judge already labelled while exploring, reused for free as
-    # calibration by finalize_mode in ("embed", "finetune"). Kept across all
-    # discovery iterations: measuring on real multi-revise runs showed that
-    # restricting to the final taxonomy version discards too much calibration
-    # data and *lowers* prototype fidelity by 5-15% — intermediate-taxonomy
-    # labels are mostly still correct, and more examples beat recency.
+    # Item id -> judge label from the discovery probes (last write wins), reused
+    # for free as cascade calibration. Kept across ALL discovery iterations:
+    # restricting to the final-taxonomy version was measured to LOWER fidelity
+    # (intermediate labels are mostly still correct; more examples beat recency).
     probe_labels: dict = field(default_factory=dict)
 
 
@@ -477,6 +495,18 @@ def make_tools(items, run_id: str, output_dir: str,
         latest categories on disk, not just buried in trace.jsonl."""
         write_taxonomy_state(state_path, state.taxonomy, state.classify_calls)
 
+    def _judge_index_replies(indices, tax_str, hardened):
+        """Judge the given corpus `indices` in FINALIZE_CHUNK-sized batches,
+        yielding `(index, reply)` as each batch returns. The single spine shared
+        by finalize's calibration re-judge, cascade tail, and the judge path."""
+        for s in range(0, len(indices), FINALIZE_CHUNK):
+            chunk = indices[s:s + FINALIZE_CHUNK]
+            prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
+                       for i in chunk]
+            replies = judge.parallel(prompts, concurrency=concurrency * 2,
+                                     max_tokens=300)
+            yield from zip(chunk, replies)
+
     @tool
     def sample_items(k: int) -> str:
         """Return K items from the corpus. Default K = 20.
@@ -696,22 +726,16 @@ def make_tools(items, run_id: str, output_dir: str,
             rng_c.shuffle(order)
             picked = []
             for i in order:
-                if corpus[i]["id"] not in cal:
+                if corpus.id_at(i) not in cal:
                     picked.append(i)
                     if len(picked) >= cascade_calibration_size:
                         break
-            for s in range(0, len(picked), FINALIZE_CHUNK):
-                chunk = picked[s:s + FINALIZE_CHUNK]
-                prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
-                           for i in chunk]
-                replies = judge.parallel(prompts, concurrency=concurrency * 2,
-                                         max_tokens=300)
-                for i, rep in zip(chunk, replies):
-                    if rep is None:
-                        continue
-                    c, _ = _coerce_category(_parse_json_block(rep), taxonomy)
-                    cal[corpus[i]["id"]] = c
-                    n_rejudge += 1
+            for i, rep in _judge_index_replies(picked, tax_str, hardened):
+                cat, rat = _label_reply(rep, taxonomy)
+                if rat == JUDGE_ERROR_RATIONALE:        # skip failed calls
+                    continue
+                cal[corpus.id_at(i)] = cat
+                n_rejudge += 1
 
         cal_texts, cal_labels = [], []
         for iid, cat in cal.items():
@@ -732,36 +756,26 @@ def make_tools(items, run_id: str, output_dir: str,
         clf = make_classifier(
             classifier_kind, embed_fn=embed, targets=targets,
             descriptions=descriptions, finetune_model=cascade_finetune_model,
-            epochs=cascade_finetune_epochs, seed=seed, batch_size=EMBED_BATCH)
+            epochs=cascade_finetune_epochs, seed=seed)
         clf.fit(cal_texts, cal_labels)
         preds, conf = clf.predict(
             (it.get("text") or "" for it in corpus), EMBED_BATCH)
         keep = _casc.confident_mask(conf, cascade_coverage)
 
-        # Judge the low-confidence tail, chunked; dedup identical tail items so
-        # the judge is paid once per distinct item there too.
-        tail_idx = [i for i in range(len(corpus)) if not keep[i]]
+        # Judge the low-confidence tail; dedup identical tail items (one
+        # sequential scan filtering on `not keep`, so a file-backed corpus is
+        # read straight through rather than seeked per tail item).
+        tail_groups = _group_by_content(
+            (i, it) for i, it in enumerate(corpus) if not keep[i])
+        reps = [g[0] for g in tail_groups]
+        rep_label: dict[int, tuple[str, str]] = {}
+        for i, rep in _judge_index_replies(reps, tax_str, hardened):
+            rep_label[i] = _label_reply(rep, taxonomy)
         tail_label: dict[int, tuple[str, str]] = {}
-        if tail_idx:
-            tail_groups: dict[str, list[int]] = {}
-            for i in tail_idx:
-                tail_groups.setdefault(_content_hash(corpus[i]), []).append(i)
-            reps = [g[0] for g in tail_groups.values()]
-            rep_label: dict[int, tuple[str, str]] = {}
-            for s in range(0, len(reps), FINALIZE_CHUNK):
-                chunk = reps[s:s + FINALIZE_CHUNK]
-                prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
-                           for i in chunk]
-                replies = judge.parallel(prompts, concurrency=concurrency * 2,
-                                         max_tokens=300)
-                for i, rep in zip(chunk, replies):
-                    rep_label[i] = (("other", JUDGE_ERROR_RATIONALE) if rep is None
-                                    else _coerce_category(_parse_json_block(rep),
-                                                          taxonomy))
-            for g in tail_groups.values():
-                lab = rep_label[g[0]]
-                for i in g:
-                    tail_label[i] = lab
+        for g in tail_groups:
+            lab = rep_label[g[0]]
+            for i in g:
+                tail_label[i] = lab
 
         # Stream every row (cheap or judged) in item order; roll counts up so
         # nothing accumulates the full row set in memory.
@@ -832,48 +846,33 @@ def make_tools(items, run_id: str, output_dir: str,
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
 
-        # Deduplicate by item content (everything except the arbitrary id):
-        # items with identical text and metadata get the same label, so the
-        # judge is paid once per distinct item instead of once per duplicate.
-        groups: dict[str, list[int]] = {}
-        for i, it in enumerate(corpus):
-            groups.setdefault(_content_hash(it), []).append(i)
-        group_indices = list(groups.values())
-        groups = None  # release the key map before the (larger) judge phase
+        # Deduplicate by item content: identical items get the same label, so
+        # the judge is paid once per distinct item instead of once per duplicate.
+        rep_to_group = {g[0]: g for g in _group_by_content(enumerate(corpus))}
 
-        def _label(rep: str | None):
-            if rep is None:
-                return "other", JUDGE_ERROR_RATIONALE
-            return _coerce_category(_parse_json_block(rep), taxonomy)
-
-        # Label the distinct items in bounded chunks so peak memory is one
-        # chunk's worth of prompts and replies, not the whole corpus. Truncate
-        # any stale file from a previous attempt, then append each chunk's rows
-        # as it returns — a crash mid-finalize keeps a prefix of real labels on
-        # disk, and the consolidated taxonomy.json summary is written only after
-        # every chunk succeeds. Counts are rolled up incrementally for the same
-        # reason: nothing ever holds the full row set in memory.
+        # Label the distinct items in bounded chunks (via _judge_index_replies)
+        # so peak memory is one chunk of prompts/replies, not the whole corpus.
+        # Truncate any stale file, then append each group's rows as its reply
+        # returns — a crash mid-finalize keeps a prefix of real labels on disk,
+        # and taxonomy.json is written only after every group is labelled. Counts
+        # roll up incrementally so nothing holds the full row set in memory.
         open(classifications_jsonl, "w").close()
         counts: dict[str, int] = {}
         n_coerced = n_judge_errors = 0
-        for start in range(0, len(group_indices), FINALIZE_CHUNK):
-            chunk = group_indices[start:start + FINALIZE_CHUNK]
-            chunk_prompts = [
-                build_classify_prompt(hardened, tax_str, corpus[g[0]]) for g in chunk]
-            chunk_replies = judge.parallel(
-                chunk_prompts, concurrency=concurrency * 2, max_tokens=300)
-            with open(classifications_jsonl, "a") as f:
-                for g, rep in zip(chunk, chunk_replies):
-                    cat, rat = _label(rep)
-                    n = len(g)
-                    if rat == JUDGE_ERROR_RATIONALE:
-                        n_judge_errors += n
-                    elif is_coerced_rationale(rat):
-                        n_coerced += n
-                    counts[cat] = counts.get(cat, 0) + n
-                    for i in g:
-                        f.write(json.dumps(
-                            {**corpus[i], "category": cat, "rationale": rat}) + "\n")
+        with open(classifications_jsonl, "a") as f:
+            for rep_i, rep in _judge_index_replies(list(rep_to_group),
+                                                   tax_str, hardened):
+                cat, rat = _label_reply(rep, taxonomy)
+                g = rep_to_group[rep_i]
+                n = len(g)
+                if rat == JUDGE_ERROR_RATIONALE:
+                    n_judge_errors += n
+                elif is_coerced_rationale(rat):
+                    n_coerced += n
+                counts[cat] = counts.get(cat, 0) + n
+                for i in g:
+                    f.write(json.dumps(
+                        {**corpus[i], "category": cat, "rationale": rat}) + "\n")
 
         artifact = build_artifact_from_counts(
             run_id, taxonomy, final_prompt, n_items=len(corpus),

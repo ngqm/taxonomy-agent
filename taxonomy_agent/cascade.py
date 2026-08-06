@@ -112,14 +112,12 @@ def _pred_margin(sims, names):
 
 def assign(names, matrix, texts, embed_fn):
     """Nearest prototype by cosine for each text, with a top1-minus-top2 margin
-    as a cheap confidence signal. Returns ``(preds, margins)``; with a single
-    prototype the raw similarity is used as the margin (there is no runner-up).
-    ``preds`` is ``["other", ...]`` when there are no prototypes at all."""
-    n = len(texts)
-    if not names:
-        return ["other"] * n, np.zeros(n, dtype=np.float32)
-    X = np.asarray(embed_fn(texts), dtype=np.float32)
-    return _pred_margin(X @ matrix.T, names)
+    as a cheap confidence signal — a single-batch convenience wrapper over
+    :func:`assign_streaming` (used mainly in tests). Returns ``(preds,
+    margins)``; ``preds`` is ``["other", ...]`` when there are no prototypes."""
+    texts = list(texts)
+    return assign_streaming(names, matrix, iter(texts), embed_fn,
+                            batch_size=max(1, len(texts)))
 
 
 def assign_streaming(names, matrix, text_iter, embed_fn, batch_size=1024):
@@ -161,8 +159,8 @@ def assign_streaming(names, matrix, text_iter, embed_fn, batch_size=1024):
 def confident_mask(margins, coverage):
     """Boolean mask over the most-confident ``coverage`` fraction of items —
     those accept the cheap label; the rest fall back to the judge. ``coverage``
-    is clamped to ``[0, 1]``; ties at the cutoff are kept, so the accepted share
-    can slightly exceed ``coverage``."""
+    ``>= 1`` keeps all and ``<= 0`` keeps none; ties at the cutoff are kept, so
+    the accepted share can slightly exceed ``coverage``."""
     margins = np.asarray(margins)
     n = len(margins)
     if n == 0:

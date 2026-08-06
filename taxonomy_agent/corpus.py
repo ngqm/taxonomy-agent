@@ -57,6 +57,11 @@ class Corpus:
         """The item with this id, or None if it is not in the corpus."""
         raise NotImplementedError
 
+    def id_at(self, i: int) -> str:
+        """The id of item `i` — O(1) with no I/O, for callers that need only the
+        id (default: read the whole item; backends override to avoid that)."""
+        return self[i]["id"]
+
 
 class InMemoryCorpus(Corpus):
     """A Corpus backed by an already-loaded list of normalized items."""
@@ -76,6 +81,9 @@ class InMemoryCorpus(Corpus):
 
     def get(self, item_id):
         return self._by_id.get(item_id)
+
+    def id_at(self, i):
+        return self._items[i]["id"]
 
 
 class JsonlCorpus(Corpus):
@@ -161,3 +169,6 @@ class JsonlCorpus(Corpus):
     def get(self, item_id):
         idx = self._id_to_idx.get(str(item_id))
         return None if idx is None else self[idx]
+
+    def id_at(self, i):
+        return self._ids[i]                          # in the index; no file read
