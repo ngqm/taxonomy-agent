@@ -397,6 +397,10 @@ def run(
     finalize: str = "judge",
     cascade_coverage: float = 0.85,
     embed_model: str = "all-MiniLM-L6-v2",
+    cascade_classifier: str = "prototype",
+    cascade_calibration_size: int = 0,
+    cascade_finetune_model: str = "distilbert-base-uncased",
+    cascade_finetune_epochs: int = 4,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -446,7 +450,19 @@ def run(
             accept from the cheap classifier (highest confidence first); the
             rest go to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge
             entirely, 0.0 falls back to a full judge pass.
-        embed_model: sentence-transformers model id for the cascade classifier.
+        embed_model: sentence-transformers model id for the embedding-based
+            cascade classifiers.
+        cascade_classifier: with finalize="cascade", how to label the confident
+            majority. "prototype" (default) is nearest class-mean on frozen
+            embeddings, no training; "logreg" is logistic regression on those
+            embeddings; "finetune" fine-tunes a BERT-family encoder end to end
+            (best, but heavier — benefits most from a larger calibration set).
+        cascade_calibration_size: re-judge this many fresh items against the
+            final taxonomy to add clean training labels for the classifier (on
+            top of the discovery probes). 0 (default) uses only the probes;
+            a non-zero value costs that many extra judge calls.
+        cascade_finetune_model: base model id for cascade_classifier="finetune".
+        cascade_finetune_epochs: fine-tuning epochs for the "finetune" classifier.
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -484,6 +500,12 @@ def run(
     if not 0.0 <= cascade_coverage <= 1.0:
         raise ValueError(
             f"cascade_coverage must be in [0, 1], got {cascade_coverage}")
+    if cascade_classifier not in ("prototype", "logreg", "finetune"):
+        raise ValueError("cascade_classifier must be 'prototype', 'logreg', or "
+                         f"'finetune', got {cascade_classifier!r}")
+    if cascade_calibration_size < 0:
+        raise ValueError("cascade_calibration_size must be >= 0, got "
+                         f"{cascade_calibration_size}")
 
     corpus = open_corpus(items, pool_limit)
     if len(corpus) == 0:
@@ -533,7 +555,10 @@ def run(
         min_iterations=min_iterations, prose_revise=prose_revise,
         initial_taxonomy=initial_taxonomy,
         finalize_mode=finalize, cascade_coverage=cascade_coverage,
-        embed_model=embed_model,
+        embed_model=embed_model, cascade_classifier=cascade_classifier,
+        cascade_calibration_size=cascade_calibration_size,
+        cascade_finetune_model=cascade_finetune_model,
+        cascade_finetune_epochs=cascade_finetune_epochs,
     )
 
     llm = ChatOpenAI(

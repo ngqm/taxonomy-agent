@@ -433,7 +433,11 @@ def make_tools(items, run_id: str, output_dir: str,
                min_iterations: int = 0, prose_revise: bool = False,
                initial_taxonomy: list[dict] | None = None,
                finalize_mode: str = "judge", cascade_coverage: float = 0.85,
-               embed_model: str = "all-MiniLM-L6-v2", embed_fn=None):
+               embed_model: str = "all-MiniLM-L6-v2", embed_fn=None,
+               cascade_classifier: str = "prototype",
+               cascade_calibration_size: int = 0,
+               cascade_finetune_model: str = "distilbert-base-uncased",
+               cascade_finetune_epochs: int = 4):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -668,32 +672,68 @@ def make_tools(items, run_id: str, output_dir: str,
         classifications.jsonl as the judge path, so everything downstream is
         unchanged."""
         from . import cascade as _casc
+        from .classifiers import make_classifier
         taxonomy = state.taxonomy
-        embed = embed_fn or _casc.load_embedder(embed_model)
-
         tax_names = [c["name"] for c in taxonomy]
         descriptions = {c["name"]: c.get("description", "") for c in taxonomy}
         valid = set(tax_names) | {"other"}
-        # Probes we already paid the judge for, kept only for categories that
-        # survived to the final taxonomy (plus "other"). All discovery
-        # iterations are used: restricting to the final version was measured to
-        # lower fidelity (see _TaxonomyState.probe_labels).
-        examples: list[tuple[str, str]] = []
-        for iid, cat in state.probe_labels.items():
-            it = corpus.get(iid)
-            if it is not None and cat in valid:
-                examples.append((it.get("text") or "", cat))
-        has_other = any(c == "other" for _, c in examples)
-        targets = tax_names + (["other"] if has_other else [])
+        tax_str = _format_taxonomy(taxonomy)
+        hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
 
-        names, protos = _casc.build_prototypes(examples, targets, embed, descriptions)
-        # Stream the corpus through the embedder one batch at a time — never
-        # materialize all texts or an N x dim embedding array. Only the per-item
-        # prediction + margin are retained (a few bytes each).
-        preds, margins = _casc.assign_streaming(
-            names, protos, (it.get("text") or "" for it in corpus),
-            embed, batch_size=EMBED_BATCH)
-        keep = _casc.confident_mask(margins, cascade_coverage)
+        # Calibration labels: discovery probes (kept for surviving categories,
+        # all iterations) plus an optional fresh re-judge of unlabelled items
+        # against the FINAL taxonomy — clean labels that lift a trained
+        # classifier, at cascade_calibration_size judge calls.
+        cal: dict[str, str] = {}
+        for iid, cat in state.probe_labels.items():
+            if cat in valid:
+                cal[iid] = cat
+        n_probe = len(cal)
+        n_rejudge = 0
+        if cascade_calibration_size and cascade_calibration_size > 0:
+            rng_c = random.Random(seed)
+            order = list(range(len(corpus)))
+            rng_c.shuffle(order)
+            picked = []
+            for i in order:
+                if corpus[i]["id"] not in cal:
+                    picked.append(i)
+                    if len(picked) >= cascade_calibration_size:
+                        break
+            for s in range(0, len(picked), FINALIZE_CHUNK):
+                chunk = picked[s:s + FINALIZE_CHUNK]
+                prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
+                           for i in chunk]
+                replies = judge.parallel(prompts, concurrency=concurrency * 2,
+                                         max_tokens=300)
+                for i, rep in zip(chunk, replies):
+                    if rep is None:
+                        continue
+                    c, _ = _coerce_category(_parse_json_block(rep), taxonomy)
+                    cal[corpus[i]["id"]] = c
+                    n_rejudge += 1
+
+        cal_texts, cal_labels = [], []
+        for iid, cat in cal.items():
+            it = corpus.get(iid)
+            if it is not None:
+                cal_texts.append(it.get("text") or "")
+                cal_labels.append(cat)
+
+        # Train the chosen classifier on the calibration set, then label the
+        # whole corpus in a streamed pass; the confidence gate keeps the top
+        # `cascade_coverage` fraction and routes the rest to the judge.
+        needs_embed = cascade_classifier in ("prototype", "logreg")
+        embed = (embed_fn or _casc.load_embedder(embed_model)) if needs_embed else None
+        targets = tax_names + (["other"] if "other" in cal_labels else [])
+        clf = make_classifier(
+            cascade_classifier, embed_fn=embed, targets=targets,
+            descriptions=descriptions, finetune_model=cascade_finetune_model,
+            epochs=cascade_finetune_epochs, seed=seed, batch_size=EMBED_BATCH)
+        clf.fit(cal_texts, cal_labels)
+        preds, conf = clf.predict(
+            (it.get("text") or "" for it in corpus), EMBED_BATCH)
+        keep = _casc.confident_mask(conf, cascade_coverage)
 
         # Judge the low-confidence tail, chunked; dedup identical tail items so
         # the judge is paid once per distinct item there too.
@@ -704,8 +744,6 @@ def make_tools(items, run_id: str, output_dir: str,
             for i in tail_idx:
                 tail_groups.setdefault(_content_hash(corpus[i]), []).append(i)
             reps = [g[0] for g in tail_groups.values()]
-            tax_str = _format_taxonomy(taxonomy)
-            hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
             rep_label: dict[int, tuple[str, str]] = {}
             for s in range(0, len(reps), FINALIZE_CHUNK):
                 chunk = reps[s:s + FINALIZE_CHUNK]
@@ -731,7 +769,8 @@ def make_tools(items, run_id: str, output_dir: str,
             for i, it in enumerate(corpus):
                 if keep[i]:
                     cat = preds[i]
-                    rat = f"{CASCADE_RATIONALE_PREFIX} margin={float(margins[i]):.3f}]"
+                    rat = (f"{CASCADE_RATIONALE_PREFIX} {cascade_classifier}; "
+                           f"conf={float(conf[i]):.3f}]")
                     n_cheap += 1
                 else:
                     cat, rat = tail_label[i]
@@ -751,8 +790,11 @@ def make_tools(items, run_id: str, output_dir: str,
         state.finalized_at = taxonomy
         n_judged = len(corpus) - n_cheap
         return (
-            f"Wrote {artifact_path} (finalize_mode=cascade)\n"
-            f"n_items={len(corpus)}: {n_cheap} labelled by embedding prototypes, "
+            f"Wrote {artifact_path} (finalize_mode=cascade, "
+            f"classifier={cascade_classifier})\n"
+            f"calibration: {n_probe} probe labels"
+            f"{f' + {n_rejudge} re-judged' if n_rejudge else ''}\n"
+            f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
             f"{n_judged} routed to the judge (coverage={cascade_coverage}); "
             f"n_judge_errors={n_judge_errors}\n"
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"

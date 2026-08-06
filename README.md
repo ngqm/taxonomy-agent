@@ -129,6 +129,19 @@ more items to the judge to hold accuracy. Lower `cascade_coverage` for higher
 fidelity, raise it (up to `1.0`, a pure `$0` labeling pass) for lower cost.
 Needs the embedding extra: `pip install 'taxonomy-agent[scale]'`.
 
+**Classifier choice** (`cascade_classifier=`): `"prototype"` (default) is nearest
+class-mean on frozen embeddings, no training; `"logreg"` fits logistic
+regression on those embeddings; `"finetune"` fine-tunes a BERT-family encoder
+end to end. On our runs `finetune` is best but by small margins
+(e.g. DarkBench 95.0% vs logreg 94.2% vs prototype 93.5% at a 30% calibration
+split), so `prototype`/`logreg` are usually the better cost/quality trade.
+
+**Cleaner calibration** (`cascade_calibration_size=N`): the classifier trains on
+the discovery probes for free, but you can add `N` fresh items re-judged against
+the *final* taxonomy for cleaner training labels (at `N` extra judge calls).
+This is the real lever on cascade fidelity — a bigger, cleaner calibration set
+helps every classifier, and `finetune` most of all.
+
 #### Refining a taxonomy with feedback
 
 Not happy with the result? Steer it in natural language instead of re-running

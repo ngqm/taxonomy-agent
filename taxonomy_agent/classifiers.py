@@ -1,0 +1,179 @@
+"""Pluggable classifiers for the cascade: label the confident majority of a
+corpus from a small judge-labeled calibration set (the discovery probes, plus an
+optional fresh re-judge against the final taxonomy).
+
+Three options, cheapest first:
+
+- ``"prototype"`` — nearest class-mean on frozen MiniLM embeddings (no training;
+  falls back to the category description for classes with no training example).
+- ``"logreg"``   — logistic regression on frozen MiniLM embeddings (fast, robust
+  on small sets; predicts only classes seen in training).
+- ``"finetune"`` — fine-tune a BERT-family encoder end to end (heaviest; benefits
+  most from a larger re-judged calibration set; predicts only trained classes).
+
+Each exposes ``fit(texts, labels)`` then ``predict(text_iter) -> (labels,
+confidence)``, where ``confidence`` is "higher = more sure" so the cascade gate
+keeps the top ``coverage`` fraction and routes the rest to the judge. Heavy deps
+(scikit-learn, torch, transformers) import lazily, so choosing one classifier
+never forces the others.
+"""
+from __future__ import annotations
+
+import numpy as np
+
+
+def _batched(iterable, n):
+    batch = []
+    for x in iterable:
+        batch.append(x)
+        if len(batch) >= n:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
+class PrototypeClassifier:
+    """Nearest class-mean on frozen embeddings — no training."""
+
+    def __init__(self, embed_fn, targets, descriptions=None, batch_size=1024):
+        self.embed_fn = embed_fn
+        self.targets = list(targets)
+        self.descriptions = descriptions
+        self.batch_size = batch_size
+        self.names, self.mat = [], None
+
+    def fit(self, texts, labels):
+        from . import cascade
+        self.names, self.mat = cascade.build_prototypes(
+            list(zip(texts, labels)), self.targets, self.embed_fn,
+            self.descriptions)
+
+    def predict(self, text_iter, batch_size=None):
+        from . import cascade
+        return cascade.assign_streaming(
+            self.names, self.mat, text_iter, self.embed_fn,
+            batch_size or self.batch_size)
+
+
+class LogRegClassifier:
+    """Multinomial logistic regression on frozen embeddings."""
+
+    def __init__(self, embed_fn, batch_size=1024, seed=42):
+        self.embed_fn = embed_fn
+        self.batch_size = batch_size
+        self.seed = seed
+        self.clf = None
+        self._single = None          # set when the calibration set has one class
+
+    def fit(self, texts, labels):
+        labels = list(labels)
+        if len(set(labels)) < 2:
+            self._single = labels[0] if labels else "other"
+            return
+        from sklearn.linear_model import LogisticRegression
+        X = np.asarray(self.embed_fn(list(texts)), dtype=np.float32)
+        self.clf = LogisticRegression(max_iter=1000, random_state=self.seed)
+        self.clf.fit(X, labels)
+
+    def predict(self, text_iter, batch_size=None):
+        preds, conf = [], []
+        for batch in _batched(text_iter, batch_size or self.batch_size):
+            if self._single is not None:
+                preds += [self._single] * len(batch)
+                conf.append(np.ones(len(batch), dtype=np.float32))
+                continue
+            X = np.asarray(self.embed_fn(batch), dtype=np.float32)
+            proba = self.clf.predict_proba(X)
+            classes = self.clf.classes_
+            idx = proba.argmax(1)
+            preds += [classes[j] for j in idx]
+            conf.append(proba.max(1).astype(np.float32))
+        return preds, (np.concatenate(conf) if conf
+                       else np.zeros(0, dtype=np.float32))
+
+
+class FinetuneClassifier:
+    """Fine-tune a BERT-family encoder end to end on the calibration set."""
+
+    def __init__(self, base_model="distilbert-base-uncased", epochs=4, lr=5e-5,
+                 batch_size=16, max_len=256, seed=42):
+        self.base_model = base_model
+        self.epochs = epochs
+        self.lr = lr
+        self.train_bs = batch_size
+        self.max_len = max_len
+        self.seed = seed
+        self.labels_ = []
+
+    def fit(self, texts, labels):
+        import random
+        import torch
+        from transformers import (AutoModelForSequenceClassification,
+                                  AutoTokenizer)
+        texts, labels = list(texts), list(labels)
+        self.labels_ = sorted(set(labels))
+        l2i = {lbl: i for i, lbl in enumerate(self.labels_)}
+        torch.manual_seed(self.seed)
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.tok = AutoTokenizer.from_pretrained(self.base_model)
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.base_model, num_labels=max(2, len(self.labels_))).to(self.device)
+        if len(self.labels_) < 2:
+            return                    # single class → predict constant
+        y = torch.tensor([l2i[lbl] for lbl in labels])
+        opt = torch.optim.AdamW(self.model.parameters(), lr=self.lr)
+        self.model.train()
+        rng = random.Random(self.seed)
+        order = list(range(len(texts)))
+        for _ in range(self.epochs):
+            rng.shuffle(order)
+            for s in range(0, len(order), self.train_bs):
+                bi = order[s:s + self.train_bs]
+                enc = self.tok([texts[i] for i in bi], truncation=True,
+                               padding=True, max_length=self.max_len,
+                               return_tensors="pt").to(self.device)
+                out = self.model(**enc, labels=y[bi].to(self.device))
+                out.loss.backward()
+                opt.step()
+                opt.zero_grad()
+        self.model.eval()
+
+    def predict(self, text_iter, batch_size=None):
+        import torch
+        bs = batch_size or 64
+        if len(self.labels_) < 2:
+            const = self.labels_[0] if self.labels_ else "other"
+            preds, n = [], 0
+            for batch in _batched(text_iter, bs):
+                preds += [const] * len(batch)
+                n += len(batch)
+            return preds, np.ones(n, dtype=np.float32)
+        preds, conf = [], []
+        with torch.no_grad():
+            for batch in _batched(text_iter, bs):
+                enc = self.tok(list(batch), truncation=True, padding=True,
+                               max_length=self.max_len,
+                               return_tensors="pt").to(self.device)
+                proba = torch.softmax(self.model(**enc).logits, dim=-1)
+                p, idx = proba.max(dim=-1)
+                preds += [self.labels_[j] for j in idx.tolist()]
+                conf.append(p.cpu().numpy().astype(np.float32))
+        return preds, (np.concatenate(conf) if conf
+                       else np.zeros(0, dtype=np.float32))
+
+
+def make_classifier(kind, *, embed_fn=None, targets=None, descriptions=None,
+                    finetune_model="distilbert-base-uncased", epochs=4,
+                    seed=42, batch_size=1024):
+    """Construct the chosen cascade classifier. ``prototype``/``logreg`` need
+    ``embed_fn``; ``finetune`` tokenizes raw text and ignores it."""
+    if kind == "prototype":
+        return PrototypeClassifier(embed_fn, targets or [], descriptions,
+                                   batch_size)
+    if kind == "logreg":
+        return LogRegClassifier(embed_fn, batch_size, seed)
+    if kind == "finetune":
+        return FinetuneClassifier(finetune_model, epochs=epochs, seed=seed)
+    raise ValueError(f"unknown cascade_classifier {kind!r} "
+                     f"(expected 'prototype', 'logreg', or 'finetune')")

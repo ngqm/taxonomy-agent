@@ -117,7 +117,9 @@ re-discovery. Returns a new `RunResult`; the original is untouched.
 
 ```python
 result = run(items, instruction, output_dir="out/",
-             finalize="cascade", cascade_coverage=0.85)   # needs the [scale] extra
+             finalize="cascade", cascade_coverage=0.85,   # needs the [scale] extra
+             cascade_classifier="prototype",     # or "logreg" / "finetune"
+             cascade_calibration_size=0)         # re-judge N items for cleaner training labels
 ```
 Default `finalize="judge"` calls the LLM judge once per item — O(N). With
 `finalize="cascade"`, after discovery the corpus is embedded locally, one
@@ -127,7 +129,10 @@ prototype, and only the least-confident `1 - cascade_coverage` fraction is sent
 to the judge. Fidelity is corpus-dependent but degrades gracefully; on an
 embedding-separable corpus it reproduces ~98% of the full-judge labels while
 judging only ~20% of items. Everything (memory, throughput) stays bounded, so
-this is the path for millions of items.
+this is the path for millions of items. `cascade_classifier` picks the cheap
+labeler — `"prototype"` (nearest class-mean, no training), `"logreg"`, or
+`"finetune"` (fine-tune a BERT-family model); `cascade_calibration_size=N`
+re-judges N fresh items against the final taxonomy for cleaner training labels.
 
 ## Evaluation harness
 
