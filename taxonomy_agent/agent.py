@@ -200,14 +200,14 @@ class RunResult(dict):
         return (self.get("artifact") or {}).get("category_counts", {})
 
     @property
-    def cascade(self) -> dict | None:
+    def labeling(self) -> dict | None:
         """For a `finalize="embed"/"finetune"` run, the cascade summary:
         calibration sizes, how many items were classifier-labelled vs judged,
         and ``val_accuracy`` — the classifier's measured agreement with the
         judge on held-out calibration items (this run's fidelity estimate, or
         ``None`` if too few re-judged items to estimate). ``None`` for a plain
         ``finalize="judge"`` run."""
-        return (self.get("artifact") or {}).get("cascade")
+        return (self.get("artifact") or {}).get("labeling")
 
     def to_dataframe(self):
         """A per-item ``pandas.DataFrame`` with columns ``id, text, category,
@@ -400,11 +400,11 @@ def run(
     seed: int = 42,
     initial_taxonomy: list[dict] | None = None,
     finalize: str = "judge",
-    cascade_coverage: float = 0.85,
+    coverage: float = 0.85,
     embed_model: str = "all-MiniLM-L6-v2",
-    cascade_calibration_size: int = 200,
-    cascade_finetune_model: str = "distilbert-base-uncased",
-    cascade_finetune_epochs: int = 4,
+    calibration_size: int = 200,
+    finetune_model: str = "distilbert-base-uncased",
+    finetune_epochs: int = 4,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -447,23 +447,23 @@ def run(
             "judge" (default) asks the LLM judge about every item — O(N) calls.
             "embed" and "finetune" instead train a cheap classifier on a
             judge-labelled calibration set (the discovery probes plus a fresh
-            re-judge, see `cascade_calibration_size`) and route only the
+            re-judge, see `calibration_size`) and route only the
             low-confidence tail to the judge, cutting LLM calls sharply on large
             corpora: "embed" labels by nearest class-mean on frozen embeddings
             (no training); "finetune" fine-tunes a BERT-family encoder end to end
             (heavier, benefits most from a larger calibration set). Both need the
             `[scale]` extra.
-        cascade_coverage: with finalize="embed"/"finetune", the fraction of items
+        coverage: with finalize="embed"/"finetune", the fraction of items
             to accept from the classifier (highest confidence first); the rest go
             to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge entirely, 0.0
             falls back to a full judge pass.
         embed_model: sentence-transformers model id for finalize="embed".
-        cascade_calibration_size: for finalize="embed"/"finetune", re-judge this
+        calibration_size: for finalize="embed"/"finetune", re-judge this
             many fresh items against the final taxonomy to build clean training
             labels (on top of the discovery probes). Defaults to 200; set 0 to
             use only the probes. Each re-judged item is one extra judge call.
-        cascade_finetune_model: base model id for finalize="finetune".
-        cascade_finetune_epochs: fine-tuning epochs for finalize="finetune".
+        finetune_model: base model id for finalize="finetune".
+        finetune_epochs: fine-tuning epochs for finalize="finetune".
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -499,12 +499,12 @@ def run(
     if finalize not in ("judge", "embed", "finetune"):
         raise ValueError("finalize must be 'judge', 'embed', or 'finetune', got "
                          f"{finalize!r}")
-    if not 0.0 <= cascade_coverage <= 1.0:
+    if not 0.0 <= coverage <= 1.0:
         raise ValueError(
-            f"cascade_coverage must be in [0, 1], got {cascade_coverage}")
-    if cascade_calibration_size < 0:
-        raise ValueError("cascade_calibration_size must be >= 0, got "
-                         f"{cascade_calibration_size}")
+            f"coverage must be in [0, 1], got {coverage}")
+    if calibration_size < 0:
+        raise ValueError("calibration_size must be >= 0, got "
+                         f"{calibration_size}")
 
     corpus = open_corpus(items, pool_limit)
     if len(corpus) == 0:
@@ -553,11 +553,11 @@ def run(
         concurrency=concurrency, seed=seed, max_iters=max_iterations,
         min_iterations=min_iterations, prose_revise=prose_revise,
         initial_taxonomy=initial_taxonomy,
-        finalize_mode=finalize, cascade_coverage=cascade_coverage,
+        finalize_mode=finalize, coverage=coverage,
         embed_model=embed_model,
-        cascade_calibration_size=cascade_calibration_size,
-        cascade_finetune_model=cascade_finetune_model,
-        cascade_finetune_epochs=cascade_finetune_epochs,
+        calibration_size=calibration_size,
+        finetune_model=finetune_model,
+        finetune_epochs=finetune_epochs,
     )
 
     llm = ChatOpenAI(
@@ -680,7 +680,7 @@ def run(
               f"unreliable (status=degraded). Check the judge model id and "
               f"OPENROUTER_API_KEY.")
 
-    _casc = (out.get("artifact") or {}).get("cascade") or {}
+    _casc = (out.get("artifact") or {}).get("labeling") or {}
     _val = _casc.get("val_accuracy")
     if _val is not None:
         logger.info(f"[taxonomy_agent] cascade fidelity: {_val:.1%} agreement "
@@ -689,7 +689,7 @@ def run(
             logger.warning(f"[taxonomy_agent] WARNING: cascade cheap labels only "
                   f"{_val:.1%} accurate on this corpus — the "
                   f"{_casc.get('n_cheap')} classifier-labelled items may be that "
-                  f"noisy. Consider finalize='judge' or a lower cascade_coverage.")
+                  f"noisy. Consider finalize='judge' or a lower coverage.")
 
     cost.write()
     cost_snapshot = cost.snapshot()

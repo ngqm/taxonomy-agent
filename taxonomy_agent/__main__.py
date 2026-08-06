@@ -149,10 +149,10 @@ def _cmd_run(argv: list[str]) -> None:
                         "centroid for the confident majority), or 'finetune' "
                         "(re-judge, then fine-tune a BERT-family model). 'embed'"
                         " / 'finetune' need the [scale] extra.")
-    p.add_argument("--cascade-coverage", type=float, default=0.85,
+    p.add_argument("--coverage", type=float, default=0.85,
                    help="With --finalize embed/finetune, fraction of items to "
                         "accept from the classifier (rest go to the judge).")
-    p.add_argument("--cascade-calibration-size", type=int, default=200,
+    p.add_argument("--calibration-size", type=int, default=200,
                    help="With --finalize embed/finetune, re-judge this many "
                         "fresh items against the final taxonomy to train the "
                         "classifier (0 = discovery probes only). Extra judge calls.")
@@ -194,8 +194,8 @@ def _cmd_run(argv: list[str]) -> None:
         size_hint=args.size_hint or None,
         seed=args.seed,
         finalize=args.finalize,
-        cascade_coverage=args.cascade_coverage,
-        cascade_calibration_size=args.cascade_calibration_size,
+        coverage=args.coverage,
+        calibration_size=args.calibration_size,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 

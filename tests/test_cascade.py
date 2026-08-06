@@ -12,7 +12,7 @@ import numpy as np
 import pytest
 
 from taxonomy_agent import cascade, classifiers
-from taxonomy_agent.tools import CASCADE_RATIONALE_PREFIX
+from taxonomy_agent.tools import CLASSIFIER_RATIONALE_PREFIX
 
 
 def fake_embed(texts):
@@ -94,7 +94,7 @@ def test_make_classifier_factory():
 
 # ── finalize=embed cascade path, end to end ──────────────────────────────────────
 
-def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
+def test_embed_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     """The confident majority is labelled by prototypes (no judge call); only the
     ambiguous tail reaches the judge."""
     items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(4)]
@@ -113,7 +113,7 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
         return out
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="embed", cascade_coverage=0.8,
+                      finalize_mode="embed", coverage=0.8,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"},
@@ -130,8 +130,8 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
             in open(os.path.join(str(tmp_path), "classifications.jsonl"))
             if l.strip()]
     assert len(rows) == 10
-    cheap = [r for r in rows if r["rationale"].startswith(CASCADE_RATIONALE_PREFIX)]
-    judged = [r for r in rows if not r["rationale"].startswith(CASCADE_RATIONALE_PREFIX)]
+    cheap = [r for r in rows if r["rationale"].startswith(CLASSIFIER_RATIONALE_PREFIX)]
+    judged = [r for r in rows if not r["rationale"].startswith(CLASSIFIER_RATIONALE_PREFIX)]
     # 8 on-axis items cheap-labelled, 2 diagonal items routed to the judge.
     assert len(cheap) == 8 and len(judged) == 2
     assert {r["id"] for r in judged} == {"n0", "n1"}
@@ -149,7 +149,7 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     assert sum(art["category_counts"].values()) == 10
 
 
-def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path):
+def test_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path):
     """Identical items in the low-confidence tail are judged once, then the
     label is expanded to every duplicate."""
     items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(4)]
@@ -164,7 +164,7 @@ def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path
                 else '{"category": "cat_a", "rationale": "tail"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="embed", cascade_coverage=0.5,
+                      finalize_mode="embed", coverage=0.5,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"}]})
@@ -181,8 +181,8 @@ def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path
     assert len(tail_rows) == 4 and all(r["category"] == "cat_a" for r in tail_rows)
 
 
-def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
-    """cascade_calibration_size re-judges that many fresh (unprobed) items
+def test_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
+    """calibration_size re-judges that many fresh (unprobed) items
     against the final taxonomy to build the training set."""
     import re
     items = ([{"id": f"a{i}", "text": f"AAA {i}"} for i in range(6)]
@@ -198,8 +198,8 @@ def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
                 else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="embed", cascade_coverage=1.0,  # no tail judge
-                      cascade_calibration_size=4, embed_fn=fake_embed)
+                      finalize_mode="embed", coverage=1.0,  # no tail judge
+                      calibration_size=4, embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "a"},
         {"op": "add", "name": "cat_b", "description": "b"}]})
@@ -213,7 +213,7 @@ def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
     assert len(rows) == 12
 
 
-def test_cascade_self_validation_measures_fidelity(make_tool_set, tmp_path):
+def test_self_validation_measures_fidelity(make_tool_set, tmp_path):
     """With enough re-judged items, the cascade holds a slice out, measures the
     classifier's agreement with the judge on it, and records it in the artifact.
     Cleanly-separable AAA/BBB items → 100% measured fidelity."""
@@ -225,8 +225,8 @@ def test_cascade_self_validation_measures_fidelity(make_tool_set, tmp_path):
                 else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="embed", cascade_coverage=1.0,
-                      cascade_calibration_size=60, embed_fn=fake_embed)
+                      finalize_mode="embed", coverage=1.0,
+                      calibration_size=60, embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "a"},
         {"op": "add", "name": "cat_b", "description": "b"}]})
@@ -234,13 +234,13 @@ def test_cascade_self_validation_measures_fidelity(make_tool_set, tmp_path):
     assert "measured fidelity: 100.0%" in msg
 
     art = json.load(open(os.path.join(str(tmp_path), "taxonomy.json")))
-    casc = art["cascade"]
+    casc = art["labeling"]
     assert casc["val_accuracy"] == 1.0
     assert casc["val_n"] == 12                        # 20% of the 60 re-judged
     assert casc["n_rejudge"] == 60 and casc["finalize"] == "embed"
 
 
-def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
+def test_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
     """coverage=1.0 accepts every cheap label; the judge is never called at
     finalize (a pure $0 labeling pass)."""
     items = ([{"id": f"a{i}", "text": f"AAA {i}"} for i in range(3)]
@@ -254,7 +254,7 @@ def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
                 else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="embed", cascade_coverage=1.0,
+                      finalize_mode="embed", coverage=1.0,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"},
@@ -266,4 +266,4 @@ def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
     rows = [json.loads(l) for l
             in open(os.path.join(str(tmp_path), "classifications.jsonl")) if l.strip()]
     assert len(rows) == 6
-    assert all(r["rationale"].startswith(CASCADE_RATIONALE_PREFIX) for r in rows)
+    assert all(r["rationale"].startswith(CLASSIFIER_RATIONALE_PREFIX) for r in rows)

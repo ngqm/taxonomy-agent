@@ -95,8 +95,8 @@ optional keyword argument with a sensible default:
 | `temperature` | `0.2` | Orchestrator sampling temperature. |
 | `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
 | `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), or `"finetune"` (re-judge, then fine-tune a BERT-family model). See below. |
-| `cascade_coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
-| `cascade_calibration_size` | `200` | With `finalize="embed"/"finetune"`, items to re-judge against the final taxonomy for training labels (`0` = probes only); each is an extra judge call. |
+| `coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
+| `calibration_size` | `200` | With `finalize="embed"/"finetune"`, items to re-judge against the final taxonomy for training labels (`0` = probes only); each is an extra judge call. |
 | `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for `finalize="embed"`. |
 | `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
 | `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
@@ -123,29 +123,29 @@ labeled once discovery converges — three options:
 ```python
 result = run(items, instruction, output_dir="out/",
              finalize="finetune",           # or "embed" / "judge"
-             cascade_calibration_size=200,   # items to re-judge for training (default 200)
-             cascade_coverage=0.85)          # keep the top 85% by confidence, judge the rest
+             calibration_size=200,   # items to re-judge for training (default 200)
+             coverage=0.85)          # keep the top 85% by confidence, judge the rest
 ```
 
 For `embed`/`finetune`, the classifier trains on the discovery probes plus
-`cascade_calibration_size` fresh items **re-judged against the final taxonomy**
+`calibration_size` fresh items **re-judged against the final taxonomy**
 (clean labels — this is the main lever on fidelity), then labels every item; the
 judge bill drops from N to the size of the low-confidence tail. Fidelity is
 corpus-dependent and degrades gracefully — on an embedding-separable corpus
-(e.g. DarkBench manipulation tactics) the cascade reproduces ~98% of the
+(e.g. DarkBench manipulation tactics) the classifier reproduces ~98% of the
 full-judge labels while judging only ~20% of items (a 5× cut); on harder corpora
 the gate routes more to the judge to hold accuracy. `finetune` edges out `embed`
 but usually by little (DarkBench 95.0% vs 93.5% at a 30% split), so `embed` is
-often the better cost/quality trade. Lower `cascade_coverage` for higher
+often the better cost/quality trade. Lower `coverage` for higher
 fidelity, raise it (up to `1.0`, a pure `$0` labeling pass) for lower cost.
 `embed`/`finetune` need the extra: `pip install 'taxonomy-agent[scale]'`.
 
 Because fidelity is corpus-dependent, each `embed`/`finetune` run **measures its
 own**: a slice of the re-judged calibration is held out, and the classifier's
-agreement with the judge on it is reported as `result.cascade["val_accuracy"]`
+agreement with the judge on it is reported as `result.labeling["val_accuracy"]`
 (and logged) — this run's fidelity estimate on your data. A low value warns that
 the cheap labels are noisy for your corpus, so you can raise the calibration
-size, lower `cascade_coverage`, or fall back to `finalize="judge"`.
+size, lower `coverage`, or fall back to `finalize="judge"`.
 
 #### Refining a taxonomy with feedback
 

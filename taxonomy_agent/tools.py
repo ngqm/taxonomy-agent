@@ -35,7 +35,7 @@ COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 # Prefix stamped on rows labelled cheaply by the cascade classifier (not the
 # judge); the classifier kind follows in the rationale. Distinct from the
 # coerced/judge-error sentinels so cascade rows are never miscounted as either.
-CASCADE_RATIONALE_PREFIX = "[cascade:"
+CLASSIFIER_RATIONALE_PREFIX = "[classifier:"
 
 # finalize_classify labels the corpus one bounded batch of distinct items at a
 # time so peak memory stays flat as the corpus grows: a million-item run never
@@ -459,11 +459,11 @@ def make_tools(items, run_id: str, output_dir: str,
                concurrency: int = 8, seed: int = 42, max_iters: int = 10,
                min_iterations: int = 0, prose_revise: bool = False,
                initial_taxonomy: list[dict] | None = None,
-               finalize_mode: str = "judge", cascade_coverage: float = 0.85,
+               finalize_mode: str = "judge", coverage: float = 0.85,
                embed_model: str = "all-MiniLM-L6-v2", embed_fn=None,
-               cascade_calibration_size: int = 0,
-               cascade_finetune_model: str = "distilbert-base-uncased",
-               cascade_finetune_epochs: int = 4):
+               calibration_size: int = 0,
+               finetune_model: str = "distilbert-base-uncased",
+               finetune_epochs: int = 4):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -722,14 +722,14 @@ def make_tools(items, run_id: str, output_dir: str,
         # Calibration labels: discovery probes (kept for surviving categories,
         # all iterations) plus an optional fresh re-judge of unlabelled items
         # against the FINAL taxonomy — clean labels that lift a trained
-        # classifier, at cascade_calibration_size judge calls.
+        # classifier, at calibration_size judge calls.
         cal: dict[str, str] = {}
         for iid, cat in state.probe_labels.items():
             if cat in valid:
                 cal[iid] = cat
         n_probe = len(cal)
         rejudged_ids: list[str] = []            # clean final-taxonomy labels
-        if cascade_calibration_size and cascade_calibration_size > 0:
+        if calibration_size and calibration_size > 0:
             rng_c = random.Random(seed)
             order = list(range(len(corpus)))
             rng_c.shuffle(order)
@@ -737,7 +737,7 @@ def make_tools(items, run_id: str, output_dir: str,
             for i in order:
                 if corpus.id_at(i) not in cal:
                     picked.append(i)
-                    if len(picked) >= cascade_calibration_size:
+                    if len(picked) >= calibration_size:
                         break
             for i, rep in _judge_index_replies(picked, tax_str, hardened):
                 cat, rat = _label_reply(rep, taxonomy)
@@ -783,8 +783,8 @@ def make_tools(items, run_id: str, output_dir: str,
         targets = tax_names + (["other"] if "other" in cal.values() else [])
         clf = make_classifier(
             classifier_kind, embed_fn=embed, targets=targets,
-            descriptions=descriptions, finetune_model=cascade_finetune_model,
-            epochs=cascade_finetune_epochs, seed=seed)
+            descriptions=descriptions, finetune_model=finetune_model,
+            epochs=finetune_epochs, seed=seed)
         clf.fit(train_texts, train_labels)
 
         # Measured fidelity: the trained classifier's agreement with the judge on
@@ -796,10 +796,10 @@ def make_tools(items, run_id: str, output_dir: str,
                 / len(val_labels)
 
         # Label the whole corpus in a streamed pass; the confidence gate keeps
-        # the top `cascade_coverage` fraction and routes the rest to the judge.
+        # the top `coverage` fraction and routes the rest to the judge.
         preds, conf = clf.predict(
             (it.get("text") or "" for it in corpus), EMBED_BATCH)
-        keep = _casc.confident_mask(conf, cascade_coverage)
+        keep = _casc.confident_mask(conf, coverage)
 
         # Judge the low-confidence tail; dedup identical tail items (one
         # sequential scan filtering on `not keep`, so a file-backed corpus is
@@ -825,7 +825,7 @@ def make_tools(items, run_id: str, output_dir: str,
             for i, it in enumerate(corpus):
                 if keep[i]:
                     cat = preds[i]
-                    rat = (f"{CASCADE_RATIONALE_PREFIX} {classifier_kind}; "
+                    rat = (f"{CLASSIFIER_RATIONALE_PREFIX} {classifier_kind}; "
                            f"conf={float(conf[i]):.3f}]")
                     n_cheap += 1
                 else:
@@ -842,9 +842,9 @@ def make_tools(items, run_id: str, output_dir: str,
             run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=counts, n_coerced=n_coerced,
             n_judge_errors=n_judge_errors)
-        artifact["cascade"] = {
+        artifact["labeling"] = {
             "finalize": finalize_mode,
-            "coverage": cascade_coverage,
+            "coverage": coverage,
             "n_calibration": len(cal),
             "n_probe": n_probe,
             "n_rejudge": n_rejudge,
@@ -860,10 +860,10 @@ def make_tools(items, run_id: str, output_dir: str,
         if val_accuracy is None:
             val_line = ("measured fidelity: not estimated "
                         f"(need >= {CASCADE_MIN_REJUDGE_FOR_VAL} re-judged items; "
-                        "raise cascade_calibration_size)\n")
+                        "raise calibration_size)\n")
         else:
             warn = ("  [LOW — cheap labels are noisy on this corpus; consider "
-                    "finalize=judge or a lower cascade_coverage]"
+                    "finalize=judge or a lower coverage]"
                     if val_accuracy < CASCADE_LOW_FIDELITY else "")
             val_line = (f"measured fidelity: {val_accuracy:.1%} agreement with the "
                         f"judge on {len(val_labels)} held-out items{warn}\n")
@@ -873,7 +873,7 @@ def make_tools(items, run_id: str, output_dir: str,
             f"{f' + {n_rejudge} re-judged' if n_rejudge else ''}\n"
             f"{val_line}"
             f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
-            f"{n_judged} routed to the judge (coverage={cascade_coverage}); "
+            f"{n_judged} routed to the judge (coverage={coverage}); "
             f"n_judge_errors={n_judge_errors}\n"
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
         )

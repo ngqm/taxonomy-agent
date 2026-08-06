@@ -10,7 +10,7 @@ a stateless **judge** labels one item at a time. Default model for both roles is
 
 ```bash
 pip install -e .                         # registers the `taxonomy` console script
-pip install -e ".[scale]"                # + sentence-transformers, for finalize=cascade
+pip install -e ".[scale]"                # + sentence-transformers, for finalize=embed/finetune
 echo 'OPENROUTER_API_KEY=sk-or-v1-...' > .env   # required for any real run
 ```
 
@@ -31,7 +31,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
 #   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
-#   --finalize {judge,embed,finetune} --cascade-calibration-size 200   # cheap labeling at scale
+#   --finalize {judge,embed,finetune} --calibration-size 200   # cheap labeling at scale
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -118,22 +118,22 @@ re-discovery. Returns a new `RunResult`; the original is untouched.
 ```python
 result = run(items, instruction, output_dir="out/",
              finalize="finetune",           # "judge" (default) | "embed" | "finetune"
-             cascade_calibration_size=200,   # items re-judged vs the final taxonomy to train on
-             cascade_coverage=0.85)          # keep top 85% by confidence, judge the rest
+             calibration_size=200,   # items re-judged vs the final taxonomy to train on
+             coverage=0.85)          # keep top 85% by confidence, judge the rest
 ```
 Default `finalize="judge"` calls the LLM judge once per item — O(N). With
 `finalize="embed"` / `"finetune"`, after discovery a classifier is trained on a
 judge-labeled calibration set (the discovery probes plus a fresh re-judge
 against the final taxonomy), each item is labeled by that classifier, and only
-the least-confident `1 - cascade_coverage` fraction is sent to the judge.
+the least-confident `1 - coverage` fraction is sent to the judge.
 Fidelity is corpus-dependent but degrades gracefully; on an
 embedding-separable corpus it reproduces ~98% of the full-judge labels while
 judging only ~20% of items. Everything (memory, throughput) stays bounded, so
 this is the path for millions of items. `"embed"` labels by embedding
 nearest-centroid; `"finetune"` fine-tunes a BERT-family model (a little more
-accurate, heavier). Both re-judge `cascade_calibration_size` fresh items against
+accurate, heavier). Both re-judge `calibration_size` fresh items against
 the final taxonomy for clean training labels — the main lever on fidelity. Each
-run measures its own fidelity: `result.cascade["val_accuracy"]` is the
+run measures its own fidelity: `result.labeling["val_accuracy"]` is the
 classifier's agreement with the judge on a held-out calibration slice (a low
 value warns the cheap labels are noisy on your corpus).
 
@@ -150,7 +150,7 @@ Writes `results.json` (+ `results.tex`) with purity, NMI, ARI, and cost per meth
 
 ## Where things live
 
-- `taxonomy_agent/`            — the library (agent loop, tools, judge, cascade, corpus, eval)
+- `taxonomy_agent/`            — the library (agent loop, tools, judge, classifiers, corpus, eval)
 - `taxonomy_agent/eval/`       — benchmark driver, corpora loaders, baselines
 - `app.py` + `demo/`          — Streamlit app at repo root
 - `example_runs/`             — sample finished runs (load these in `taxonomy inspect`)
