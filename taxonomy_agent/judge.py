@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import random
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable
@@ -10,6 +11,19 @@ from typing import Callable
 import requests
 
 logger = logging.getLogger("taxonomy_agent.judge")
+
+
+def _parse_retry_after(headers, cap: float = 30.0) -> float | None:
+    """Seconds to wait from a `Retry-After` header (integer-seconds form),
+    clamped to `[0, cap]`, or `None` if absent/unparseable. The HTTP-date form
+    is ignored — JSON APIs use seconds."""
+    if not headers:
+        return None
+    val = headers.get("Retry-After")
+    try:
+        return min(cap, max(0.0, float(val)))
+    except (TypeError, ValueError):
+        return None
 
 
 class JudgeAuthError(RuntimeError):
@@ -21,8 +35,9 @@ class Judge:
 
     ``call`` labels a single prompt; ``parallel`` fans a batch over a thread
     pool, preserving order. HTTP failures are discriminated: 401/403 raise
-    ``JudgeAuthError``; 429 backs off (1s, 2s, 4s) up to 3 retries; 5xx and
-    network errors retry once; a malformed body returns ``None``.
+    ``JudgeAuthError``; 429 honors ``Retry-After`` or backs off ~1/2/4s with
+    full jitter, up to 3 retries; 5xx and network errors retry once; a malformed
+    body returns ``None``.
 
     ``usage_sink``, if set, is called with each successful response's ``usage``
     dict (augmented with ``http_status``) from worker threads, so it must be
@@ -93,7 +108,13 @@ class Judge:
                     if rate_attempt >= len(rate_backoff):
                         logger.warning(f"[judge rate-limited after {rate_attempt} retries] {e}")
                         return None
-                    time.sleep(rate_backoff[rate_attempt])
+                    # Honor Retry-After when the server sends it; otherwise back
+                    # off with full jitter so many concurrent workers don't
+                    # retry in lockstep (a thundering herd) at scale.
+                    retry_after = _parse_retry_after(getattr(e.response, "headers", None))
+                    delay = (retry_after if retry_after is not None
+                             else rate_backoff[rate_attempt] * (0.5 + random.random()))
+                    time.sleep(delay)
                     rate_attempt += 1
                     continue
                 if status is not None and 500 <= status < 600:

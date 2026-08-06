@@ -13,6 +13,7 @@ from taxonomy_agent.judge import Judge, JudgeAuthError
 def _http_err_resp(status: int) -> MagicMock:
     r = MagicMock()
     r.status_code = status
+    r.headers = {}                       # real dict: no Retry-After by default
     err = requests.exceptions.HTTPError(f"HTTP {status}")
     err.response = r
     r.raise_for_status.side_effect = err
@@ -225,14 +226,32 @@ def test_call_retries_with_backoff_on_429():
         return _http_err_resp(429)
 
     with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.random.random", return_value=0.5), \
          patch("taxonomy_agent.judge.time.sleep") as fake_sleep:
         out = call("prompt")
 
     assert out is None
     # original + 3 retries = 4 posts
     assert len(posts) == 4
+    # exponential backoff with full jitter: base * (0.5 + random()); random()->0.5
+    # makes the multiplier 1.0, recovering the nominal 1/2/4s schedule.
     sleeps = [c.args[0] for c in fake_sleep.call_args_list]
     assert sleeps == [1.0, 2.0, 4.0]
+
+
+def test_call_honors_retry_after_on_429():
+    call = Judge("k", "model").call
+
+    def fake_post(*a, **k):
+        r = _http_err_resp(429)
+        r.headers = {"Retry-After": "7"}
+        return r
+
+    with patch("taxonomy_agent.judge.requests.post", side_effect=fake_post), \
+         patch("taxonomy_agent.judge.time.sleep") as fake_sleep:
+        assert call("prompt") is None
+    # Retry-After overrides the jittered backoff.
+    assert [c.args[0] for c in fake_sleep.call_args_list] == [7.0, 7.0, 7.0]
 
 
 def test_call_retries_on_500_then_succeeds():
