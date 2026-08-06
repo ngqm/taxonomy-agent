@@ -201,7 +201,7 @@ class RunResult(dict):
 
     @property
     def labeling(self) -> dict | None:
-        """For a `finalize="embed"/"finetune"` run, the cascade summary:
+        """For a `finalize="embed"/"finetune"` run, the labeling summary:
         calibration sizes, how many items were classifier-labelled vs judged,
         and ``val_accuracy`` — the classifier's measured agreement with the
         judge on held-out calibration items (this run's fidelity estimate, or
@@ -680,15 +680,15 @@ def run(
               f"unreliable (status=degraded). Check the judge model id and "
               f"OPENROUTER_API_KEY.")
 
-    _casc = (out.get("artifact") or {}).get("labeling") or {}
-    _val = _casc.get("val_accuracy")
+    _lab = (out.get("artifact") or {}).get("labeling") or {}
+    _val = _lab.get("val_accuracy")
     if _val is not None:
-        logger.info(f"[taxonomy_agent] cascade fidelity: {_val:.1%} agreement "
-                    f"with the judge on {_casc.get('val_n')} held-out items")
+        logger.info(f"[taxonomy_agent] labeling fidelity: {_val:.1%} agreement "
+                    f"with the judge on {_lab.get('val_n')} held-out items")
         if _val < 0.80:
-            logger.warning(f"[taxonomy_agent] WARNING: cascade cheap labels only "
+            logger.warning(f"[taxonomy_agent] WARNING: the cheap labels are only "
                   f"{_val:.1%} accurate on this corpus — the "
-                  f"{_casc.get('n_cheap')} classifier-labelled items may be that "
+                  f"{_lab.get('n_cheap')} classifier-labelled items may be that "
                   f"noisy. Consider finalize='judge' or a lower coverage.")
 
     cost.write()

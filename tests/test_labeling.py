@@ -1,4 +1,4 @@
-"""Cascade labeling: pure primitives + the finalize=embed/finetune cascade path.
+"""Classifier labeling: embedding primitives + the finalize=embed/finetune path.
 
 Uses a deterministic fake embedder (a keyword -> fixed axis map) so the tests
 run offline without sentence-transformers and the nearest-prototype outcome is
@@ -11,7 +11,7 @@ import os
 import numpy as np
 import pytest
 
-from taxonomy_agent import cascade, classifiers
+from taxonomy_agent import embedding, classifiers
 from taxonomy_agent.tools import CLASSIFIER_RATIONALE_PREFIX
 
 
@@ -34,7 +34,7 @@ def fake_embed(texts):
 # ── pure primitives ────────────────────────────────────────────────────────
 
 def test_build_prototypes_means_examples():
-    names, mat = cascade.build_prototypes(
+    names, mat = embedding.build_prototypes(
         [("AAA one", "a"), ("AAA two", "a"), ("BBB one", "b")],
         ["a", "b"], fake_embed)
     assert names == ["a", "b"]
@@ -44,7 +44,7 @@ def test_build_prototypes_means_examples():
 
 def test_build_prototypes_description_fallback_for_empty_category():
     # 'b' has no example -> falls back to its description embedding.
-    names, mat = cascade.build_prototypes(
+    names, mat = embedding.build_prototypes(
         [("AAA one", "a")], ["a", "b"], fake_embed,
         descriptions={"a": "aaa", "b": "BBB things"})
     assert set(names) == {"a", "b"}
@@ -53,9 +53,9 @@ def test_build_prototypes_description_fallback_for_empty_category():
 
 
 def test_assign_and_margin():
-    names, mat = cascade.build_prototypes(
+    names, mat = embedding.build_prototypes(
         [("AAA", "a"), ("BBB", "b")], ["a", "b"], fake_embed)
-    preds, margins = cascade.assign(names, mat, ["AAA x", "BBB y", "neutral"], fake_embed)
+    preds, margins = embedding.assign(names, mat, ["AAA x", "BBB y", "neutral"], fake_embed)
     assert preds[0] == "a" and preds[1] == "b"
     assert margins[0] > 0.9 and margins[1] > 0.9   # on-axis: clear winner
     assert margins[2] < 0.1                          # diagonal: ambiguous
@@ -63,18 +63,18 @@ def test_assign_and_margin():
 
 def test_confident_mask_keeps_top_coverage():
     m = np.array([0.9, 0.8, 0.1, 0.05])
-    assert cascade.confident_mask(m, 0.5).tolist() == [True, True, False, False]
-    assert cascade.confident_mask(m, 1.0).all()
-    assert not cascade.confident_mask(m, 0.0).any()
+    assert embedding.confident_mask(m, 0.5).tolist() == [True, True, False, False]
+    assert embedding.confident_mask(m, 1.0).all()
+    assert not embedding.confident_mask(m, 0.0).any()
 
 
 def test_assign_streaming_matches_assign_across_batches():
-    names, mat = cascade.build_prototypes(
+    names, mat = embedding.build_prototypes(
         [("AAA", "a"), ("BBB", "b")], ["a", "b"], fake_embed)
     texts = ["AAA 1", "BBB 2", "neutral 3", "AAA 4", "BBB 5"]
-    p_full, m_full = cascade.assign(names, mat, texts, fake_embed)
+    p_full, m_full = embedding.assign(names, mat, texts, fake_embed)
     # batch_size=2 forces multiple flushes across a boundary.
-    p_str, m_str = cascade.assign_streaming(names, mat, iter(texts), fake_embed,
+    p_str, m_str = embedding.assign_streaming(names, mat, iter(texts), fake_embed,
                                             batch_size=2)
     assert p_str == p_full
     assert np.allclose(m_str, m_full)
@@ -92,7 +92,7 @@ def test_make_classifier_factory():
         classifiers.make_classifier("nope")
 
 
-# ── finalize=embed cascade path, end to end ──────────────────────────────────────
+# ── finalize=embed labeling path, end to end ──────────────────────────────────────
 
 def test_embed_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     """The confident majority is labelled by prototypes (no judge call); only the
@@ -214,7 +214,7 @@ def test_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
 
 
 def test_self_validation_measures_fidelity(make_tool_set, tmp_path):
-    """With enough re-judged items, the cascade holds a slice out, measures the
+    """With enough re-judged items, the classifier holds a slice out, measures the
     classifier's agreement with the judge on it, and records it in the artifact.
     Cleanly-separable AAA/BBB items → 100% measured fidelity."""
     items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(30)]

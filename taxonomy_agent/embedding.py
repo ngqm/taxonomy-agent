@@ -1,4 +1,4 @@
-"""Confidence-gated cascade labeling — the primitives.
+"""Embedding primitives for the classifier-based labeling path.
 
 The scaling wall is that ``finalize_classify`` pays the judge once per item:
 O(N) LLM calls. This module labels the confident majority of a corpus with a

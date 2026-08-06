@@ -1,17 +1,17 @@
-"""Pluggable classifiers for the cascade: label the confident majority of a
+"""Pluggable classifiers for the labeling path: label the confident majority of a
 corpus from a judge-labeled calibration set (the discovery probes plus a fresh
 re-judge against the final taxonomy).
 
 Two options:
 
 - ``"prototype"`` — nearest class-mean on frozen MiniLM embeddings (no training;
-  the "embedding clustering" cascade; falls back to the category description for
+  the "embedding clustering" labeler; falls back to the category description for
   classes with no training example).
 - ``"finetune"`` — fine-tune a BERT-family encoder end to end (heavier; benefits
   most from a larger re-judged calibration set; predicts only trained classes).
 
 Each exposes ``fit(texts, labels)`` then ``predict(text_iter) -> (labels,
-confidence)``, where ``confidence`` is "higher = more sure" so the cascade gate
+confidence)``, where ``confidence`` is "higher = more sure" so the confidence gate
 keeps the top ``coverage`` fraction and routes the rest to the judge. Heavy deps
 (torch, transformers) import lazily, so choosing one classifier never forces the
 other.
@@ -45,14 +45,14 @@ class PrototypeClassifier:
         self.names, self.mat = [], None
 
     def fit(self, texts, labels):
-        from . import cascade
-        self.names, self.mat = cascade.build_prototypes(
+        from . import embedding
+        self.names, self.mat = embedding.build_prototypes(
             list(zip(texts, labels)), self.targets, self.embed_fn,
             self.descriptions)
 
     def predict(self, text_iter, batch_size=1024):
-        from . import cascade
-        return cascade.assign_streaming(
+        from . import embedding
+        return embedding.assign_streaming(
             self.names, self.mat, text_iter, self.embed_fn, batch_size)
 
 
@@ -128,7 +128,7 @@ class FinetuneClassifier:
 
 def make_classifier(kind, *, embed_fn=None, targets=None, descriptions=None,
                     finetune_model=DEFAULT_FINETUNE_MODEL, epochs=4, seed=42):
-    """Construct the cascade classifier. ``prototype`` needs ``embed_fn``;
+    """Construct the classifier. ``prototype`` needs ``embed_fn``;
     ``finetune`` tokenizes raw text and ignores it."""
     if kind == "prototype":
         return PrototypeClassifier(embed_fn, targets or [], descriptions)

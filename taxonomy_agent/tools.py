@@ -32,9 +32,9 @@ JUDGE_ERROR_RATIONALE = "[judge call failed]"
 # (see `is_coerced_rationale` / `summarize_rows`) instead of a repeated literal.
 COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 
-# Prefix stamped on rows labelled cheaply by the cascade classifier (not the
+# Prefix stamped on rows labelled cheaply by the classifier (not the
 # judge); the classifier kind follows in the rationale. Distinct from the
-# coerced/judge-error sentinels so cascade rows are never miscounted as either.
+# coerced/judge-error sentinels so classifier rows are never miscounted as either.
 CLASSIFIER_RATIONALE_PREFIX = "[classifier:"
 
 # finalize_classify labels the corpus one bounded batch of distinct items at a
@@ -43,19 +43,19 @@ CLASSIFIER_RATIONALE_PREFIX = "[classifier:"
 # chunk's worth. Small corpora finish in a single chunk, unchanged.
 FINALIZE_CHUNK = 2000
 
-# The cascade embeds the corpus one batch of this many items at a time, so only
+# The embedding classifier labels the corpus one batch of this many items at a time, so only
 # one batch of embedding vectors is ever resident — a 10M-item run never holds a
 # 10M x dim array (which would be tens of GB).
 EMBED_BATCH = 1024
 
-# Cascade self-validation: hold out a slice of the re-judged calibration (clean
+# Self-validation: hold out a slice of the re-judged calibration (clean
 # final-taxonomy labels), measure the trained classifier's agreement with the
-# judge on it, and report that as the run's measured cascade fidelity. Only runs
+# judge on it, and report that as the run's measured labeling fidelity. Only runs
 # when there are enough re-judged items to make the estimate meaningful.
-CASCADE_VAL_FRACTION = 0.2
-CASCADE_MIN_REJUDGE_FOR_VAL = 40
-CASCADE_VAL_CAP = 200
-CASCADE_LOW_FIDELITY = 0.80          # below this, warn that cheap labels are noisy
+VAL_FRACTION = 0.2
+VAL_MIN_REJUDGE = 40
+VAL_CAP = 200
+VAL_LOW_FIDELITY = 0.80          # below this, warn that cheap labels are noisy
 
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
@@ -266,7 +266,7 @@ class _TaxonomyState:
     # Counter against the per-run classify budget (see `make_tools`).
     classify_calls: int = 0
     # Item id -> judge label from the discovery probes (last write wins), reused
-    # for free as cascade calibration. Kept across ALL discovery iterations:
+    # for free as classifier calibration. Kept across ALL discovery iterations:
     # restricting to the final-taxonomy version was measured to LOWER fidelity
     # (intermediate labels are mostly still correct; more examples beat recency).
     probe_labels: dict = field(default_factory=dict)
@@ -507,7 +507,7 @@ def make_tools(items, run_id: str, output_dir: str,
     def _judge_index_replies(indices, tax_str, hardened):
         """Judge the given corpus `indices` in FINALIZE_CHUNK-sized batches,
         yielding `(index, reply)` as each batch returns. The single spine shared
-        by finalize's calibration re-judge, cascade tail, and the judge path."""
+        by finalize's calibration re-judge, the embed/finetune tail, and the judge path."""
         for s in range(0, len(indices), FINALIZE_CHUNK):
             chunk = indices[s:s + FINALIZE_CHUNK]
             prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
@@ -618,9 +618,9 @@ def make_tools(items, run_id: str, output_dir: str,
                 n_other += 1
             results.append({"item_id": it["id"], "category": cat, "rationale": rat[:400]})
         n_scored = len(sel) - n_judge_errors
-        # Keep each probe's judge label as free calibration for a cascade
+        # Keep each probe's judge label as free calibration for a classifier
         # finalize (skip failed calls). Labels are against the taxonomy at this
-        # moment; the cascade filters to categories that survive to the end.
+        # moment; the classifier path filters to categories that survive to the end.
         for r in results:
             if r["rationale"] != JUDGE_ERROR_RATIONALE:
                 state.probe_labels[r["item_id"]] = r["category"]
@@ -702,7 +702,7 @@ def make_tools(items, run_id: str, output_dir: str,
                     f"Raw replies:\n{raw_glimpse}")
         return json.dumps(proposals, indent=2)
 
-    def _cascade_finalize(final_prompt: str) -> str:
+    def _classifier_finalize(final_prompt: str) -> str:
         """finalize_mode in ('embed', 'finetune'): train a cheap classifier on a
         judge-labelled calibration set (discovery probes + an optional fresh
         re-judge), label the confident majority with it, and route only the
@@ -710,7 +710,7 @@ def make_tools(items, run_id: str, output_dir: str,
         taxonomy.json + streamed classifications.jsonl as the judge path, so
         everything downstream is
         unchanged."""
-        from . import cascade as _casc
+        from . import embedding as _emb
         from .classifiers import make_classifier
         taxonomy = state.taxonomy
         tax_names = [c["name"] for c in taxonomy]
@@ -750,15 +750,15 @@ def make_tools(items, run_id: str, output_dir: str,
 
         # Hold out a slice of the RE-JUDGED calibration (clean final-taxonomy
         # labels) to measure the classifier's agreement with the judge — the
-        # run's own cascade-fidelity estimate. Held-out items are just excluded
+        # run's own labeling-fidelity estimate. Held-out items are just excluded
         # from training; they still get labelled along with everything else.
         val_ids: set = set()
-        if n_rejudge >= CASCADE_MIN_REJUDGE_FOR_VAL:
+        if n_rejudge >= VAL_MIN_REJUDGE:
             rng_v = random.Random(seed + 1)
             pool = list(rejudged_ids)
             rng_v.shuffle(pool)
-            n_val = min(CASCADE_VAL_CAP,
-                        max(1, int(len(pool) * CASCADE_VAL_FRACTION)))
+            n_val = min(VAL_CAP,
+                        max(1, int(len(pool) * VAL_FRACTION)))
             val_ids = set(pool[:n_val])
 
         train_texts, train_labels = [], []
@@ -778,7 +778,7 @@ def make_tools(items, run_id: str, output_dir: str,
         # finalize_mode picks the classifier: "embed" -> nearest class-mean on
         # embeddings, "finetune" -> a fine-tuned encoder.
         classifier_kind = "finetune" if finalize_mode == "finetune" else "prototype"
-        embed = ((embed_fn or _casc.load_embedder(embed_model))
+        embed = ((embed_fn or _emb.load_embedder(embed_model))
                  if classifier_kind == "prototype" else None)
         targets = tax_names + (["other"] if "other" in cal.values() else [])
         clf = make_classifier(
@@ -799,7 +799,7 @@ def make_tools(items, run_id: str, output_dir: str,
         # the top `coverage` fraction and routes the rest to the judge.
         preds, conf = clf.predict(
             (it.get("text") or "" for it in corpus), EMBED_BATCH)
-        keep = _casc.confident_mask(conf, coverage)
+        keep = _emb.confident_mask(conf, coverage)
 
         # Judge the low-confidence tail; dedup identical tail items (one
         # sequential scan filtering on `not keep`, so a file-backed corpus is
@@ -859,12 +859,12 @@ def make_tools(items, run_id: str, output_dir: str,
 
         if val_accuracy is None:
             val_line = ("measured fidelity: not estimated "
-                        f"(need >= {CASCADE_MIN_REJUDGE_FOR_VAL} re-judged items; "
+                        f"(need >= {VAL_MIN_REJUDGE} re-judged items; "
                         "raise calibration_size)\n")
         else:
             warn = ("  [LOW — cheap labels are noisy on this corpus; consider "
                     "finalize=judge or a lower coverage]"
-                    if val_accuracy < CASCADE_LOW_FIDELITY else "")
+                    if val_accuracy < VAL_LOW_FIDELITY else "")
             val_line = (f"measured fidelity: {val_accuracy:.1%} agreement with the "
                         f"judge on {len(val_labels)} held-out items{warn}\n")
         return (
@@ -904,7 +904,7 @@ def make_tools(items, run_id: str, output_dir: str,
                     f"The artifact at {artifact_path} is up to date — stop here. "
                     f"If you genuinely want to relabel, revise the taxonomy first.")
         if finalize_mode in ("embed", "finetune"):
-            return _cascade_finalize(final_prompt)
+            return _classifier_finalize(final_prompt)
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
 
