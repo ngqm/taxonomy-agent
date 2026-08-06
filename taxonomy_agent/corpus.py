@@ -16,6 +16,18 @@ import json
 from pathlib import Path
 
 
+def _iter_jsonl(path):
+    """Yield each non-blank line of a `.jsonl` file as a parsed JSON value.
+    Shared by the readers of the run's object-per-line files (classifications /
+    trace); the input-corpus loaders keep their own reader because they also
+    tolerate a bare-text line, which these files never contain."""
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                yield json.loads(line)
+
+
 def _normalize_one(obj, idx: int) -> dict | None:
     """Normalize one raw item (a string or a `{text, ...}` dict) at 1-based
     position `idx` into `{id, text, ...}`, or `None` if its text is blank.

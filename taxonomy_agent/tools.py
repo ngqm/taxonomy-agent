@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from langchain_core.tools import tool
 
-from .corpus import Corpus, InMemoryCorpus
+from .corpus import Corpus, InMemoryCorpus, _iter_jsonl
 
 
 ESCAPE_HATCH_SUFFIX = (
@@ -905,23 +905,18 @@ def make_tools(items, run_id: str, output_dir: str,
         counts: dict[str, int] = {}
         n_rows = n_coerced = n_judge_errors = 0
         try:
-            with open(classifications_jsonl) as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
-                    r = json.loads(line)
-                    cat = r.get("category")
-                    if cat not in valid:
-                        return None
-                    n_rows += 1
-                    seen_ids.add(r.get("id"))
-                    counts[cat] = counts.get(cat, 0) + 1
-                    rat = r.get("rationale", "")
-                    if rat == JUDGE_ERROR_RATIONALE:
-                        n_judge_errors += 1
-                    elif is_coerced_rationale(rat):
-                        n_coerced += 1
+            for r in _iter_jsonl(classifications_jsonl):
+                cat = r.get("category")
+                if cat not in valid:
+                    return None
+                n_rows += 1
+                seen_ids.add(r.get("id"))
+                counts[cat] = counts.get(cat, 0) + 1
+                rat = r.get("rationale", "")
+                if rat == JUDGE_ERROR_RATIONALE:
+                    n_judge_errors += 1
+                elif is_coerced_rationale(rat):
+                    n_coerced += 1
         except (ValueError, OSError):
             return None
         if n_rows != len(corpus) or seen_ids != want_ids:

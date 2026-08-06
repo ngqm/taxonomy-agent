@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
-from .corpus import Corpus, InMemoryCorpus, JsonlCorpus, _normalize_one
+from .corpus import (Corpus, InMemoryCorpus, JsonlCorpus, _iter_jsonl,
+                     _normalize_one)
 from .cost import CostTracker
 from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
@@ -182,13 +183,8 @@ class RunResult(dict):
         if not output_dir:
             return
         path = Path(output_dir) / "classifications.jsonl"
-        if not path.exists():
-            return
-        with open(path) as f:
-            for line in f:
-                line = line.strip()
-                if line:
-                    yield json.loads(line)
+        if path.exists():
+            yield from _iter_jsonl(path)
 
     @property
     def classifications(self) -> list[dict]:
@@ -270,8 +266,7 @@ class RunResult(dict):
         trace_path = Path(output_dir) / "trace.jsonl"
         if not trace_path.exists():
             raise FileNotFoundError(f"no trace.jsonl in {output_dir!r}.")
-        events = [json.loads(ln) for ln in trace_path.read_text().splitlines()
-                  if ln.strip()]
+        events = list(_iter_jsonl(trace_path))
         rows = []
         running = 0
         for i, e in enumerate(events):
