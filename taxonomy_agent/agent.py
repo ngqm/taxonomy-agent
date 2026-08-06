@@ -15,7 +15,7 @@ from langchain_openai import ChatOpenAI
 from langgraph.prebuilt import create_react_agent
 
 from .corpus import (Corpus, InMemoryCorpus, JsonlCorpus, _iter_jsonl,
-                     _normalize_one)
+                     _normalize_one, atomic_write_json)
 from .cost import CostTracker
 from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
@@ -440,9 +440,11 @@ def run(
         api_key: defaults to OPENROUTER_API_KEY env var.
         base_url: OpenRouter base URL.
         temperature: orchestrator sampling temperature.
-        seed: seeds the probe-sampling RNG so a run is reproducible given the
-            same corpus and models (with temperature 0). Vary it for independent
-            replicates.
+        seed: seeds the probe-sampling and calibration RNG only. It does NOT
+            make the discovered taxonomy reproducible: the orchestrator LLM runs
+            at `temperature` (default 0.2) and is not bit-reproducible even at 0,
+            so the same seed can yield a different taxonomy. Vary it for
+            independent replicates; do not treat it as a determinism guarantee.
         finalize: how to label the full corpus once discovery converges.
             "judge" (default) asks the LLM judge about every item — O(N) calls.
             "embed" and "finetune" instead train a cheap classifier on a
@@ -535,8 +537,7 @@ def run(
         "seed": seed,
         "status": "running",
     }
-    with open(meta_path, "w") as f:
-        json.dump(meta, f, indent=2)
+    atomic_write_json(meta_path, meta)
 
     cost = CostTracker(
         orchestrator_model=orchestrator_model,
@@ -697,8 +698,7 @@ def run(
     meta["status"] = out["status"]
     meta["finished_at"] = datetime.datetime.now().isoformat(timespec="seconds")
     meta["cost"] = cost_snapshot
-    with open(meta_path, "w") as f:
-        json.dump(meta, f, indent=2)
+    atomic_write_json(meta_path, meta)
 
     if cost_snapshot["total_usd"] is not None:
         logger.info(f"[taxonomy_agent] cost: ${cost_snapshot['total_usd']:.4f} "

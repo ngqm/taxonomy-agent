@@ -16,6 +16,8 @@ import os
 import threading
 from dataclasses import dataclass, field
 
+from .corpus import atomic_write_json
+
 # Per-million-token USD prices. Values are best-effort and may drift; the
 # truth is whatever OpenRouter charges at call time. Update as needed.
 MODEL_PRICES: dict[str, dict[str, float]] = {
@@ -160,7 +162,5 @@ class CostTracker:
     def write(self, path: str | None = None) -> str:
         """Persist the current snapshot to `<path>` (default `output_dir/cost.json`)."""
         target = path or os.path.join(self.output_dir, "cost.json")
-        os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
-        with open(target, "w") as f:
-            json.dump(self.snapshot(), f, indent=2)
+        atomic_write_json(target, self.snapshot())
         return target

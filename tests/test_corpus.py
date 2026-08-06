@@ -107,3 +107,19 @@ def test_tools_run_over_file_backed_corpus(make_tool_set, tmp_path):
     assert {r["id"] for r in rows} == {str(i) for i in range(12)}
     art = json.load(open(tmp_path / "taxonomy.json"))
     assert art["n_items"] == 12 and "classifications" not in art
+
+
+def test_atomic_write_json_roundtrips_and_cleans_temp(tmp_path):
+    from taxonomy_agent.corpus import atomic_write_json
+    p = tmp_path / "out.json"
+    atomic_write_json(str(p), {"a": 1, "b": [2, 3]})
+    assert json.loads(p.read_text()) == {"a": 1, "b": [2, 3]}
+    assert not (tmp_path / "out.json.tmp").exists()   # temp renamed away
+
+
+def test_atomic_write_json_replaces_existing(tmp_path):
+    from taxonomy_agent.corpus import atomic_write_json
+    p = tmp_path / "out.json"
+    atomic_write_json(str(p), {"v": 1})
+    atomic_write_json(str(p), {"v": 2})
+    assert json.loads(p.read_text()) == {"v": 2}

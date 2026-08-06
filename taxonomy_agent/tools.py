@@ -12,7 +12,7 @@ from typing import Any, Callable
 
 from langchain_core.tools import tool
 
-from .corpus import Corpus, InMemoryCorpus, _iter_jsonl
+from .corpus import Corpus, InMemoryCorpus, _iter_jsonl, atomic_write_json
 
 
 ESCAPE_HATCH_SUFFIX = (
@@ -269,9 +269,8 @@ def build_artifact(run_id: str, rows: list[dict], taxonomy: list[dict],
 def write_taxonomy_state(path: str, taxonomy: list[dict],
                          n_classify_calls: int = 0) -> None:
     """Persist the working taxonomy + classify-call count to `taxonomy_state.json`."""
-    with open(path, "w") as f:
-        json.dump({"taxonomy": taxonomy, "n_classify_calls": n_classify_calls},
-                  f, indent=2)
+    atomic_write_json(path, {"taxonomy": taxonomy,
+                             "n_classify_calls": n_classify_calls})
 
 
 def _append_trace(trace_path: str, run_id: str, kind: str, payload: dict) -> None:
@@ -313,9 +312,44 @@ class _TaxonomyState:
 
 _OpHandler = Callable[[list[dict], dict], tuple[list[dict], dict]]
 
+MAX_NAME_LEN = 40
+MAX_DESC_LEN = 200
+_RESERVED_NAMES = {"other"}       # reserved for the escape hatch / unmatched bucket
+
+
+def _clean_category_name(raw) -> str | None:
+    """Normalize a proposed category name to safe snake_case, or `None` if it
+    can't be one (empty, or the reserved `other`). Names can originate in the
+    judge's novelty proposals, which are produced from untrusted corpus text, so
+    this collapses everything outside `[a-z0-9]` to `_` and truncates — an
+    injected newline or instruction embedded in a name cannot then survive into
+    later prompts or the persisted taxonomy. Case-folding also makes
+    `Topic_A`/`topic_a` collapse to one name instead of one shadowing the
+    other."""
+    if not isinstance(raw, str):
+        return None
+    name = re.sub(r"[^a-z0-9]+", "_", raw.strip().lower()).strip("_")[:MAX_NAME_LEN]
+    name = name.strip("_")
+    if not name or name in _RESERVED_NAMES:
+        return None
+    return name
+
+
+def _clean_description(raw) -> str:
+    """Collapse a category description to a single bounded line, so a multi-line
+    `SYSTEM: ...` payload injected via a description can't reshape later
+    prompts."""
+    if not isinstance(raw, str):
+        return ""
+    return " ".join(raw.split())[:MAX_DESC_LEN]
+
 
 def _op_add(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
-    name, desc = op["name"], op["description"]
+    name = _clean_category_name(op["name"])
+    if name is None:
+        return tax, {"op": "add", "name": op.get("name"),
+                     "result": "rejected (invalid or reserved name)"}
+    desc = _clean_description(op["description"])
     if any(c["name"] == name for c in tax):
         return tax, {"op": "add", "name": name, "result": "skipped (already exists)"}
     return tax + [{"name": name, "description": desc}], {
@@ -324,7 +358,11 @@ def _op_add(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
 
 
 def _op_rename(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
-    old, new = op["old_name"], op["new_name"]
+    old = op["old_name"]
+    new = _clean_category_name(op["new_name"])
+    if new is None:
+        return tax, {"op": "rename", "from": old, "to": op.get("new_name"),
+                     "result": "rejected (invalid or reserved new name)"}
     if not any(c["name"] == old for c in tax):
         return tax, {"op": "rename", "from": old, "to": new, "result": "missing source"}
     if any(c["name"] == new for c in tax):
@@ -335,9 +373,10 @@ def _op_rename(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
 
 
 def _op_edit(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
-    name, desc = op["name"], op["description"]
+    name = op["name"]
     if not any(c["name"] == name for c in tax):
         return tax, {"op": "edit", "name": name, "result": "missing"}
+    desc = _clean_description(op["description"])
     new_tax = [{**c, "description": desc} if c["name"] == name else dict(c) for c in tax]
     return new_tax, {"op": "edit", "name": name, "result": "ok"}
 
@@ -350,9 +389,12 @@ def _op_drop(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
 
 
 def _op_merge(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
-    into = op["into"]
+    into = _clean_category_name(op["into"])
+    if into is None:
+        return tax, {"op": "merge", "into": op.get("into"),
+                     "result": "rejected (invalid or reserved target name)"}
     sources = op.get("from", []) or []
-    desc = op.get("description")
+    desc = _clean_description(op["description"]) if op.get("description") else None
     target_exists = any(c["name"] == into for c in tax)
     # Validate before any deletion — bug #1 was that sources got removed first.
     if not target_exists and not desc:
@@ -389,10 +431,12 @@ def _op_split(tax: list[dict], op: dict) -> tuple[list[dict], dict]:
     new_tax = [c for c in tax if c["name"] != src]
     added: list[str] = []
     for nc in new_cats:
-        if any(c["name"] == nc["name"] for c in new_tax):
+        cname = _clean_category_name(nc["name"])
+        if cname is None or any(c["name"] == cname for c in new_tax):
             continue
-        new_tax = new_tax + [{"name": nc["name"], "description": nc["description"]}]
-        added.append(nc["name"])
+        new_tax = new_tax + [{"name": cname,
+                              "description": _clean_description(nc["description"])}]
+        added.append(cname)
     return new_tax, {"op": "split", "from": src, "into": added, "result": "ok"}
 
 
@@ -848,6 +892,34 @@ def make_tools(items, run_id: str, output_dir: str,
             (it.get("text") or "" for it in corpus), EMBED_BATCH)
         keep = _emb.confident_mask(conf, coverage)
 
+        # A finetune classifier can only emit classes it trained on (it ignores
+        # the category descriptions the prototype path falls back on), so a
+        # taxonomy category with no calibration example is unpredictable, and a
+        # single training class collapses it to a constant. In the single-class
+        # case its "confident" labels are meaningless, so route every item to
+        # the judge (and drop the bogus 100% self-validation); when only some
+        # categories are unrepresented, warn that items truly in them may be
+        # cheap-mislabeled.
+        finalize_notes: list[str] = []
+        if classifier_kind == "finetune":
+            train_classes = set(train_labels)
+            uncovered = [c for c in tax_names if c not in train_classes]
+            if len(train_classes) < 2:
+                keep = _emb.confident_mask(conf, 0.0)      # judge everything
+                val_accuracy = None
+                finalize_notes.append(
+                    "finetune had <2 calibration classes (degenerate); routed "
+                    "all items to the judge — raise calibration_size or use "
+                    "finalize=embed")
+            elif uncovered:
+                finalize_notes.append(
+                    f"finetune saw no calibration example for {len(uncovered)} "
+                    f"categor{'y' if len(uncovered) == 1 else 'ies'} "
+                    f"({', '.join(uncovered[:5])}"
+                    f"{', …' if len(uncovered) > 5 else ''}); items truly in "
+                    "those may be cheap-mislabeled — raise calibration_size or "
+                    "use finalize=embed")
+
         # Judge the low-confidence tail; dedup identical tail items (one
         # sequential scan filtering on `not keep`, so a file-backed corpus is
         # read straight through rather than seeked per tail item).
@@ -896,8 +968,7 @@ def make_tools(items, run_id: str, output_dir: str,
             "val_accuracy": val_accuracy,
             "val_n": len(val_labels),
         }
-        with open(artifact_path, "w") as f:
-            json.dump(artifact, f, indent=2)
+        atomic_write_json(artifact_path, artifact)
         state.finalized_at = taxonomy
 
         if val_accuracy is None:
@@ -910,11 +981,13 @@ def make_tools(items, run_id: str, output_dir: str,
                     if val_accuracy < VAL_LOW_FIDELITY else "")
             val_line = (f"measured fidelity: {val_accuracy:.1%} agreement with the "
                         f"judge on {len(val_labels)} held-out items{warn}\n")
+        notes_block = "".join(f"NOTE: {m}\n" for m in finalize_notes)
         return (
             f"Wrote {artifact_path} (finalize={finalize_mode})\n"
             f"calibration: {n_probe} probe labels"
             f"{f' + {n_rejudge} re-judged' if n_rejudge else ''}\n"
             f"{val_line}"
+            f"{notes_block}"
             f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
             f"{n_judged} routed to the judge (coverage={coverage}); "
             f"n_judge_errors={artifact['n_judge_errors']}\n"
@@ -977,8 +1050,7 @@ def make_tools(items, run_id: str, output_dir: str,
             run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=roll.counts, n_coerced=roll.n_coerced,
             n_judge_errors=roll.n_judge_errors)
-        with open(artifact_path, "w") as f:
-            json.dump(artifact, f, indent=2)
+        atomic_write_json(artifact_path, artifact)
         # Snapshot the taxonomy that this artifact reflects. `_apply_ops`
         # always reassigns state.taxonomy to a fresh list of fresh dicts,
         # so this reference stays a stable record of the finalized state.
@@ -1039,8 +1111,7 @@ def make_tools(items, run_id: str, output_dir: str,
         # judge to relabel the whole corpus a second time.
         reused = _artifact_from_streamed_classifications()
         if reused is not None:
-            with open(artifact_path, "w") as f:
-                json.dump(reused, f, indent=2)
+            atomic_write_json(artifact_path, reused)
             state.finalized_at = state.taxonomy
             return reused
 
