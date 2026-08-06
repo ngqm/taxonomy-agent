@@ -237,7 +237,11 @@ class _TaxonomyState:
     classify_calls: int = 0
     # Item id -> judge label from the discovery probes (last write wins). These
     # are items the judge already labelled while exploring, reused for free as
-    # calibration prototypes by finalize_mode="cascade".
+    # calibration prototypes by finalize_mode="cascade". Kept across all
+    # discovery iterations: measuring on real multi-revise runs showed that
+    # restricting to the final taxonomy version discards too much calibration
+    # data and *lowers* prototype fidelity by 5-15% — intermediate-taxonomy
+    # labels are mostly still correct, and more examples beat recency.
     probe_labels: dict = field(default_factory=dict)
 
 
@@ -671,7 +675,9 @@ def make_tools(items, run_id: str, output_dir: str,
         descriptions = {c["name"]: c.get("description", "") for c in taxonomy}
         valid = set(tax_names) | {"other"}
         # Probes we already paid the judge for, kept only for categories that
-        # survived to the final taxonomy (plus "other").
+        # survived to the final taxonomy (plus "other"). All discovery
+        # iterations are used: restricting to the final version was measured to
+        # lower fidelity (see _TaxonomyState.probe_labels).
         examples: list[tuple[str, str]] = []
         for iid, cat in state.probe_labels.items():
             it = corpus.get(iid)
