@@ -397,8 +397,7 @@ def run(
     finalize: str = "judge",
     cascade_coverage: float = 0.85,
     embed_model: str = "all-MiniLM-L6-v2",
-    cascade_classifier: str = "prototype",
-    cascade_calibration_size: int = 0,
+    cascade_calibration_size: int = 200,
     cascade_finetune_model: str = "distilbert-base-uncased",
     cascade_finetune_epochs: int = 4,
 ) -> "RunResult":
@@ -441,28 +440,25 @@ def run(
             replicates.
         finalize: how to label the full corpus once discovery converges.
             "judge" (default) asks the LLM judge about every item — O(N) calls.
-            "cascade" labels the confident majority with an embedding classifier
-            (prototypes averaged from the discovery probes, which the judge
-            already labelled) and routes only the low-confidence tail to the
-            judge, cutting LLM calls sharply on large corpora. Needs the
-            `[scale]` extra (sentence-transformers).
-        cascade_coverage: with finalize="cascade", the fraction of items to
-            accept from the cheap classifier (highest confidence first); the
-            rest go to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge
-            entirely, 0.0 falls back to a full judge pass.
-        embed_model: sentence-transformers model id for the embedding-based
-            cascade classifiers.
-        cascade_classifier: with finalize="cascade", how to label the confident
-            majority. "prototype" (default) is nearest class-mean on frozen
-            embeddings, no training; "logreg" is logistic regression on those
-            embeddings; "finetune" fine-tunes a BERT-family encoder end to end
-            (best, but heavier — benefits most from a larger calibration set).
-        cascade_calibration_size: re-judge this many fresh items against the
-            final taxonomy to add clean training labels for the classifier (on
-            top of the discovery probes). 0 (default) uses only the probes;
-            a non-zero value costs that many extra judge calls.
-        cascade_finetune_model: base model id for cascade_classifier="finetune".
-        cascade_finetune_epochs: fine-tuning epochs for the "finetune" classifier.
+            "embed" and "finetune" instead train a cheap classifier on a
+            judge-labelled calibration set (the discovery probes plus a fresh
+            re-judge, see `cascade_calibration_size`) and route only the
+            low-confidence tail to the judge, cutting LLM calls sharply on large
+            corpora: "embed" labels by nearest class-mean on frozen embeddings
+            (no training); "finetune" fine-tunes a BERT-family encoder end to end
+            (heavier, benefits most from a larger calibration set). Both need the
+            `[scale]` extra.
+        cascade_coverage: with finalize="embed"/"finetune", the fraction of items
+            to accept from the classifier (highest confidence first); the rest go
+            to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge entirely, 0.0
+            falls back to a full judge pass.
+        embed_model: sentence-transformers model id for finalize="embed".
+        cascade_calibration_size: for finalize="embed"/"finetune", re-judge this
+            many fresh items against the final taxonomy to build clean training
+            labels (on top of the discovery probes). Defaults to 200; set 0 to
+            use only the probes. Each re-judged item is one extra judge call.
+        cascade_finetune_model: base model id for finalize="finetune".
+        cascade_finetune_epochs: fine-tuning epochs for finalize="finetune".
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -495,14 +491,12 @@ def run(
         raise ValueError(f"concurrency must be ≥ 1, got {concurrency}")
     if not 0.0 <= converge_below <= 1.0:
         raise ValueError(f"converge_below must be in [0, 1], got {converge_below}")
-    if finalize not in ("judge", "cascade"):
-        raise ValueError(f"finalize must be 'judge' or 'cascade', got {finalize!r}")
+    if finalize not in ("judge", "embed", "finetune"):
+        raise ValueError("finalize must be 'judge', 'embed', or 'finetune', got "
+                         f"{finalize!r}")
     if not 0.0 <= cascade_coverage <= 1.0:
         raise ValueError(
             f"cascade_coverage must be in [0, 1], got {cascade_coverage}")
-    if cascade_classifier not in ("prototype", "logreg", "finetune"):
-        raise ValueError("cascade_classifier must be 'prototype', 'logreg', or "
-                         f"'finetune', got {cascade_classifier!r}")
     if cascade_calibration_size < 0:
         raise ValueError("cascade_calibration_size must be >= 0, got "
                          f"{cascade_calibration_size}")
@@ -555,7 +549,7 @@ def run(
         min_iterations=min_iterations, prose_revise=prose_revise,
         initial_taxonomy=initial_taxonomy,
         finalize_mode=finalize, cascade_coverage=cascade_coverage,
-        embed_model=embed_model, cascade_classifier=cascade_classifier,
+        embed_model=embed_model,
         cascade_calibration_size=cascade_calibration_size,
         cascade_finetune_model=cascade_finetune_model,
         cascade_finetune_epochs=cascade_finetune_epochs,

@@ -1,4 +1,4 @@
-"""Cascade labeling: pure primitives + the finalize_mode='cascade' path.
+"""Cascade labeling: pure primitives + the finalize=embed/finetune cascade path.
 
 Uses a deterministic fake embedder (a keyword -> fixed axis map) so the tests
 run offline without sentence-transformers and the nearest-prototype outcome is
@@ -83,33 +83,16 @@ def test_assign_streaming_matches_assign_across_batches():
 
 # ── pluggable classifiers ───────────────────────────────────────────────────
 
-def test_logreg_classifier_fit_predict():
-    clf = classifiers.LogRegClassifier(fake_embed)
-    clf.fit(["AAA 1", "AAA 2", "BBB 1", "BBB 2"], ["a", "a", "b", "b"])
-    preds, conf = clf.predict(iter(["AAA x", "BBB y"]))
-    assert preds == ["a", "b"]
-    assert conf.shape == (2,) and (conf > 0.5).all()
-
-
-def test_logreg_classifier_single_class_is_safe():
-    clf = classifiers.LogRegClassifier(fake_embed)
-    clf.fit(["AAA 1", "AAA 2"], ["a", "a"])          # one class → constant
-    preds, conf = clf.predict(iter(["AAA", "BBB"]))
-    assert preds == ["a", "a"] and conf.tolist() == [1.0, 1.0]
-
-
 def test_make_classifier_factory():
     assert isinstance(classifiers.make_classifier("prototype", embed_fn=fake_embed,
                       targets=["a"]), classifiers.PrototypeClassifier)
-    assert isinstance(classifiers.make_classifier("logreg", embed_fn=fake_embed),
-                      classifiers.LogRegClassifier)
     assert isinstance(classifiers.make_classifier("finetune"),
                       classifiers.FinetuneClassifier)   # constructed, not trained
     with pytest.raises(ValueError):
         classifiers.make_classifier("nope")
 
 
-# ── finalize_mode='cascade' end to end ──────────────────────────────────────
+# ── finalize=embed cascade path, end to end ──────────────────────────────────────
 
 def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     """The confident majority is labelled by prototypes (no judge call); only the
@@ -130,7 +113,7 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
         return out
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="cascade", cascade_coverage=0.8,
+                      finalize_mode="embed", cascade_coverage=0.8,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"},
@@ -141,7 +124,7 @@ def test_cascade_finalize_labels_majority_cheaply(make_tool_set, tmp_path):
     judge_batches.clear()
 
     msg = t["finalize"].invoke({"final_prompt": "p"})
-    assert "finalize_mode=cascade" in msg
+    assert "finalize=embed" in msg
 
     rows = [json.loads(l) for l
             in open(os.path.join(str(tmp_path), "classifications.jsonl"))
@@ -181,7 +164,7 @@ def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path
                 else '{"category": "cat_a", "rationale": "tail"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="cascade", cascade_coverage=0.5,
+                      finalize_mode="embed", cascade_coverage=0.5,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"}]})
@@ -196,38 +179,6 @@ def test_cascade_tail_dedup_pays_judge_once_per_distinct(make_tool_set, tmp_path
     assert len(rows) == 8
     tail_rows = [r for r in rows if r["id"].startswith("n")]
     assert len(tail_rows) == 4 and all(r["category"] == "cat_a" for r in tail_rows)
-
-
-def test_cascade_with_logreg_classifier(make_tool_set, tmp_path):
-    """cascade_classifier='logreg' trains on the probe labels and labels the
-    corpus; same artifact shape as the prototype path."""
-    items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(4)]
-             + [{"id": f"b{i}", "text": f"BBB doc {i}"} for i in range(4)]
-             + [{"id": f"n{i}", "text": f"neutral doc {i}"} for i in range(2)])
-
-    def parallel(prompts, **k):
-        return ['{"category": "cat_a", "rationale": "r"}' if "AAA" in p
-                else '{"category": "cat_b", "rationale": "r"}' if "BBB" in p
-                else '{"category": "cat_a", "rationale": "t"}' for p in prompts]
-
-    t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="cascade", cascade_coverage=0.8,
-                      cascade_classifier="logreg", embed_fn=fake_embed)
-    t["revise"].invoke({"operations": [
-        {"op": "add", "name": "cat_a", "description": "a"},
-        {"op": "add", "name": "cat_b", "description": "b"}]})
-    t["classify"].invoke({"item_ids": ["a0", "a1", "b0", "b1"], "classify_prompt": "p"})
-    msg = t["finalize"].invoke({"final_prompt": "p"})
-    assert "classifier=logreg" in msg
-
-    rows = [json.loads(l) for l
-            in open(os.path.join(str(tmp_path), "classifications.jsonl")) if l.strip()]
-    assert len(rows) == 10
-    for r in rows:                                    # trained logreg separates AAA/BBB
-        if "AAA" in r["text"]:
-            assert r["category"] == "cat_a"
-        elif "BBB" in r["text"]:
-            assert r["category"] == "cat_b"
 
 
 def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
@@ -247,9 +198,8 @@ def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
                 else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="cascade", cascade_coverage=1.0,  # no tail judge
-                      cascade_classifier="prototype", cascade_calibration_size=4,
-                      embed_fn=fake_embed)
+                      finalize_mode="embed", cascade_coverage=1.0,  # no tail judge
+                      cascade_calibration_size=4, embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "a"},
         {"op": "add", "name": "cat_b", "description": "b"}]})
@@ -277,7 +227,7 @@ def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
                 else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
 
     t = make_tool_set(items, lambda *a, **k: None, parallel,
-                      finalize_mode="cascade", cascade_coverage=1.0,
+                      finalize_mode="embed", cascade_coverage=1.0,
                       embed_fn=fake_embed)
     t["revise"].invoke({"operations": [
         {"op": "add", "name": "cat_a", "description": "aaa"},

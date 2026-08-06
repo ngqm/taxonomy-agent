@@ -31,7 +31,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
 #   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
-#   --finalize cascade --cascade-coverage 0.85   # cheap labeling at scale (see below)
+#   --finalize {judge,embed,finetune} --cascade-calibration-size 200   # cheap labeling at scale
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -113,26 +113,26 @@ edit / merge / split / drop) and re-labels only the items an edit could move
 (rename or merge = 0 judge calls). Open-ended feedback warm-starts a short
 re-discovery. Returns a new `RunResult`; the original is untouched.
 
-### Scaling to large corpora (`finalize="cascade"`)
+### Scaling to large corpora (`finalize="embed"` / `"finetune"`)
 
 ```python
 result = run(items, instruction, output_dir="out/",
-             finalize="cascade", cascade_coverage=0.85,   # needs the [scale] extra
-             cascade_classifier="prototype",     # or "logreg" / "finetune"
-             cascade_calibration_size=0)         # re-judge N items for cleaner training labels
+             finalize="finetune",           # "judge" (default) | "embed" | "finetune"
+             cascade_calibration_size=200,   # items re-judged vs the final taxonomy to train on
+             cascade_coverage=0.85)          # keep top 85% by confidence, judge the rest
 ```
 Default `finalize="judge"` calls the LLM judge once per item — O(N). With
-`finalize="cascade"`, after discovery the corpus is embedded locally, one
-prototype is built per category by averaging the discovery probes the judge
-already labeled (free calibration), each item is assigned to its nearest
-prototype, and only the least-confident `1 - cascade_coverage` fraction is sent
-to the judge. Fidelity is corpus-dependent but degrades gracefully; on an
+`finalize="embed"` / `"finetune"`, after discovery a classifier is trained on a
+judge-labeled calibration set (the discovery probes plus a fresh re-judge
+against the final taxonomy), each item is labeled by that classifier, and only
+the least-confident `1 - cascade_coverage` fraction is sent to the judge.
+Fidelity is corpus-dependent but degrades gracefully; on an
 embedding-separable corpus it reproduces ~98% of the full-judge labels while
 judging only ~20% of items. Everything (memory, throughput) stays bounded, so
-this is the path for millions of items. `cascade_classifier` picks the cheap
-labeler — `"prototype"` (nearest class-mean, no training), `"logreg"`, or
-`"finetune"` (fine-tune a BERT-family model); `cascade_calibration_size=N`
-re-judges N fresh items against the final taxonomy for cleaner training labels.
+this is the path for millions of items. `"embed"` labels by embedding
+nearest-centroid; `"finetune"` fine-tunes a BERT-family model (a little more
+accurate, heavier). Both re-judge `cascade_calibration_size` fresh items against
+the final taxonomy for clean training labels — the main lever on fidelity.
 
 ## Evaluation harness
 

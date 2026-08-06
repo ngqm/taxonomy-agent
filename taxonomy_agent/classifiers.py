@@ -1,21 +1,20 @@
 """Pluggable classifiers for the cascade: label the confident majority of a
-corpus from a small judge-labeled calibration set (the discovery probes, plus an
-optional fresh re-judge against the final taxonomy).
+corpus from a judge-labeled calibration set (the discovery probes plus a fresh
+re-judge against the final taxonomy).
 
-Three options, cheapest first:
+Two options:
 
 - ``"prototype"`` — nearest class-mean on frozen MiniLM embeddings (no training;
-  falls back to the category description for classes with no training example).
-- ``"logreg"``   — logistic regression on frozen MiniLM embeddings (fast, robust
-  on small sets; predicts only classes seen in training).
-- ``"finetune"`` — fine-tune a BERT-family encoder end to end (heaviest; benefits
+  the "embedding clustering" cascade; falls back to the category description for
+  classes with no training example).
+- ``"finetune"`` — fine-tune a BERT-family encoder end to end (heavier; benefits
   most from a larger re-judged calibration set; predicts only trained classes).
 
 Each exposes ``fit(texts, labels)`` then ``predict(text_iter) -> (labels,
 confidence)``, where ``confidence`` is "higher = more sure" so the cascade gate
 keeps the top ``coverage`` fraction and routes the rest to the judge. Heavy deps
-(scikit-learn, torch, transformers) import lazily, so choosing one classifier
-never forces the others.
+(torch, transformers) import lazily, so choosing one classifier never forces the
+other.
 """
 from __future__ import annotations
 
@@ -54,43 +53,6 @@ class PrototypeClassifier:
         return cascade.assign_streaming(
             self.names, self.mat, text_iter, self.embed_fn,
             batch_size or self.batch_size)
-
-
-class LogRegClassifier:
-    """Multinomial logistic regression on frozen embeddings."""
-
-    def __init__(self, embed_fn, batch_size=1024, seed=42):
-        self.embed_fn = embed_fn
-        self.batch_size = batch_size
-        self.seed = seed
-        self.clf = None
-        self._single = None          # set when the calibration set has one class
-
-    def fit(self, texts, labels):
-        labels = list(labels)
-        if len(set(labels)) < 2:
-            self._single = labels[0] if labels else "other"
-            return
-        from sklearn.linear_model import LogisticRegression
-        X = np.asarray(self.embed_fn(list(texts)), dtype=np.float32)
-        self.clf = LogisticRegression(max_iter=1000, random_state=self.seed)
-        self.clf.fit(X, labels)
-
-    def predict(self, text_iter, batch_size=None):
-        preds, conf = [], []
-        for batch in _batched(text_iter, batch_size or self.batch_size):
-            if self._single is not None:
-                preds += [self._single] * len(batch)
-                conf.append(np.ones(len(batch), dtype=np.float32))
-                continue
-            X = np.asarray(self.embed_fn(batch), dtype=np.float32)
-            proba = self.clf.predict_proba(X)
-            classes = self.clf.classes_
-            idx = proba.argmax(1)
-            preds += [classes[j] for j in idx]
-            conf.append(proba.max(1).astype(np.float32))
-        return preds, (np.concatenate(conf) if conf
-                       else np.zeros(0, dtype=np.float32))
 
 
 class FinetuneClassifier:
@@ -166,14 +128,12 @@ class FinetuneClassifier:
 def make_classifier(kind, *, embed_fn=None, targets=None, descriptions=None,
                     finetune_model="distilbert-base-uncased", epochs=4,
                     seed=42, batch_size=1024):
-    """Construct the chosen cascade classifier. ``prototype``/``logreg`` need
-    ``embed_fn``; ``finetune`` tokenizes raw text and ignores it."""
+    """Construct the cascade classifier. ``prototype`` needs ``embed_fn``;
+    ``finetune`` tokenizes raw text and ignores it."""
     if kind == "prototype":
         return PrototypeClassifier(embed_fn, targets or [], descriptions,
                                    batch_size)
-    if kind == "logreg":
-        return LogRegClassifier(embed_fn, batch_size, seed)
     if kind == "finetune":
         return FinetuneClassifier(finetune_model, epochs=epochs, seed=seed)
-    raise ValueError(f"unknown cascade_classifier {kind!r} "
-                     f"(expected 'prototype', 'logreg', or 'finetune')")
+    raise ValueError(f"unknown classifier {kind!r} "
+                     f"(expected 'prototype' or 'finetune')")

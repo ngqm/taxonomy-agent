@@ -28,7 +28,7 @@ def load_embedder(model_name: str = DEFAULT_EMBED_MODEL):
         from sentence_transformers import SentenceTransformer
     except ImportError as e:  # pragma: no cover - exercised only without the dep
         raise ImportError(
-            "finalize='cascade' needs sentence-transformers. Install it with "
+            "finalize='embed' needs sentence-transformers. Install it with "
             "`pip install 'taxonomy-agent[scale]'` (or `pip install "
             "sentence-transformers`)."
         ) from e

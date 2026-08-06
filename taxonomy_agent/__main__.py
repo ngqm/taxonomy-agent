@@ -142,23 +142,20 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--seed", type=int, default=42,
                    help="RNG seed for reproducible probe sampling.")
-    p.add_argument("--finalize", choices=["judge", "cascade"], default="judge",
-                   help="How to label the corpus: 'judge' (LLM per item) or "
-                        "'cascade' (embedding classifier for the confident "
-                        "majority, judge only the tail — needs the [scale] "
-                        "extra).")
+    p.add_argument("--finalize", choices=["judge", "embed", "finetune"],
+                   default="judge",
+                   help="How to label the corpus: 'judge' (LLM per item), "
+                        "'embed' (re-judge a sample, then embedding nearest-"
+                        "centroid for the confident majority), or 'finetune' "
+                        "(re-judge, then fine-tune a BERT-family model). 'embed'"
+                        " / 'finetune' need the [scale] extra.")
     p.add_argument("--cascade-coverage", type=float, default=0.85,
-                   help="With --finalize cascade, fraction of items to accept "
-                        "from the cheap classifier (rest go to the judge).")
-    p.add_argument("--cascade-classifier", choices=["prototype", "logreg", "finetune"],
-                   default="prototype",
-                   help="Cascade classifier: 'prototype' (nearest class-mean, "
-                        "no training), 'logreg' (on embeddings), or 'finetune' "
-                        "(fine-tune a BERT-family model).")
-    p.add_argument("--cascade-calibration-size", type=int, default=0,
-                   help="Re-judge this many fresh items against the final "
-                        "taxonomy to train the cascade classifier (0 = use only "
-                        "discovery probes; non-zero costs extra judge calls).")
+                   help="With --finalize embed/finetune, fraction of items to "
+                        "accept from the classifier (rest go to the judge).")
+    p.add_argument("--cascade-calibration-size", type=int, default=200,
+                   help="With --finalize embed/finetune, re-judge this many "
+                        "fresh items against the final taxonomy to train the "
+                        "classifier (0 = discovery probes only). Extra judge calls.")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -198,7 +195,6 @@ def _cmd_run(argv: list[str]) -> None:
         seed=args.seed,
         finalize=args.finalize,
         cascade_coverage=args.cascade_coverage,
-        cascade_classifier=args.cascade_classifier,
         cascade_calibration_size=args.cascade_calibration_size,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")

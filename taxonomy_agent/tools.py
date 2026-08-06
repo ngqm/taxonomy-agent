@@ -237,7 +237,7 @@ class _TaxonomyState:
     classify_calls: int = 0
     # Item id -> judge label from the discovery probes (last write wins). These
     # are items the judge already labelled while exploring, reused for free as
-    # calibration prototypes by finalize_mode="cascade". Kept across all
+    # calibration by finalize_mode in ("embed", "finetune"). Kept across all
     # discovery iterations: measuring on real multi-revise runs showed that
     # restricting to the final taxonomy version discards too much calibration
     # data and *lowers* prototype fidelity by 5-15% — intermediate-taxonomy
@@ -434,7 +434,6 @@ def make_tools(items, run_id: str, output_dir: str,
                initial_taxonomy: list[dict] | None = None,
                finalize_mode: str = "judge", cascade_coverage: float = 0.85,
                embed_model: str = "all-MiniLM-L6-v2", embed_fn=None,
-               cascade_classifier: str = "prototype",
                cascade_calibration_size: int = 0,
                cascade_finetune_model: str = "distilbert-base-uncased",
                cascade_finetune_epochs: int = 4):
@@ -665,11 +664,12 @@ def make_tools(items, run_id: str, output_dir: str,
         return json.dumps(proposals, indent=2)
 
     def _cascade_finalize(final_prompt: str) -> str:
-        """finalize_mode='cascade': label the confident majority with an
-        embedding classifier (prototypes averaged from the discovery probes the
-        judge already paid for) and route only the low-confidence tail to the
-        judge. Produces the same compact taxonomy.json + streamed
-        classifications.jsonl as the judge path, so everything downstream is
+        """finalize_mode in ('embed', 'finetune'): train a cheap classifier on a
+        judge-labelled calibration set (discovery probes + an optional fresh
+        re-judge), label the confident majority with it, and route only the
+        low-confidence tail to the judge. Produces the same compact
+        taxonomy.json + streamed classifications.jsonl as the judge path, so
+        everything downstream is
         unchanged."""
         from . import cascade as _casc
         from .classifiers import make_classifier
@@ -720,14 +720,17 @@ def make_tools(items, run_id: str, output_dir: str,
                 cal_texts.append(it.get("text") or "")
                 cal_labels.append(cat)
 
-        # Train the chosen classifier on the calibration set, then label the
-        # whole corpus in a streamed pass; the confidence gate keeps the top
-        # `cascade_coverage` fraction and routes the rest to the judge.
-        needs_embed = cascade_classifier in ("prototype", "logreg")
-        embed = (embed_fn or _casc.load_embedder(embed_model)) if needs_embed else None
+        # finalize_mode picks the classifier: "embed" -> nearest class-mean on
+        # embeddings, "finetune" -> a fine-tuned encoder. Train it on the
+        # calibration set, then label the whole corpus in a streamed pass; the
+        # confidence gate keeps the top `cascade_coverage` fraction and routes
+        # the rest to the judge.
+        classifier_kind = "finetune" if finalize_mode == "finetune" else "prototype"
+        embed = ((embed_fn or _casc.load_embedder(embed_model))
+                 if classifier_kind == "prototype" else None)
         targets = tax_names + (["other"] if "other" in cal_labels else [])
         clf = make_classifier(
-            cascade_classifier, embed_fn=embed, targets=targets,
+            classifier_kind, embed_fn=embed, targets=targets,
             descriptions=descriptions, finetune_model=cascade_finetune_model,
             epochs=cascade_finetune_epochs, seed=seed, batch_size=EMBED_BATCH)
         clf.fit(cal_texts, cal_labels)
@@ -769,7 +772,7 @@ def make_tools(items, run_id: str, output_dir: str,
             for i, it in enumerate(corpus):
                 if keep[i]:
                     cat = preds[i]
-                    rat = (f"{CASCADE_RATIONALE_PREFIX} {cascade_classifier}; "
+                    rat = (f"{CASCADE_RATIONALE_PREFIX} {classifier_kind}; "
                            f"conf={float(conf[i]):.3f}]")
                     n_cheap += 1
                 else:
@@ -790,8 +793,7 @@ def make_tools(items, run_id: str, output_dir: str,
         state.finalized_at = taxonomy
         n_judged = len(corpus) - n_cheap
         return (
-            f"Wrote {artifact_path} (finalize_mode=cascade, "
-            f"classifier={cascade_classifier})\n"
+            f"Wrote {artifact_path} (finalize={finalize_mode})\n"
             f"calibration: {n_probe} probe labels"
             f"{f' + {n_rejudge} re-judged' if n_rejudge else ''}\n"
             f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
@@ -825,7 +827,7 @@ def make_tools(items, run_id: str, output_dir: str,
             return (f"ERROR: finalize_classify already ran with this taxonomy. "
                     f"The artifact at {artifact_path} is up to date — stop here. "
                     f"If you genuinely want to relabel, revise the taxonomy first.")
-        if finalize_mode == "cascade":
+        if finalize_mode in ("embed", "finetune"):
             return _cascade_finalize(final_prompt)
         tax_str = _format_taxonomy(taxonomy)
         hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
