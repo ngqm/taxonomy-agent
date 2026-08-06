@@ -20,19 +20,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from .embedding import batched
+
 
 DEFAULT_FINETUNE_MODEL = "distilbert-base-uncased"
-
-
-def _batched(iterable, n):
-    batch = []
-    for x in iterable:
-        batch.append(x)
-        if len(batch) >= n:
-            yield batch
-            batch = []
-    if batch:
-        yield batch
 
 
 class PrototypeClassifier:
@@ -108,13 +99,13 @@ class FinetuneClassifier:
         if len(self.labels_) < 2:
             const = self.labels_[0] if self.labels_ else "other"
             preds, n = [], 0
-            for batch in _batched(text_iter, bs):
+            for batch in batched(text_iter, bs):
                 preds += [const] * len(batch)
                 n += len(batch)
             return preds, np.ones(n, dtype=np.float32)
         preds, conf = [], []
         with torch.no_grad():
-            for batch in _batched(text_iter, bs):
+            for batch in batched(text_iter, bs):
                 enc = self.tok(list(batch), truncation=True, padding=True,
                                max_length=self.max_len,
                                return_tensors="pt").to(self.device)

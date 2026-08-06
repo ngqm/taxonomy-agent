@@ -20,6 +20,20 @@ import numpy as np
 DEFAULT_EMBED_MODEL = "all-MiniLM-L6-v2"
 
 
+def batched(iterable, n):
+    """Yield lists of up to `n` items from `iterable`, streaming — never
+    materializing more than one batch. Shared by the streamed labeling paths
+    (`assign_streaming` here, `FinetuneClassifier.predict` in classifiers)."""
+    batch = []
+    for x in iterable:
+        batch.append(x)
+        if len(batch) >= n:
+            yield batch
+            batch = []
+    if batch:
+        yield batch
+
+
 def load_embedder(model_name: str = DEFAULT_EMBED_MODEL):
     """Return ``embed(list[str]) -> np.ndarray`` yielding L2-normalized float32
     rows, backed by sentence-transformers. Lazy import so this module stays
@@ -131,11 +145,7 @@ def assign_streaming(names, matrix, text_iter, embed_fn, batch_size=1024):
     millions stays well within memory."""
     preds: list[str] = []
     margins: list[np.ndarray] = []
-    batch: list[str] = []
-
-    def flush():
-        if not batch:
-            return
+    for batch in batched(text_iter, batch_size):
         if not names:
             preds.extend(["other"] * len(batch))
             margins.append(np.zeros(len(batch), dtype=np.float32))
@@ -144,13 +154,6 @@ def assign_streaming(names, matrix, text_iter, embed_fn, batch_size=1024):
             p, m = _pred_margin(X @ matrix.T, names)
             preds.extend(p)
             margins.append(m)
-        batch.clear()
-
-    for t in text_iter:
-        batch.append(t)
-        if len(batch) >= batch_size:
-            flush()
-    flush()
     marg = (np.concatenate(margins) if margins
             else np.zeros(0, dtype=np.float32))
     return preds, marg

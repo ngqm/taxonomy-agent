@@ -178,19 +178,32 @@ def _group_by_content(indexed_items) -> list[list[int]]:
     return list(groups.values())
 
 
+class _CountRollup:
+    """Incremental rollup of classification rows into `(category_counts,
+    n_coerced, n_judge_errors)` without holding the rows — the single owner of
+    what each rationale sentinel means for the counts. `add` weights by `n`, so
+    a content-deduped group of identical items counts once per duplicate."""
+
+    def __init__(self) -> None:
+        self.counts: dict[str, int] = {}
+        self.n_coerced = 0
+        self.n_judge_errors = 0
+
+    def add(self, category: str, rationale: str, n: int = 1) -> None:
+        self.counts[category] = self.counts.get(category, 0) + n
+        if rationale == JUDGE_ERROR_RATIONALE:
+            self.n_judge_errors += n
+        elif is_coerced_rationale(rationale):
+            self.n_coerced += n
+
+
 def summarize_rows(rows: list[dict]) -> tuple[dict, int, int]:
     """Roll classification rows up into `(category_counts, n_coerced,
     n_judge_errors)` by inspecting each row's category and rationale sentinel."""
-    counts: dict[str, int] = {}
-    n_coerced = n_judge_errors = 0
+    roll = _CountRollup()
     for r in rows:
-        counts[r["category"]] = counts.get(r["category"], 0) + 1
-        rat = r.get("rationale", "")
-        if rat == JUDGE_ERROR_RATIONALE:
-            n_judge_errors += 1
-        elif is_coerced_rationale(rat):
-            n_coerced += 1
-    return counts, n_coerced, n_judge_errors
+        roll.add(r["category"], r.get("rationale", ""))
+    return roll.counts, roll.n_coerced, roll.n_judge_errors
 
 
 def build_artifact_from_counts(run_id: str, taxonomy: list[dict],
@@ -217,9 +230,8 @@ def build_artifact(run_id: str, rows: list[dict], taxonomy: list[dict],
                    final_prompt: str) -> dict:
     """Summarize classification `rows` into the `taxonomy.json` artifact.
     Convenience wrapper over `build_artifact_from_counts` for callers that
-    already hold every row in memory (`refine()` and the streamed-recovery
-    path); the rows themselves are persisted separately to
-    `classifications.jsonl`."""
+    already hold every row in memory (`refine()`); the rows themselves are
+    persisted separately to `classifications.jsonl`."""
     counts, n_coerced, n_judge_errors = summarize_rows(rows)
     return build_artifact_from_counts(
         run_id, taxonomy, final_prompt, n_items=len(rows),
@@ -729,7 +741,7 @@ def make_tools(items, run_id: str, output_dir: str,
                 cal[iid] = cat
         n_probe = len(cal)
         rejudged_ids: list[str] = []            # clean final-taxonomy labels
-        if calibration_size and calibration_size > 0:
+        if calibration_size > 0:
             rng_c = random.Random(seed)
             order = list(range(len(corpus)))
             rng_c.shuffle(order)
@@ -757,8 +769,7 @@ def make_tools(items, run_id: str, output_dir: str,
             rng_v = random.Random(seed + 1)
             pool = list(rejudged_ids)
             rng_v.shuffle(pool)
-            n_val = min(VAL_CAP,
-                        max(1, int(len(pool) * VAL_FRACTION)))
+            n_val = min(VAL_CAP, int(len(pool) * VAL_FRACTION))
             val_ids = set(pool[:n_val])
 
         train_texts, train_labels = [], []
@@ -819,8 +830,8 @@ def make_tools(items, run_id: str, output_dir: str,
         # Stream every row (cheap or judged) in item order; roll counts up so
         # nothing accumulates the full row set in memory.
         open(classifications_jsonl, "w").close()
-        counts: dict[str, int] = {}
-        n_coerced = n_judge_errors = n_cheap = 0
+        roll = _CountRollup()
+        n_cheap = 0
         with open(classifications_jsonl, "a") as f:
             for i, it in enumerate(corpus):
                 if keep[i]:
@@ -830,18 +841,14 @@ def make_tools(items, run_id: str, output_dir: str,
                     n_cheap += 1
                 else:
                     cat, rat = tail_label[i]
-                    if rat == JUDGE_ERROR_RATIONALE:
-                        n_judge_errors += 1
-                    elif is_coerced_rationale(rat):
-                        n_coerced += 1
-                counts[cat] = counts.get(cat, 0) + 1
+                roll.add(cat, rat)
                 f.write(json.dumps({**it, "category": cat, "rationale": rat}) + "\n")
 
         n_judged = len(corpus) - n_cheap
         artifact = build_artifact_from_counts(
             run_id, taxonomy, final_prompt, n_items=len(corpus),
-            category_counts=counts, n_coerced=n_coerced,
-            n_judge_errors=n_judge_errors)
+            category_counts=roll.counts, n_coerced=roll.n_coerced,
+            n_judge_errors=roll.n_judge_errors)
         artifact["labeling"] = {
             "finalize": finalize_mode,
             "coverage": coverage,
@@ -874,7 +881,7 @@ def make_tools(items, run_id: str, output_dir: str,
             f"{val_line}"
             f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
             f"{n_judged} routed to the judge (coverage={coverage}); "
-            f"n_judge_errors={n_judge_errors}\n"
+            f"n_judge_errors={artifact['n_judge_errors']}\n"
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
         )
 
@@ -919,27 +926,21 @@ def make_tools(items, run_id: str, output_dir: str,
         # and taxonomy.json is written only after every group is labelled. Counts
         # roll up incrementally so nothing holds the full row set in memory.
         open(classifications_jsonl, "w").close()
-        counts: dict[str, int] = {}
-        n_coerced = n_judge_errors = 0
+        roll = _CountRollup()
         with open(classifications_jsonl, "a") as f:
             for rep_i, rep in _judge_index_replies(list(rep_to_group),
                                                    tax_str, hardened):
                 cat, rat = _label_reply(rep, taxonomy)
                 g = rep_to_group[rep_i]
-                n = len(g)
-                if rat == JUDGE_ERROR_RATIONALE:
-                    n_judge_errors += n
-                elif is_coerced_rationale(rat):
-                    n_coerced += n
-                counts[cat] = counts.get(cat, 0) + n
+                roll.add(cat, rat, len(g))
                 for i in g:
                     f.write(json.dumps(
                         {**corpus[i], "category": cat, "rationale": rat}) + "\n")
 
         artifact = build_artifact_from_counts(
             run_id, taxonomy, final_prompt, n_items=len(corpus),
-            category_counts=counts, n_coerced=n_coerced,
-            n_judge_errors=n_judge_errors)
+            category_counts=roll.counts, n_coerced=roll.n_coerced,
+            n_judge_errors=roll.n_judge_errors)
         with open(artifact_path, "w") as f:
             json.dump(artifact, f, indent=2)
         # Snapshot the taxonomy that this artifact reflects. `_apply_ops`
@@ -961,11 +962,13 @@ def make_tools(items, run_id: str, output_dir: str,
         goes, so recovering a million-row run never holds every row in memory."""
         if not os.path.exists(classifications_jsonl):
             return None
-        want_ids = {it["id"] for it in corpus}
+        # Ids come from the corpus's in-memory index (no file re-scan; O(1)/item
+        # for a file-backed corpus), not by streaming every row again.
+        want_ids = {corpus.id_at(i) for i in range(len(corpus))}
         valid = {c["name"] for c in state.taxonomy} | {"other"}
         seen_ids: set = set()
-        counts: dict[str, int] = {}
-        n_rows = n_coerced = n_judge_errors = 0
+        roll = _CountRollup()
+        n_rows = 0
         try:
             for r in _iter_jsonl(classifications_jsonl):
                 cat = r.get("category")
@@ -973,12 +976,7 @@ def make_tools(items, run_id: str, output_dir: str,
                     return None
                 n_rows += 1
                 seen_ids.add(r.get("id"))
-                counts[cat] = counts.get(cat, 0) + 1
-                rat = r.get("rationale", "")
-                if rat == JUDGE_ERROR_RATIONALE:
-                    n_judge_errors += 1
-                elif is_coerced_rationale(rat):
-                    n_coerced += 1
+                roll.add(cat, r.get("rationale", ""))
         except (ValueError, OSError):
             return None
         if n_rows != len(corpus) or seen_ids != want_ids:
@@ -986,8 +984,8 @@ def make_tools(items, run_id: str, output_dir: str,
         return build_artifact_from_counts(
             run_id, state.taxonomy,
             "(recovered from streamed classifications.jsonl)",
-            n_items=n_rows, category_counts=counts, n_coerced=n_coerced,
-            n_judge_errors=n_judge_errors)
+            n_items=n_rows, category_counts=roll.counts,
+            n_coerced=roll.n_coerced, n_judge_errors=roll.n_judge_errors)
 
     def force_finalize_with_default_prompt() -> dict | None:
         """Fallback path for when the orchestrator stream ends without ever

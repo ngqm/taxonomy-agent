@@ -19,7 +19,7 @@ from .corpus import (Corpus, InMemoryCorpus, JsonlCorpus, _iter_jsonl,
 from .cost import CostTracker
 from .judge import Judge
 from .prompts import SYSTEM_PROMPT_TEMPLATE
-from .tools import make_tools
+from .tools import make_tools, VAL_LOW_FIDELITY
 
 logger = logging.getLogger("taxonomy_agent")
 
@@ -685,7 +685,7 @@ def run(
     if _val is not None:
         logger.info(f"[taxonomy_agent] labeling fidelity: {_val:.1%} agreement "
                     f"with the judge on {_lab.get('val_n')} held-out items")
-        if _val < 0.80:
+        if _val < VAL_LOW_FIDELITY:
             logger.warning(f"[taxonomy_agent] WARNING: the cheap labels are only "
                   f"{_val:.1%} accurate on this corpus — the "
                   f"{_lab.get('n_cheap')} classifier-labelled items may be that "
