@@ -4,8 +4,12 @@ loop without holding every item in memory.
 `InMemoryCorpus` wraps a list — the small-input path, behaviourally identical to
 passing a plain list. `JsonlCorpus` indexes a `.jsonl` file by byte offset and
 reads items on demand: random-access sampling by `seek`, streaming iteration for
-the finalize pass. Its retained memory is the offset + id index (a few bytes per
-item), not the item text, so a corpus far larger than RAM can be labelled.
+the finalize pass. It does not retain item *text*, so a corpus whose text dwarfs
+RAM can still be labelled — but it does keep an in-memory index per item (a byte
+offset, the id string, and an id->row map entry), on the order of a couple
+hundred bytes each in CPython. That index, not the text, is the real ceiling:
+tens of millions of items fit on a large box; hundreds of millions would need
+the offsets packed into an array and the id map sharded to disk.
 
 Only the stdlib is imported here so `tools` and `agent` can both depend on it
 without an import cycle.
@@ -13,7 +17,22 @@ without an import cycle.
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+
+
+def atomic_write_json(path, obj, *, indent: int = 2) -> None:
+    """Write `obj` as JSON to `path` atomically: dump to a sibling temp file,
+    then `os.replace()` it into place (an atomic rename on POSIX). A crash
+    mid-write leaves the previous file intact rather than a half-written,
+    unparseable one — so a killed run's taxonomy.json / cost.json / meta.json
+    always reload cleanly. Shared by `tools`, `agent`, and `cost`."""
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    tmp = f"{path}.tmp"
+    with open(tmp, "w") as f:
+        json.dump(obj, f, indent=indent)
+    os.replace(tmp, path)
 
 
 def _iter_jsonl(path):
