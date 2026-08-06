@@ -213,6 +213,33 @@ def test_cascade_calibration_size_rejudges_fresh_items(make_tool_set, tmp_path):
     assert len(rows) == 12
 
 
+def test_cascade_self_validation_measures_fidelity(make_tool_set, tmp_path):
+    """With enough re-judged items, the cascade holds a slice out, measures the
+    classifier's agreement with the judge on it, and records it in the artifact.
+    Cleanly-separable AAA/BBB items → 100% measured fidelity."""
+    items = ([{"id": f"a{i}", "text": f"AAA doc {i}"} for i in range(30)]
+             + [{"id": f"b{i}", "text": f"BBB doc {i}"} for i in range(30)])
+
+    def parallel(prompts, **k):
+        return ['{"category": "cat_a", "rationale": "r"}' if "AAA" in p
+                else '{"category": "cat_b", "rationale": "r"}' for p in prompts]
+
+    t = make_tool_set(items, lambda *a, **k: None, parallel,
+                      finalize_mode="embed", cascade_coverage=1.0,
+                      cascade_calibration_size=60, embed_fn=fake_embed)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "cat_a", "description": "a"},
+        {"op": "add", "name": "cat_b", "description": "b"}]})
+    msg = t["finalize"].invoke({"final_prompt": "p"})
+    assert "measured fidelity: 100.0%" in msg
+
+    art = json.load(open(os.path.join(str(tmp_path), "taxonomy.json")))
+    casc = art["cascade"]
+    assert casc["val_accuracy"] == 1.0
+    assert casc["val_n"] == 12                        # 20% of the 60 re-judged
+    assert casc["n_rejudge"] == 60 and casc["finalize"] == "embed"
+
+
 def test_cascade_coverage_one_skips_judge_entirely(make_tool_set, tmp_path):
     """coverage=1.0 accepts every cheap label; the judge is never called at
     finalize (a pure $0 labeling pass)."""

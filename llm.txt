@@ -132,7 +132,10 @@ judging only ~20% of items. Everything (memory, throughput) stays bounded, so
 this is the path for millions of items. `"embed"` labels by embedding
 nearest-centroid; `"finetune"` fine-tunes a BERT-family model (a little more
 accurate, heavier). Both re-judge `cascade_calibration_size` fresh items against
-the final taxonomy for clean training labels — the main lever on fidelity.
+the final taxonomy for clean training labels — the main lever on fidelity. Each
+run measures its own fidelity: `result.cascade["val_accuracy"]` is the
+classifier's agreement with the judge on a held-out calibration slice (a low
+value warns the cheap labels are noisy on your corpus).
 
 ## Evaluation harness
 

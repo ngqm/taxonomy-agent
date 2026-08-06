@@ -199,6 +199,16 @@ class RunResult(dict):
         """Number of items assigned to each category."""
         return (self.get("artifact") or {}).get("category_counts", {})
 
+    @property
+    def cascade(self) -> dict | None:
+        """For a `finalize="embed"/"finetune"` run, the cascade summary:
+        calibration sizes, how many items were classifier-labelled vs judged,
+        and ``val_accuracy`` — the classifier's measured agreement with the
+        judge on held-out calibration items (this run's fidelity estimate, or
+        ``None`` if too few re-judged items to estimate). ``None`` for a plain
+        ``finalize="judge"`` run."""
+        return (self.get("artifact") or {}).get("cascade")
+
     def to_dataframe(self):
         """A per-item ``pandas.DataFrame`` with columns ``id, text, category,
         rationale, definition`` (the definition of the assigned category)."""
@@ -669,6 +679,17 @@ def run(
               f"{art.get('n_items')} judge calls failed; the labels are "
               f"unreliable (status=degraded). Check the judge model id and "
               f"OPENROUTER_API_KEY.")
+
+    _casc = (out.get("artifact") or {}).get("cascade") or {}
+    _val = _casc.get("val_accuracy")
+    if _val is not None:
+        logger.info(f"[taxonomy_agent] cascade fidelity: {_val:.1%} agreement "
+                    f"with the judge on {_casc.get('val_n')} held-out items")
+        if _val < 0.80:
+            logger.warning(f"[taxonomy_agent] WARNING: cascade cheap labels only "
+                  f"{_val:.1%} accurate on this corpus — the "
+                  f"{_casc.get('n_cheap')} classifier-labelled items may be that "
+                  f"noisy. Consider finalize='judge' or a lower cascade_coverage.")
 
     cost.write()
     cost_snapshot = cost.snapshot()

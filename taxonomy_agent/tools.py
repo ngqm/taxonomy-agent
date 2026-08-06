@@ -48,6 +48,15 @@ FINALIZE_CHUNK = 2000
 # 10M x dim array (which would be tens of GB).
 EMBED_BATCH = 1024
 
+# Cascade self-validation: hold out a slice of the re-judged calibration (clean
+# final-taxonomy labels), measure the trained classifier's agreement with the
+# judge on it, and report that as the run's measured cascade fidelity. Only runs
+# when there are enough re-judged items to make the estimate meaningful.
+CASCADE_VAL_FRACTION = 0.2
+CASCADE_MIN_REJUDGE_FOR_VAL = 40
+CASCADE_VAL_CAP = 200
+CASCADE_LOW_FIDELITY = 0.80          # below this, warn that cheap labels are noisy
+
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
 # receives the orchestrator's own prompt instead.
@@ -719,7 +728,7 @@ def make_tools(items, run_id: str, output_dir: str,
             if cat in valid:
                 cal[iid] = cat
         n_probe = len(cal)
-        n_rejudge = 0
+        rejudged_ids: list[str] = []            # clean final-taxonomy labels
         if cascade_calibration_size and cascade_calibration_size > 0:
             rng_c = random.Random(seed)
             order = list(range(len(corpus)))
@@ -734,30 +743,60 @@ def make_tools(items, run_id: str, output_dir: str,
                 cat, rat = _label_reply(rep, taxonomy)
                 if rat == JUDGE_ERROR_RATIONALE:        # skip failed calls
                     continue
-                cal[corpus.id_at(i)] = cat
-                n_rejudge += 1
+                iid = corpus.id_at(i)
+                cal[iid] = cat
+                rejudged_ids.append(iid)
+        n_rejudge = len(rejudged_ids)
 
-        cal_texts, cal_labels = [], []
+        # Hold out a slice of the RE-JUDGED calibration (clean final-taxonomy
+        # labels) to measure the classifier's agreement with the judge — the
+        # run's own cascade-fidelity estimate. Held-out items are just excluded
+        # from training; they still get labelled along with everything else.
+        val_ids: set = set()
+        if n_rejudge >= CASCADE_MIN_REJUDGE_FOR_VAL:
+            rng_v = random.Random(seed + 1)
+            pool = list(rejudged_ids)
+            rng_v.shuffle(pool)
+            n_val = min(CASCADE_VAL_CAP,
+                        max(1, int(len(pool) * CASCADE_VAL_FRACTION)))
+            val_ids = set(pool[:n_val])
+
+        train_texts, train_labels = [], []
+        val_texts, val_labels = [], []
         for iid, cat in cal.items():
             it = corpus.get(iid)
-            if it is not None:
-                cal_texts.append(it.get("text") or "")
-                cal_labels.append(cat)
+            if it is None:
+                continue
+            text = it.get("text") or ""
+            if iid in val_ids:
+                val_texts.append(text)
+                val_labels.append(cat)
+            else:
+                train_texts.append(text)
+                train_labels.append(cat)
 
         # finalize_mode picks the classifier: "embed" -> nearest class-mean on
-        # embeddings, "finetune" -> a fine-tuned encoder. Train it on the
-        # calibration set, then label the whole corpus in a streamed pass; the
-        # confidence gate keeps the top `cascade_coverage` fraction and routes
-        # the rest to the judge.
+        # embeddings, "finetune" -> a fine-tuned encoder.
         classifier_kind = "finetune" if finalize_mode == "finetune" else "prototype"
         embed = ((embed_fn or _casc.load_embedder(embed_model))
                  if classifier_kind == "prototype" else None)
-        targets = tax_names + (["other"] if "other" in cal_labels else [])
+        targets = tax_names + (["other"] if "other" in cal.values() else [])
         clf = make_classifier(
             classifier_kind, embed_fn=embed, targets=targets,
             descriptions=descriptions, finetune_model=cascade_finetune_model,
             epochs=cascade_finetune_epochs, seed=seed)
-        clf.fit(cal_texts, cal_labels)
+        clf.fit(train_texts, train_labels)
+
+        # Measured fidelity: the trained classifier's agreement with the judge on
+        # the held-out calibration items.
+        val_accuracy = None
+        if val_texts:
+            vpreds, _ = clf.predict(iter(val_texts))
+            val_accuracy = sum(p == y for p, y in zip(vpreds, val_labels)) \
+                / len(val_labels)
+
+        # Label the whole corpus in a streamed pass; the confidence gate keeps
+        # the top `cascade_coverage` fraction and routes the rest to the judge.
         preds, conf = clf.predict(
             (it.get("text") or "" for it in corpus), EMBED_BATCH)
         keep = _casc.confident_mask(conf, cascade_coverage)
@@ -798,18 +837,41 @@ def make_tools(items, run_id: str, output_dir: str,
                 counts[cat] = counts.get(cat, 0) + 1
                 f.write(json.dumps({**it, "category": cat, "rationale": rat}) + "\n")
 
+        n_judged = len(corpus) - n_cheap
         artifact = build_artifact_from_counts(
             run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=counts, n_coerced=n_coerced,
             n_judge_errors=n_judge_errors)
+        artifact["cascade"] = {
+            "finalize": finalize_mode,
+            "coverage": cascade_coverage,
+            "n_calibration": len(cal),
+            "n_probe": n_probe,
+            "n_rejudge": n_rejudge,
+            "n_cheap": n_cheap,
+            "n_judged": n_judged,
+            "val_accuracy": val_accuracy,
+            "val_n": len(val_labels),
+        }
         with open(artifact_path, "w") as f:
             json.dump(artifact, f, indent=2)
         state.finalized_at = taxonomy
-        n_judged = len(corpus) - n_cheap
+
+        if val_accuracy is None:
+            val_line = ("measured fidelity: not estimated "
+                        f"(need >= {CASCADE_MIN_REJUDGE_FOR_VAL} re-judged items; "
+                        "raise cascade_calibration_size)\n")
+        else:
+            warn = ("  [LOW — cheap labels are noisy on this corpus; consider "
+                    "finalize=judge or a lower cascade_coverage]"
+                    if val_accuracy < CASCADE_LOW_FIDELITY else "")
+            val_line = (f"measured fidelity: {val_accuracy:.1%} agreement with the "
+                        f"judge on {len(val_labels)} held-out items{warn}\n")
         return (
             f"Wrote {artifact_path} (finalize={finalize_mode})\n"
             f"calibration: {n_probe} probe labels"
             f"{f' + {n_rejudge} re-judged' if n_rejudge else ''}\n"
+            f"{val_line}"
             f"n_items={len(corpus)}: {n_cheap} labelled by the classifier, "
             f"{n_judged} routed to the judge (coverage={cascade_coverage}); "
             f"n_judge_errors={n_judge_errors}\n"

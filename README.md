@@ -140,6 +140,13 @@ often the better cost/quality trade. Lower `cascade_coverage` for higher
 fidelity, raise it (up to `1.0`, a pure `$0` labeling pass) for lower cost.
 `embed`/`finetune` need the extra: `pip install 'taxonomy-agent[scale]'`.
 
+Because fidelity is corpus-dependent, each `embed`/`finetune` run **measures its
+own**: a slice of the re-judged calibration is held out, and the classifier's
+agreement with the judge on it is reported as `result.cascade["val_accuracy"]`
+(and logged) — this run's fidelity estimate on your data. A low value warns that
+the cheap labels are noisy for your corpus, so you can raise the calibration
+size, lower `cascade_coverage`, or fall back to `finalize="judge"`.
+
 #### Refining a taxonomy with feedback
 
 Not happy with the result? Steer it in natural language instead of re-running
