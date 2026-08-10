@@ -88,6 +88,22 @@ def _ok_parallel(reply: str):
     return parallel
 
 
+def test_classify_max_tokens_threads_to_judge(items50, make_tool_set):
+    """run()'s judge_max_tokens reaches the per-item classify calls."""
+    seen: dict = {}
+
+    def parallel(prompts, **k):
+        seen["max_tokens"] = k.get("max_tokens")
+        return ['{"category": "a", "rationale": "r"}'] * len(prompts)
+
+    t = make_tool_set(items50, lambda *a, **k: None, parallel,
+                      classify_max_tokens=123)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["classify"].invoke({"item_ids": ["1", "2"], "classify_prompt": "p"})
+    assert seen["max_tokens"] == 123
+
+
 def test_classify_dedupes_item_ids(items50, make_tool_set):
     """Bug #3 — duplicates must not produce duplicate judge calls."""
     seen_lens = []

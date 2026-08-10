@@ -396,6 +396,9 @@ def run(
     api_key: str | None = None,
     base_url: str = "https://openrouter.ai/api/v1",
     temperature: float = 0.2,
+    orchestrator_max_tokens: int | None = None,
+    judge_max_tokens: int = 300,
+    reasoning_effort: str | None = None,
     prose_revise: bool = False,
     seed: int = 42,
     initial_taxonomy: list[dict] | None = None,
@@ -440,6 +443,19 @@ def run(
         api_key: defaults to OPENROUTER_API_KEY env var.
         base_url: OpenRouter base URL.
         temperature: orchestrator sampling temperature.
+        orchestrator_max_tokens: cap on the orchestrator's output tokens per
+            step. None (default) sends no cap, so the model's own default
+            applies.
+        judge_max_tokens: cap on each judge classification reply (label +
+            rationale). Default 300. Lower it to trim cost/latency on the O(N)
+            labelling pass; raise it if rationales are being truncated. Does not
+            throttle category *proposals* (those keep a larger internal budget).
+        reasoning_effort: reasoning effort for the orchestrator on
+            reasoning-capable models, forwarded to OpenRouter as
+            `reasoning.effort` ("low", "medium", or "high"). None (default)
+            sends nothing, so the model's own default applies. The judge is
+            deliberately left as a cheap, non-reasoning labeller (like its fixed
+            temperature 0), so this steers the orchestrator only.
         seed: seeds the probe-sampling and calibration RNG only. It does NOT
             make the discovered taxonomy reproducible: the orchestrator LLM runs
             at `temperature` (default 0.2) and is not bit-reproducible even at 0,
@@ -507,6 +523,15 @@ def run(
     if calibration_size < 0:
         raise ValueError("calibration_size must be >= 0, got "
                          f"{calibration_size}")
+    if orchestrator_max_tokens is not None and orchestrator_max_tokens < 1:
+        raise ValueError("orchestrator_max_tokens must be None or a positive "
+                         f"int, got {orchestrator_max_tokens!r}")
+    if judge_max_tokens < 1:
+        raise ValueError(f"judge_max_tokens must be >= 1, got {judge_max_tokens}")
+    if reasoning_effort is not None and reasoning_effort not in (
+            "low", "medium", "high"):
+        raise ValueError("reasoning_effort must be None, 'low', 'medium', or "
+                         f"'high', got {reasoning_effort!r}")
 
     corpus = open_corpus(items, pool_limit)
     if len(corpus) == 0:
@@ -535,6 +560,9 @@ def run(
         "min_iterations": min_iterations,
         "prose_revise": prose_revise,
         "seed": seed,
+        "orchestrator_max_tokens": orchestrator_max_tokens,
+        "judge_max_tokens": judge_max_tokens,
+        "reasoning_effort": reasoning_effort,
         "status": "running",
     }
     atomic_write_json(meta_path, meta)
@@ -559,17 +587,24 @@ def run(
         calibration_size=calibration_size,
         finetune_model=finetune_model,
         finetune_epochs=finetune_epochs,
+        classify_max_tokens=judge_max_tokens,
     )
 
+    # Forward `usage: {include: true}` so OpenRouter returns the actual charge
+    # under usage.cost — CostTracker prefers this over the static MODEL_PRICES
+    # fallback. Harmless for endpoints that ignore it. `reasoning.effort` steers
+    # reasoning-capable orchestrators; omitted entirely when unset so
+    # non-reasoning models are unaffected.
+    extra_body: dict = {"usage": {"include": True}}
+    if reasoning_effort:
+        extra_body["reasoning"] = {"effort": reasoning_effort}
     llm = ChatOpenAI(
         model=orchestrator_model,
         api_key=api_key,
         base_url=base_url,
         temperature=temperature,
-        # Forward `usage: {include: true}` so OpenRouter returns the actual
-        # charge under usage.cost — CostTracker prefers this over the static
-        # MODEL_PRICES fallback. Harmless for endpoints that ignore it.
-        extra_body={"usage": {"include": True}},
+        max_tokens=orchestrator_max_tokens,
+        extra_body=extra_body,
     )
     if size_hint and size_hint.strip():
         size_aside = f" (aim for {size_hint.strip()} categories)"

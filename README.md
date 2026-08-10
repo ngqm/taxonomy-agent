@@ -93,6 +93,9 @@ optional keyword argument with a sensible default:
 | `pool_limit` | `None` | Cap the number of items used (handy for smoke tests); `None` uses all of them. |
 | `seed` | `42` | Seeds probe sampling for reproducibility; vary it for independent replicates. |
 | `temperature` | `0.2` | Orchestrator sampling temperature. |
+| `orchestrator_max_tokens` | `None` | Cap on orchestrator output tokens per step; `None` uses the model's own default. |
+| `judge_max_tokens` | `300` | Max tokens per judge classification reply (label + rationale). Lower to trim cost on the O(N) pass; raise if rationales truncate. |
+| `reasoning_effort` | `None` | Reasoning effort for a reasoning-capable orchestrator (`low`/`medium`/`high`), forwarded as OpenRouter `reasoning.effort`. The judge stays a cheap non-reasoning labeller. |
 | `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
 | `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), or `"finetune"` (re-judge, then fine-tune a BERT-family model). See below. |
 | `coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
@@ -103,8 +106,9 @@ optional keyword argument with a sensible default:
 
 The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--min-iters`, `--threshold`, `--probe-size`, `--concurrency`, `--seed`,
-`--orchestrator`, `--judge`, `--size`; see `taxonomy run --help`). Run
-`help(run)` in Python for the full docstring.
+`--orchestrator`, `--judge`, `--size`, `--judge-max-tokens`,
+`--orchestrator-max-tokens`, `--reasoning-effort`; see `taxonomy run --help`).
+Run `help(run)` in Python for the full docstring.
 
 #### Scaling to large corpora (`finalize=`)
 

@@ -32,6 +32,8 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
 #   --finalize {judge,embed,finetune} --calibration-size 200   # cheap labeling at scale
+#   --judge-max-tokens 300 --orchestrator-max-tokens N   # per-role output-token caps
+#   --reasoning-effort {low,medium,high}   # reasoning effort for the orchestrator
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -80,6 +82,9 @@ result = run(
     orchestrator_model="deepseek/deepseek-v4-flash",
     judge_model="deepseek/deepseek-v4-flash",
     min_iterations=3, converge_below=0.10, probe_size=20, size_hint="4-10",
+    judge_max_tokens=300,           # per-judge-reply token cap (label + rationale)
+    orchestrator_max_tokens=None,   # orchestrator step cap; None = model default
+    reasoning_effort=None,          # "low"/"medium"/"high" for a reasoning orchestrator
 )
 result.definitions          # {category: definition}
 result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)

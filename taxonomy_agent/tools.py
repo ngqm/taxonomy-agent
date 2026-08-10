@@ -546,7 +546,8 @@ def make_tools(items, run_id: str, output_dir: str,
                embed_model: str = "all-MiniLM-L6-v2", embed_fn=None,
                calibration_size: int = 0,
                finetune_model: str = "distilbert-base-uncased",
-               finetune_epochs: int = 4):
+               finetune_epochs: int = 4,
+               classify_max_tokens: int = 300):
     """Construct the six LangChain tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -596,7 +597,7 @@ def make_tools(items, run_id: str, output_dir: str,
             prompts = [build_classify_prompt(hardened, tax_str, corpus[i])
                        for i in chunk]
             replies = judge.parallel(prompts, concurrency=concurrency * 2,
-                                     max_tokens=300)
+                                     max_tokens=classify_max_tokens)
             yield from zip(chunk, replies)
 
     @tool
@@ -684,7 +685,8 @@ def make_tools(items, run_id: str, output_dir: str,
         tax_str = _format_taxonomy(taxonomy)
         hardened = classify_prompt.strip() + ESCAPE_HATCH_SUFFIX
         prompts = [build_classify_prompt(hardened, tax_str, it) for it in sel]
-        replies = judge.parallel(prompts, concurrency=concurrency, max_tokens=300)
+        replies = judge.parallel(prompts, concurrency=concurrency,
+                                 max_tokens=classify_max_tokens)
         results = []
         n_other = 0
         n_coerced = 0

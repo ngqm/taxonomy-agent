@@ -156,6 +156,16 @@ def _cmd_run(argv: list[str]) -> None:
                    help="With --finalize embed/finetune, re-judge this many "
                         "fresh items against the final taxonomy to train the "
                         "classifier (0 = discovery probes only). Extra judge calls.")
+    p.add_argument("--judge-max-tokens", type=int, default=300,
+                   help="Max tokens per judge classification reply "
+                        "(label + rationale). Default 300.")
+    p.add_argument("--orchestrator-max-tokens", type=int, default=None,
+                   help="Cap on orchestrator output tokens per step "
+                        "(default: the model's own).")
+    p.add_argument("--reasoning-effort", choices=["low", "medium", "high"],
+                   default=None,
+                   help="Reasoning effort for a reasoning-capable orchestrator "
+                        "(OpenRouter reasoning.effort). Default: unset.")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -196,6 +206,9 @@ def _cmd_run(argv: list[str]) -> None:
         finalize=args.finalize,
         coverage=args.coverage,
         calibration_size=args.calibration_size,
+        judge_max_tokens=args.judge_max_tokens,
+        orchestrator_max_tokens=args.orchestrator_max_tokens,
+        reasoning_effort=args.reasoning_effort,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -343,6 +356,15 @@ def _cmd_legacy(argv: list[str]) -> None:
     p.add_argument("--category-focus",
                    default=cfg.get("category_focus"),
                    help="What the taxonomy's categories should describe.")
+    p.add_argument("--judge-max-tokens", type=int,
+                   default=cfg.get("judge_max_tokens", 300),
+                   help="Max tokens per judge classification reply. Default 300.")
+    p.add_argument("--orchestrator-max-tokens", type=int,
+                   default=cfg.get("orchestrator_max_tokens"),
+                   help="Cap on orchestrator output tokens per step.")
+    p.add_argument("--reasoning-effort", choices=["low", "medium", "high"],
+                   default=cfg.get("reasoning_effort"),
+                   help="Reasoning effort for a reasoning-capable orchestrator.")
 
     args = p.parse_args(argv)
 
@@ -379,6 +401,9 @@ def _cmd_legacy(argv: list[str]) -> None:
         size_hint=args.size_hint,
         category_focus=args.category_focus,
         seed=args.seed,
+        judge_max_tokens=args.judge_max_tokens,
+        orchestrator_max_tokens=args.orchestrator_max_tokens,
+        reasoning_effort=args.reasoning_effort,
     )
 
 
