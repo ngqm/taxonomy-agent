@@ -91,7 +91,7 @@ optional keyword argument with a sensible default:
 | `category_focus` | `None` | Optional sentence describing what the categories should capture (e.g. "the reasoning strategy each chain of thought uses"). |
 | `concurrency` | `8` | Number of parallel judge calls. |
 | `pool_limit` | `None` | Cap the number of items used (handy for smoke tests); `None` uses all of them. |
-| `seed` | `42` | Seeds probe sampling for reproducibility; vary it for independent replicates. |
+| `seed` | `42` | Seeds probe/calibration sampling only; vary it for independent replicates. It does **not** make the taxonomy reproducible — the orchestrator runs at `temperature` 0.2 (and LLMs aren't bit-reproducible even at 0). |
 | `temperature` | `0.2` | Orchestrator sampling temperature. |
 | `orchestrator_max_tokens` | `None` | Cap on orchestrator output tokens per step; `None` uses the model's own default. |
 | `judge_max_tokens` | `300` | Max tokens per judge classification reply (label + rationale). Lower to trim cost on the O(N) pass; raise if rationales truncate. |
@@ -102,6 +102,8 @@ optional keyword argument with a sensible default:
 | `coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
 | `calibration_size` | `200` | With `finalize="embed"/"finetune"`, items to re-judge against the final taxonomy for training labels (`0` = probes only); each is an extra judge call. |
 | `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for `finalize="embed"`. |
+| `finetune_model` | `distilbert-base-uncased` | Base model for `finalize="finetune"`. |
+| `finetune_epochs` | `4` | Fine-tuning epochs for `finalize="finetune"`. |
 | `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
 | `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
 
@@ -231,6 +233,8 @@ Each run writes to its output directory:
 - `trace.jsonl` — every revise, classify, and novelty-proposal call
 - `taxonomy_state.json` — the working taxonomy, rewritten after each revision
 - `cost.json` — running spend, from OpenRouter's native usage cost
+- `meta.json` — run metadata: config (models, token/reasoning knobs, seed),
+  status, and final cost; written at start and updated on completion
 
 ## Cost
 
@@ -256,10 +260,13 @@ The evaluation harness reproduces the benchmark numbers:
 pip install -e ".[eval]"
 python -m taxonomy_agent.eval --corpus 20ng \
     --methods taxonomy_agent,bertopic,lda --seeds 42,43,44 \
+    --orchestrator deepseek/deepseek-v4-flash \
     --instruction "Identify the topic of each text."
 ```
 
 It writes `results.json` with purity, NMI, ARI, and cost per method and seed.
+Pass `--orchestrator deepseek/deepseek-v4-flash` to match the paper's cheap
+config; the CLI otherwise defaults the orchestrator to Claude Sonnet.
 
 ## Citation
 
