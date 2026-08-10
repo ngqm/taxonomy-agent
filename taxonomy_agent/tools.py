@@ -37,6 +37,11 @@ COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 # coerced/judge-error sentinels so classifier rows are never miscounted as either.
 CLASSIFIER_RATIONALE_PREFIX = "[classifier:"
 
+# Rationale stamped on the discovery-probe rows written when finalize="none"
+# (discovery only): the taxonomy is returned without labelling the full corpus,
+# and only the items already judged for free during discovery are recorded.
+DISCOVERY_PROBE_RATIONALE = "[discovery probe; corpus not fully labelled]"
+
 # finalize_classify labels the corpus one bounded batch of distinct items at a
 # time so peak memory stays flat as the corpus grows: a million-item run never
 # holds a million prompt strings (or reply strings) alive at once, only one
@@ -996,6 +1001,50 @@ def make_tools(items, run_id: str, output_dir: str,
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
         )
 
+    def _discovery_only_finalize(final_prompt: str) -> str:
+        """finalize_mode == "none": ship the discovered taxonomy WITHOUT the
+        O(N) full-corpus labelling pass. The items already judged for free
+        during discovery (the probes, kept in `state.probe_labels`) are written
+        to classifications.jsonl as a labelled sample; the rest of the corpus is
+        left unlabelled. Keeps the counts↔n_items invariant by reporting
+        n_items as the sample size, with the full corpus size under `labeling`."""
+        taxonomy = state.taxonomy
+        valid = {c["name"] for c in taxonomy} | {"other"}
+        open(classifications_jsonl, "w").close()
+        roll = _CountRollup()
+        n_sample = 0
+        with open(classifications_jsonl, "a") as f:
+            for iid, cat in state.probe_labels.items():
+                if cat not in valid:
+                    continue
+                it = corpus.get(iid)
+                if it is None:
+                    continue
+                roll.add(cat, DISCOVERY_PROBE_RATIONALE)
+                n_sample += 1
+                f.write(json.dumps({**it, "category": cat,
+                                    "rationale": DISCOVERY_PROBE_RATIONALE}) + "\n")
+        artifact = build_artifact_from_counts(
+            run_id, taxonomy, final_prompt, n_items=n_sample,
+            category_counts=roll.counts, n_coerced=roll.n_coerced,
+            n_judge_errors=roll.n_judge_errors)
+        artifact["labeling"] = {
+            "finalize": "none",
+            "labelled_corpus": False,
+            "n_corpus": len(corpus),
+            "n_sample": n_sample,
+        }
+        atomic_write_json(artifact_path, artifact)
+        state.finalized_at = taxonomy
+        return (
+            f"Wrote {artifact_path} (finalize=none — discovery only)\n"
+            f"Discovered {len(taxonomy)} categories; the corpus of {len(corpus)} "
+            f"items was NOT fully labelled.\n"
+            f"Recorded {n_sample} discovery-probe items as a labelled sample. "
+            f"Re-run with finalize=judge/embed/finetune to label every item.\n"
+            f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
+        )
+
     @tool
     def finalize_classify(final_prompt: str) -> str:
         """Have the judge label every item in the corpus against the current
@@ -1021,6 +1070,8 @@ def make_tools(items, run_id: str, output_dir: str,
             return (f"ERROR: finalize_classify already ran with this taxonomy. "
                     f"The artifact at {artifact_path} is up to date — stop here. "
                     f"If you genuinely want to relabel, revise the taxonomy first.")
+        if finalize_mode == "none":
+            return _discovery_only_finalize(final_prompt)
         if finalize_mode in ("embed", "finetune"):
             return _classifier_finalize(final_prompt)
         tax_str = _format_taxonomy(taxonomy)

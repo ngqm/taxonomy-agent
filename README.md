@@ -95,9 +95,10 @@ optional keyword argument with a sensible default:
 | `temperature` | `0.2` | Orchestrator sampling temperature. |
 | `orchestrator_max_tokens` | `None` | Cap on orchestrator output tokens per step; `None` uses the model's own default. |
 | `judge_max_tokens` | `300` | Max tokens per judge classification reply (label + rationale). Lower to trim cost on the O(N) pass; raise if rationales truncate. |
-| `reasoning_effort` | `None` | Reasoning effort for a reasoning-capable orchestrator (`low`/`medium`/`high`), forwarded as OpenRouter `reasoning.effort`. The judge stays a cheap non-reasoning labeller. |
+| `orchestrator_reasoning_effort` | `None` | Reasoning effort for a reasoning-capable orchestrator (`low`/`medium`/`high`), forwarded as OpenRouter `reasoning.effort`. |
+| `judge_reasoning_effort` | `None` | Same, for the judge. Leave `None` to keep the O(N) labelling pass cheap. |
 | `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
-| `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), or `"finetune"` (re-judge, then fine-tune a BERT-family model). See below. |
+| `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), `"finetune"` (re-judge, then fine-tune a BERT-family model), or `"none"` (discovery only — ship the taxonomy without labelling the corpus). See below. |
 | `coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
 | `calibration_size` | `200` | With `finalize="embed"/"finetune"`, items to re-judge against the final taxonomy for training labels (`0` = probes only); each is an extra judge call. |
 | `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for `finalize="embed"`. |
@@ -107,14 +108,15 @@ optional keyword argument with a sensible default:
 The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--min-iters`, `--threshold`, `--probe-size`, `--concurrency`, `--seed`,
 `--orchestrator`, `--judge`, `--size`, `--judge-max-tokens`,
-`--orchestrator-max-tokens`, `--reasoning-effort`; see `taxonomy run --help`).
+`--orchestrator-max-tokens`, `--orchestrator-reasoning-effort`,
+`--judge-reasoning-effort`, `--finalize none`; see `taxonomy run --help`).
 Run `help(run)` in Python for the full docstring.
 
 #### Scaling to large corpora (`finalize=`)
 
 Labeling every item with the judge is one LLM call per item — fine for
 thousands, costly for millions. The `finalize` argument picks how the corpus is
-labeled once discovery converges — three options:
+labeled once discovery converges — four options:
 
 1. **`finalize="judge"`** (default) — the LLM judge labels every item. O(N)
    calls; highest fidelity, highest cost.
@@ -123,6 +125,11 @@ labeled once discovery converges — three options:
    the low-confidence tail to the judge.
 3. **`finalize="finetune"`** — same, but **fine-tune a BERT-family model** on the
    re-judged sample instead of using centroids (a little more accurate, heavier).
+4. **`finalize="none"`** — **discovery only**: skip full-corpus labelling
+   entirely. You get the discovered taxonomy (categories + definitions) plus the
+   items already judged for free during discovery as a labelled sample, so you
+   pay only for discovery. Re-run later with one of the modes above (e.g.
+   `RunResult.from_dir(...)` then a fresh `run`) to label the whole corpus.
 
 ```python
 result = run(items, instruction, output_dir="out/",

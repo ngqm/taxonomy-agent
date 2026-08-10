@@ -398,7 +398,8 @@ def run(
     temperature: float = 0.2,
     orchestrator_max_tokens: int | None = None,
     judge_max_tokens: int = 300,
-    reasoning_effort: str | None = None,
+    orchestrator_reasoning_effort: str | None = None,
+    judge_reasoning_effort: str | None = None,
     prose_revise: bool = False,
     seed: int = 42,
     initial_taxonomy: list[dict] | None = None,
@@ -450,12 +451,13 @@ def run(
             rationale). Default 300. Lower it to trim cost/latency on the O(N)
             labelling pass; raise it if rationales are being truncated. Does not
             throttle category *proposals* (those keep a larger internal budget).
-        reasoning_effort: reasoning effort for the orchestrator on
-            reasoning-capable models, forwarded to OpenRouter as
-            `reasoning.effort` ("low", "medium", or "high"). None (default)
-            sends nothing, so the model's own default applies. The judge is
-            deliberately left as a cheap, non-reasoning labeller (like its fixed
-            temperature 0), so this steers the orchestrator only.
+        orchestrator_reasoning_effort, judge_reasoning_effort: reasoning effort
+            for each role independently on reasoning-capable models, forwarded to
+            OpenRouter as `reasoning.effort` ("low", "medium", or "high"). None
+            (default) sends nothing, so the model's own default applies. Set the
+            orchestrator's to think harder about the taxonomy; leave the judge's
+            None to keep the O(N) labelling pass cheap (raising it multiplies
+            per-item cost/latency).
         seed: seeds the probe-sampling and calibration RNG only. It does NOT
             make the discovered taxonomy reproducible: the orchestrator LLM runs
             at `temperature` (default 0.2) and is not bit-reproducible even at 0,
@@ -470,7 +472,11 @@ def run(
             corpora: "embed" labels by nearest class-mean on frozen embeddings
             (no training); "finetune" fine-tunes a BERT-family encoder end to end
             (heavier, benefits most from a larger calibration set). Both need the
-            `[scale]` extra.
+            `[scale]` extra. "none" skips full-corpus labelling entirely: it
+            ships the discovered taxonomy (categories + definitions) plus the
+            items already judged for free during discovery as a labelled sample,
+            so you pay only for discovery — re-run later with a labelling mode to
+            classify the whole corpus.
         coverage: with finalize="embed"/"finetune", the fraction of items
             to accept from the classifier (highest confidence first); the rest go
             to the judge. 0.85 keeps 85% cheap; 1.0 skips the judge entirely, 0.0
@@ -514,9 +520,9 @@ def run(
         raise ValueError(f"concurrency must be ≥ 1, got {concurrency}")
     if not 0.0 <= converge_below <= 1.0:
         raise ValueError(f"converge_below must be in [0, 1], got {converge_below}")
-    if finalize not in ("judge", "embed", "finetune"):
-        raise ValueError("finalize must be 'judge', 'embed', or 'finetune', got "
-                         f"{finalize!r}")
+    if finalize not in ("judge", "embed", "finetune", "none"):
+        raise ValueError("finalize must be 'judge', 'embed', 'finetune', or "
+                         f"'none', got {finalize!r}")
     if not 0.0 <= coverage <= 1.0:
         raise ValueError(
             f"coverage must be in [0, 1], got {coverage}")
@@ -528,10 +534,12 @@ def run(
                          f"int, got {orchestrator_max_tokens!r}")
     if judge_max_tokens < 1:
         raise ValueError(f"judge_max_tokens must be >= 1, got {judge_max_tokens}")
-    if reasoning_effort is not None and reasoning_effort not in (
-            "low", "medium", "high"):
-        raise ValueError("reasoning_effort must be None, 'low', 'medium', or "
-                         f"'high', got {reasoning_effort!r}")
+    for _name, _eff in (("orchestrator_reasoning_effort",
+                         orchestrator_reasoning_effort),
+                        ("judge_reasoning_effort", judge_reasoning_effort)):
+        if _eff is not None and _eff not in ("low", "medium", "high"):
+            raise ValueError(f"{_name} must be None, 'low', 'medium', or 'high', "
+                             f"got {_eff!r}")
 
     corpus = open_corpus(items, pool_limit)
     if len(corpus) == 0:
@@ -562,7 +570,8 @@ def run(
         "seed": seed,
         "orchestrator_max_tokens": orchestrator_max_tokens,
         "judge_max_tokens": judge_max_tokens,
-        "reasoning_effort": reasoning_effort,
+        "orchestrator_reasoning_effort": orchestrator_reasoning_effort,
+        "judge_reasoning_effort": judge_reasoning_effort,
         "status": "running",
     }
     atomic_write_json(meta_path, meta)
@@ -576,6 +585,7 @@ def run(
 
     judge = Judge(
         api_key, judge_model, base_url=base_url, usage_sink=cost.add_judge_usage,
+        reasoning_effort=judge_reasoning_effort,
     )
     tools, force_finalize = make_tools(
         corpus, run_id, output_dir, judge,
@@ -596,8 +606,8 @@ def run(
     # reasoning-capable orchestrators; omitted entirely when unset so
     # non-reasoning models are unaffected.
     extra_body: dict = {"usage": {"include": True}}
-    if reasoning_effort:
-        extra_body["reasoning"] = {"effort": reasoning_effort}
+    if orchestrator_reasoning_effort:
+        extra_body["reasoning"] = {"effort": orchestrator_reasoning_effort}
     llm = ChatOpenAI(
         model=orchestrator_model,
         api_key=api_key,

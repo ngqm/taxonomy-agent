@@ -142,13 +142,15 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--concurrency", type=int, default=8)
     p.add_argument("--seed", type=int, default=42,
                    help="RNG seed for reproducible probe sampling.")
-    p.add_argument("--finalize", choices=["judge", "embed", "finetune"],
+    p.add_argument("--finalize", choices=["judge", "embed", "finetune", "none"],
                    default="judge",
                    help="How to label the corpus: 'judge' (LLM per item), "
                         "'embed' (re-judge a sample, then embedding nearest-"
-                        "centroid for the confident majority), or 'finetune' "
-                        "(re-judge, then fine-tune a BERT-family model). 'embed'"
-                        " / 'finetune' need the [scale] extra.")
+                        "centroid for the confident majority), 'finetune' "
+                        "(re-judge, then fine-tune a BERT-family model), or "
+                        "'none' (discovery only — ship the taxonomy without "
+                        "labelling the full corpus). 'embed'/'finetune' need "
+                        "the [scale] extra.")
     p.add_argument("--coverage", type=float, default=0.85,
                    help="With --finalize embed/finetune, fraction of items to "
                         "accept from the classifier (rest go to the judge).")
@@ -162,10 +164,14 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--orchestrator-max-tokens", type=int, default=None,
                    help="Cap on orchestrator output tokens per step "
                         "(default: the model's own).")
-    p.add_argument("--reasoning-effort", choices=["low", "medium", "high"],
-                   default=None,
+    p.add_argument("--orchestrator-reasoning-effort",
+                   choices=["low", "medium", "high"], default=None,
                    help="Reasoning effort for a reasoning-capable orchestrator "
                         "(OpenRouter reasoning.effort). Default: unset.")
+    p.add_argument("--judge-reasoning-effort",
+                   choices=["low", "medium", "high"], default=None,
+                   help="Reasoning effort for a reasoning-capable judge. "
+                        "Default: unset (keeps the O(N) pass cheap).")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -208,7 +214,8 @@ def _cmd_run(argv: list[str]) -> None:
         calibration_size=args.calibration_size,
         judge_max_tokens=args.judge_max_tokens,
         orchestrator_max_tokens=args.orchestrator_max_tokens,
-        reasoning_effort=args.reasoning_effort,
+        orchestrator_reasoning_effort=args.orchestrator_reasoning_effort,
+        judge_reasoning_effort=args.judge_reasoning_effort,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -362,9 +369,14 @@ def _cmd_legacy(argv: list[str]) -> None:
     p.add_argument("--orchestrator-max-tokens", type=int,
                    default=cfg.get("orchestrator_max_tokens"),
                    help="Cap on orchestrator output tokens per step.")
-    p.add_argument("--reasoning-effort", choices=["low", "medium", "high"],
-                   default=cfg.get("reasoning_effort"),
+    p.add_argument("--orchestrator-reasoning-effort",
+                   choices=["low", "medium", "high"],
+                   default=cfg.get("orchestrator_reasoning_effort"),
                    help="Reasoning effort for a reasoning-capable orchestrator.")
+    p.add_argument("--judge-reasoning-effort",
+                   choices=["low", "medium", "high"],
+                   default=cfg.get("judge_reasoning_effort"),
+                   help="Reasoning effort for a reasoning-capable judge.")
 
     args = p.parse_args(argv)
 
@@ -403,7 +415,8 @@ def _cmd_legacy(argv: list[str]) -> None:
         seed=args.seed,
         judge_max_tokens=args.judge_max_tokens,
         orchestrator_max_tokens=args.orchestrator_max_tokens,
-        reasoning_effort=args.reasoning_effort,
+        orchestrator_reasoning_effort=args.orchestrator_reasoning_effort,
+        judge_reasoning_effort=args.judge_reasoning_effort,
     )
 
 

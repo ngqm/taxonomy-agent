@@ -297,3 +297,20 @@ def test_parallel_on_reply_fires_for_failures_too():
                  on_reply=lambda i, r: received.append((i, r)))
 
     assert sorted(received) == [(0, "ok"), (1, None)]
+
+
+def test_judge_forwards_reasoning_effort_in_payload():
+    j = Judge("k", "model", reasoning_effort="high")
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_ok_resp("x")) as post:
+        j.call("prompt")
+    body = _json.loads(post.call_args.kwargs["data"])
+    assert body["reasoning"] == {"effort": "high"}
+
+
+def test_judge_omits_reasoning_when_unset():
+    j = Judge("k", "model")
+    with patch("taxonomy_agent.judge.requests.post",
+               return_value=_ok_resp("x")) as post:
+        j.call("prompt")
+    assert "reasoning" not in _json.loads(post.call_args.kwargs["data"])

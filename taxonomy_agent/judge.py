@@ -46,28 +46,35 @@ class Judge:
 
     def __init__(self, api_key: str, model: str,
                  base_url: str = "https://openrouter.ai/api/v1",
-                 usage_sink: Callable[[dict], None] | None = None):
+                 usage_sink: Callable[[dict], None] | None = None,
+                 reasoning_effort: str | None = None):
         self.api_key = api_key
         self.model = model
         self.base_url = base_url
         self.usage_sink = usage_sink
+        self.reasoning_effort = reasoning_effort
 
     def _post(self, prompt: str, max_tokens: int, temperature: float):
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            # Ask OpenRouter to include the actual charge under usage.cost;
+            # cost.CostTracker prefers it over the static price table.
+            "usage": {"include": True},
+        }
+        # Steer a reasoning-capable judge model; omitted entirely when unset so
+        # non-reasoning models are unaffected.
+        if self.reasoning_effort:
+            payload["reasoning"] = {"effort": self.reasoning_effort}
         return requests.post(
             f"{self.base_url}/chat/completions",
             headers={
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
-            data=json.dumps({
-                "model": self.model,
-                "messages": [{"role": "user", "content": prompt}],
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                # Ask OpenRouter to include the actual charge under usage.cost;
-                # cost.CostTracker prefers it over the static price table.
-                "usage": {"include": True},
-            }),
+            data=json.dumps(payload),
             timeout=90,
         )
 

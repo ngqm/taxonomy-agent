@@ -632,3 +632,27 @@ def test_trace_records_revise_and_classify(items50, make_tool_set, tmp_path):
     kinds = [json.loads(l)["kind"] for l in trace_lines]
     assert "revise" in kinds
     assert "classify" in kinds
+
+
+# === finalize="none" (discovery only) ===
+
+def test_finalize_none_ships_taxonomy_without_full_labelling(
+        items50, make_tool_set, tmp_path):
+    """finalize='none' writes the taxonomy + the free discovery-probe sample,
+    and does NOT label the whole corpus."""
+    parallel = _ok_parallel('{"category": "a", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, parallel,
+                      finalize_mode="none", min_iterations=0)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["classify"].invoke({"item_ids": ["1", "2", "3"], "classify_prompt": "p"})
+    t["finalize"].invoke({"final_prompt": "p"})
+
+    art = json.load(open(tmp_path / "taxonomy.json"))
+    assert art["labeling"] == {"finalize": "none", "labelled_corpus": False,
+                               "n_corpus": 50, "n_sample": 3}
+    rows = [json.loads(l) for l in open(tmp_path / "classifications.jsonl")
+            if l.strip()]
+    assert len(rows) == 3 == art["n_items"]          # only the probed items
+    assert {r["id"] for r in rows} == {"1", "2", "3"}
+    assert all(r["category"] == "a" for r in rows)

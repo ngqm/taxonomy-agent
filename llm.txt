@@ -31,9 +31,11 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
 #   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
-#   --finalize {judge,embed,finetune} --calibration-size 200   # cheap labeling at scale
+#   --finalize {judge,embed,finetune,none} --calibration-size 200   # cheap labeling at scale
+#       ('none' = discovery only: ship the taxonomy, don't label the whole corpus)
 #   --judge-max-tokens 300 --orchestrator-max-tokens N   # per-role output-token caps
-#   --reasoning-effort {low,medium,high}   # reasoning effort for the orchestrator
+#   --orchestrator-reasoning-effort {low,medium,high}   # per-role reasoning effort
+#   --judge-reasoning-effort {low,medium,high}
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -84,7 +86,8 @@ result = run(
     min_iterations=3, converge_below=0.10, probe_size=20, size_hint="4-10",
     judge_max_tokens=300,           # per-judge-reply token cap (label + rationale)
     orchestrator_max_tokens=None,   # orchestrator step cap; None = model default
-    reasoning_effort=None,          # "low"/"medium"/"high" for a reasoning orchestrator
+    orchestrator_reasoning_effort=None,  # "low"/"medium"/"high" per role
+    judge_reasoning_effort=None,         # None keeps the O(N) judge pass cheap
 )
 result.definitions          # {category: definition}
 result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)
@@ -122,10 +125,13 @@ re-discovery. Returns a new `RunResult`; the original is untouched.
 
 ```python
 result = run(items, instruction, output_dir="out/",
-             finalize="finetune",           # "judge" (default) | "embed" | "finetune"
+             finalize="finetune",    # "judge" (default) | "embed" | "finetune" | "none"
              calibration_size=200,   # items re-judged vs the final taxonomy to train on
              coverage=0.85)          # keep top 85% by confidence, judge the rest
 ```
+`finalize="none"` is discovery only: it ships the taxonomy (categories +
+definitions) plus the discovery-probe items as a labelled sample, and does NOT
+label the full corpus — pay for discovery now, label later with another mode.
 Default `finalize="judge"` calls the LLM judge once per item — O(N). With
 `finalize="embed"` / `"finetune"`, after discovery a classifier is trained on a
 judge-labeled calibration set (the discovery probes plus a fresh re-judge

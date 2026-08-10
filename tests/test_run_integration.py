@@ -110,7 +110,8 @@ def test_run_validates_params(tmp_path):
     for bad in [dict(concurrency=0), dict(probe_size=0),
                 dict(max_iterations=0), dict(converge_below=1.5),
                 dict(judge_max_tokens=0), dict(orchestrator_max_tokens=0),
-                dict(reasoning_effort="ultra")]:
+                dict(orchestrator_reasoning_effort="ultra"),
+                dict(judge_reasoning_effort="ultra"), dict(finalize="bogus")]:
         with pytest.raises(ValueError):
             run(_items(), "x", str(tmp_path), api_key="fake", **bad)
 
