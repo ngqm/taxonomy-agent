@@ -69,7 +69,8 @@ into memory.
   category) and per-category counts. Does NOT embed per-item rows, so it stays
   small at any corpus size.
 - `classifications.jsonl` — the per-item labels + rationales, one row per item,
-  streamed during finalisation. The source of truth `RunResult` reads.
+  streamed during finalisation (plus a `categories` list per row under
+  `multi_label`). The source of truth `RunResult` reads.
 - `taxonomy_state.json`   — working taxonomy, rewritten after every revise (partial-progress safe)
 - `trace.jsonl`           — one row per tool call (novelties / revise / classify),
   with the unmatched rate (JSON field `dont_fit_rate`, kept for back-compat)

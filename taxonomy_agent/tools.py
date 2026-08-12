@@ -195,6 +195,13 @@ def _coerce_categories(parsed: Any, taxonomy: list[dict]) -> tuple[list[str], st
     return out, rat
 
 
+def _primary_label(categories: list[str]) -> str:
+    """The single 'primary' label for a multi-label result: the first applicable
+    category, or 'other' when nothing applies. One home for the empty→other rule,
+    so the per-item `category` field stays consistent across classify/finalize."""
+    return categories[0] if categories else "other"
+
+
 def is_coerced_rationale(rationale: str) -> bool:
     """True if `_coerce_category` stamped this rationale as an out-of-taxonomy
     (coerced) label. Single home for the sentinel-prefix check."""
@@ -853,7 +860,7 @@ def make_tools(items, run_id: str, output_dir: str,
                 if not cats:                    # matches no category = uncovered
                     n_other += 1
                 results.append({"item_id": it["id"],
-                                "category": cats[0] if cats else "other",
+                                "category": _primary_label(cats),
                                 "categories": cats, "rationale": rat[:400]})
             else:
                 cat, rat = _coerce_category(parsed, taxonomy)
@@ -1216,7 +1223,7 @@ def make_tools(items, run_id: str, output_dir: str,
                 continue
             if multi_label:
                 cats, _ = _coerce_categories(_parse_json_block(rep), state.taxonomy)
-                primary = cats[0] if cats else "other"
+                primary = _primary_label(cats)
                 n_other += (not cats)
             else:
                 primary, _ = _label_reply(rep, state.taxonomy)
@@ -1291,7 +1298,7 @@ def make_tools(items, run_id: str, output_dir: str,
                 if multi_label:
                     cats, rat = _coerce_categories(_parse_json_block(rep), taxonomy)
                     roll.add_multi(cats, rat, len(g))
-                    primary = cats[0] if cats else "other"
+                    primary = _primary_label(cats)
                     for i in g:
                         f.write(json.dumps({**corpus[i], "category": primary,
                                             "categories": cats, "rationale": rat}) + "\n")
