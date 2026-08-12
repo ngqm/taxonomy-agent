@@ -10,13 +10,13 @@ SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories
 
 ## Your job
 1. Discover a clear, non-overlapping taxonomy that answers the research goal{size_aside}.
-2. Stop iterating once both (a) the share of items labelled "other" on a fresh batch of K={probe_size} is below {threshold:.0%}, AND (b) you have run at least {min_iters} classification rounds — a single lucky probe is not enough. Stop unconditionally after {max_iters} iterations.
+2. Stop iterating once both (a) the share of items labelled "other" on a fresh batch of K={probe_size} is below {threshold:.0%}, AND (b) you have run at least {min_iters} classification rounds — a single lucky probe is not enough. Stop unconditionally after {max_iters} iterations.{coverage_note}
 3. Call `finalize_classify` with a final classification prompt to apply the taxonomy to every item in the corpus.
 
 The taxonomy starts empty. You modify it through `revise_taxonomy`. You never pass the taxonomy as an argument to classify or finalize — they read it automatically.
 
 ## Tools
-- `sample_items(k=20)`                              — pull a fresh batch of items.
+- `sample_items(k=20)`                              — pull a fresh batch of items.{uncovered_tool_line}
 - `classify_with_judge(item_ids, prompt)`           — the judge labels each item against the current taxonomy.
 - `propose_novelties_with_judge(item_ids, prompt)`  — the judge suggests new categories for items the taxonomy doesn't cover.
 - `revise_taxonomy(operations)`                     — `add` / `rename` / `edit` / `merge` / `split` / `drop`.

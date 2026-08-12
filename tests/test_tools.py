@@ -13,7 +13,8 @@ import pytest
 import random
 
 from taxonomy_agent.tools import (JUDGE_ERROR_RATIONALE,
-                                  REJECTION_SAMPLE_MIN_N, _coerce_category,
+                                  REJECTION_SAMPLE_MIN_N,
+                                  UNCOVERED_MAX_RESURFACE, _coerce_category,
                                   _rejection_sample_indices)
 
 
@@ -656,3 +657,128 @@ def test_finalize_none_ships_taxonomy_without_full_labelling(
     assert len(rows) == 3 == art["n_items"]          # only the probed items
     assert {r["id"] for r in rows} == {"1", "2", "3"}
     assert all(r["category"] == "a" for r in rows)
+
+
+# === sample_uncovered (coverage-steered sampling) ===
+
+def _add_cat_and_mark_other(t, ids):
+    """Add a category, then classify `ids` with an all-"other" judge so they
+    land in the frontier (probe_labels)."""
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["classify"].invoke({"item_ids": ids, "classify_prompt": "p"})
+
+
+def test_sample_uncovered_absent_under_uniform_default(items5, null_judge,
+                                                       make_tool_set):
+    """Default strategy exposes exactly the six original tools."""
+    t = make_tool_set(items5, *null_judge)
+    assert "uncovered" not in t
+    t2 = make_tool_set(items5, *null_judge, sample_strategy="uncovered")
+    assert "uncovered" in t2
+
+
+def test_sample_uncovered_surfaces_frontier(items50, make_tool_set):
+    other = _ok_parallel('{"category": "other", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, other,
+                      sample_strategy="uncovered")
+    _add_cat_and_mark_other(t, [str(i) for i in range(10)])
+    out = t["uncovered"].invoke({"k": 5})
+    ids = _ids_from_sample(out)
+    assert len(ids) == 5
+    # every returned id is a known-"other" item, none invented
+    assert set(ids).issubset({str(i) for i in range(10)})
+    assert "5 known-uncovered + 0 fresh" in out
+
+
+def test_sample_uncovered_falls_back_to_uniform_when_empty(items50, null_judge,
+                                                           make_tool_set):
+    t = make_tool_set(items50, *null_judge, sample_strategy="uncovered")
+    out = t["uncovered"].invoke({"k": 8})           # nothing probed yet
+    assert len(_ids_from_sample(out)) == 8
+    assert "0 known-uncovered + 8 fresh" in out
+
+
+def test_sample_uncovered_tops_up_when_short(items50, make_tool_set):
+    other = _ok_parallel('{"category": "other", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, other,
+                      sample_strategy="uncovered")
+    _add_cat_and_mark_other(t, ["0", "1", "2"])     # 3 frontier items
+    out = t["uncovered"].invoke({"k": 10})
+    assert "3 known-uncovered + 7 fresh" in out
+    assert len(_ids_from_sample(out)) == 10
+
+
+def test_sample_uncovered_caps_perennial_other(items50, make_tool_set):
+    other = _ok_parallel('{"category": "other", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, other,
+                      sample_strategy="uncovered")
+    _add_cat_and_mark_other(t, ["0"])
+    for _ in range(UNCOVERED_MAX_RESURFACE):
+        assert _ids_from_sample(t["uncovered"].invoke({"k": 1})) == ["0"]
+    # exhausted: no longer counted as frontier
+    assert "0 known-uncovered + 1 fresh" in t["uncovered"].invoke({"k": 1})
+
+
+# === coverage backstop (opt-in code-side convergence check) ===
+
+def test_coverage_backstop_refuses_while_uncovered(items50, make_tool_set,
+                                                   tmp_path):
+    other = _ok_parallel('{"category": "other", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, other,
+                      enforce_coverage=True, converge_below=0.1, probe_size=10)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "coverage check failed" in out
+    assert not os.path.exists(tmp_path / "taxonomy.json")   # nothing written
+
+
+def test_coverage_backstop_flags_when_budget_spent(items50, make_tool_set,
+                                                   tmp_path):
+    other = _ok_parallel('{"category": "other", "rationale": "r"}')
+    # max_iters=1 -> classify_budget = max(8, 3) = 8
+    t = make_tool_set(items50, lambda *a, **k: None, other, max_iters=1,
+                      enforce_coverage=True, converge_below=0.1, probe_size=5)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    for i in range(8):                              # exhaust the classify budget
+        t["classify"].invoke({"item_ids": [str(i)], "classify_prompt": "p"})
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "Wrote" in out                           # finalized despite low coverage
+    art = json.load(open(tmp_path / "taxonomy.json"))
+    assert art["low_coverage_rate"] == 1.0
+
+
+def test_coverage_backstop_off_by_default(items50, make_tool_set, tmp_path):
+    ok = _ok_parallel('{"category": "a", "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, ok)   # enforce_coverage=False
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    out = t["finalize"].invoke({"final_prompt": "p"})
+    assert "Wrote" in out
+    art = json.load(open(tmp_path / "taxonomy.json"))
+    assert "low_coverage_rate" not in art
+
+
+# === prompt wiring (placeholders empty unless opted in) ===
+
+def test_prompt_default_omits_new_bits():
+    from taxonomy_agent.prompts import SYSTEM_PROMPT_TEMPLATE
+    p = SYSTEM_PROMPT_TEMPLATE.format(
+        instruction="x", n_items=1, threshold=0.1, probe_size=20, max_iters=10,
+        min_iters=3, size_aside="", focus_bullet="", uncovered_tool_line="",
+        coverage_note="")
+    assert "sample_uncovered" not in p
+    assert "independent" not in p
+
+
+def test_prompt_uncovered_and_coverage_render():
+    from taxonomy_agent.prompts import SYSTEM_PROMPT_TEMPLATE
+    p = SYSTEM_PROMPT_TEMPLATE.format(
+        instruction="x", n_items=1, threshold=0.1, probe_size=20, max_iters=10,
+        min_iters=3, size_aside="", focus_bullet="",
+        uncovered_tool_line="\n- `sample_uncovered(k=20)` — pull uncovered items.",
+        coverage_note=" The system re-checks on its own independent probe.")
+    assert "sample_uncovered" in p
+    assert "independent probe" in p

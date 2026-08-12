@@ -67,6 +67,12 @@ VAL_LOW_FIDELITY = 0.80          # below this, warn that cheap labels are noisy
 # not O(n). Below it, the list is small enough that enumeration is simplest.
 REJECTION_SAMPLE_MIN_N = 100_000
 
+# `sample_uncovered` stops re-surfacing an item once it has been shown this many
+# times while still uncovered — a perennial "other" is likely genuine noise
+# (malformed row, off-axis outlier), not a missing category, so fixating on it
+# would starve the frontier of fresh items.
+UNCOVERED_MAX_RESURFACE = 3
+
 # The classification instruction used when the caller has none of its own — the
 # auto-finalize fallback and `refine()`'s re-classification. `finalize_classify`
 # receives the orchestrator's own prompt instead.
@@ -313,6 +319,15 @@ class _TaxonomyState:
     # restricting to the final-taxonomy version was measured to LOWER fidelity
     # (intermediate labels are mostly still correct; more examples beat recency).
     probe_labels: dict = field(default_factory=dict)
+    # Item id -> times `sample_uncovered` has surfaced it while still "other".
+    # Caps fixation on perennial misfits (see UNCOVERED_MAX_RESURFACE).
+    frontier_shown: dict = field(default_factory=dict)
+    # Set by the coverage backstop when it lets a finalize through despite a
+    # high unmatched rate (budget exhausted): the rate it measured, else None.
+    low_coverage: float | None = None
+    # force_finalize sets this so aborted-run recovery bypasses the coverage
+    # backstop (mirrors how it bypasses the min_iterations floor).
+    skip_coverage_check: bool = False
 
 
 _OpHandler = Callable[[list[dict], dict], tuple[list[dict], dict]]
@@ -552,11 +567,26 @@ def make_tools(items, run_id: str, output_dir: str,
                calibration_size: int = 0,
                finetune_model: str = "distilbert-base-uncased",
                finetune_epochs: int = 4,
-               classify_max_tokens: int = 300):
-    """Construct the six LangChain tools, sharing state via closure.
+               classify_max_tokens: int = 300,
+               sample_strategy: str = "uniform",
+               enforce_coverage: bool = False,
+               converge_below: float = 0.10,
+               probe_size: int = 20):
+    """Construct the discovery tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
     it through `revise_taxonomy` and reads it via `get_taxonomy`.
+
+    `sample_strategy="uncovered"` adds a seventh tool, `sample_uncovered`, that
+    preferentially surfaces items the taxonomy has not placed (past "other"
+    labels). The default "uniform" returns exactly the six original tools in the
+    original order, so an unchanged run reproduces prior behaviour byte-for-byte.
+
+    `enforce_coverage=True` turns `finalize_classify`'s stop rule into a code
+    check: it re-measures the unmatched rate on a fresh uniform-random probe
+    (independent of whatever the orchestrator chose to classify) and refuses to
+    finalize above `converge_below` while classify budget remains. `probe_size`
+    sizes that probe. Both default off so behaviour is unchanged.
 
     `min_iterations` is a floor on the number of `classify_with_judge` calls
     required before `finalize_classify` is allowed — guards against premature
@@ -605,13 +635,15 @@ def make_tools(items, run_id: str, output_dir: str,
                                      max_tokens=classify_max_tokens)
             yield from zip(chunk, replies)
 
-    @tool
-    def sample_items(k: int) -> str:
-        """Return K items from the corpus. Default K = 20.
+    def _draw_unseen(k: int) -> tuple[list[int], str]:
+        """Pick up to k corpus indices not handed out yet (uniform random),
+        marking them seen. Resets the history with a note when the unseen pool
+        is too small. The single uniform-draw primitive shared by sample_items,
+        sample_uncovered's top-up, and the coverage probe.
 
-        Items returned by earlier calls are not repeated until the corpus is
-        exhausted. At that point the history resets and the reply notes the
-        wraparound; subsequent batches will overlap with prior ones."""
+        Sample by index, not by scanning every item, so a file-backed corpus
+        only reads the rows it hands out — and on a huge corpus we draw by
+        rejection rather than materializing an n-length unseen list."""
         n = len(corpus)
         k = max(1, min(int(k), n))
         note = ""
@@ -619,19 +651,65 @@ def make_tools(items, run_id: str, output_dir: str,
             note = (f" (pool of {n} exhausted — sampling history reset; "
                     f"expect overlap with prior probes)")
             state.sampled_idx = set()
-        # Sample by index, not by scanning every item, so a file-backed corpus
-        # only reads the K rows it hands out — and on a huge corpus we draw by
-        # rejection rather than materializing an n-length unseen list.
         seen = state.sampled_idx
         chosen = _rejection_sample_indices(rng, n, k, seen.__contains__, len(seen))
         if chosen is None:
             chosen = rng.sample([i for i in range(n) if i not in seen], k)
         state.sampled_idx.update(chosen)
+        return chosen, note
+
+    @tool
+    def sample_items(k: int) -> str:
+        """Return K items from the corpus. Default K = 20.
+
+        Items returned by earlier calls are not repeated until the corpus is
+        exhausted. At that point the history resets and the reply notes the
+        wraparound; subsequent batches will overlap with prior ones."""
+        chosen, note = _draw_unseen(k)
         sampled = [corpus[i] for i in chosen]
         ids = [it["id"] for it in sampled]
         blocks = [_format_item(it, i) for i, it in enumerate(sampled, start=1)]
         return (
-            f"Sampled {k} items{note}.\n"
+            f"Sampled {len(chosen)} items{note}.\n"
+            f"item_ids = {json.dumps(ids)}\n\n"
+            + "\n\n".join(blocks)
+        )
+
+    @tool
+    def sample_uncovered(k: int) -> str:
+        """Return up to K items the taxonomy does not yet cover. Default K = 20.
+
+        Prefers items a prior `classify_with_judge` labelled "other", pooled
+        across ALL past probes (not just the last batch), then fills the rest
+        with fresh unseen items. Feed the result to
+        `propose_novelties_with_judge` to grow the taxonomy, then re-classify
+        the same ids after revising to confirm the new categories absorb them.
+
+        An item that stays "other" across several probes is dropped from the
+        pool as likely noise rather than re-shown forever."""
+        k = max(1, min(int(k), len(corpus)))
+        # Frontier = items last judged "other". probe_labels is last-write-wins,
+        # so anything since re-covered has already dropped out; we only skip
+        # perennial misfits (shown UNCOVERED_MAX_RESURFACE times, likely noise).
+        frontier = [iid for iid, lab in state.probe_labels.items()
+                    if lab == "other"
+                    and state.frontier_shown.get(iid, 0) < UNCOVERED_MAX_RESURFACE]
+        rng.shuffle(frontier)
+        frontier = frontier[:k]
+        for iid in frontier:
+            state.frontier_shown[iid] = state.frontier_shown.get(iid, 0) + 1
+        out = [it for it in (corpus.get(iid) for iid in frontier) if it is not None]
+        n_frontier = len(out)
+        note = ""
+        if n_frontier < k:
+            chosen, note = _draw_unseen(k - n_frontier)
+            out += [corpus[i] for i in chosen]
+        ids = [it["id"] for it in out]
+        blocks = [_format_item(it, i) for i, it in enumerate(out, start=1)]
+        return (
+            f"Sampled {len(out)} items "
+            f"({n_frontier} known-uncovered + {len(out) - n_frontier} fresh)"
+            f"{note}.\n"
             f"item_ids = {json.dumps(ids)}\n\n"
             + "\n\n".join(blocks)
         )
@@ -1045,6 +1123,26 @@ def make_tools(items, run_id: str, output_dir: str,
             f"category_counts={json.dumps(artifact['category_counts'], indent=2)}"
         )
 
+    def _coverage_ok() -> tuple[bool, float]:
+        """Re-measure convergence on a FRESH uniform-random probe, independent of
+        whatever the orchestrator chose to classify — so a steered discovery loop
+        cannot manufacture a stop signal by only classifying items it already
+        understands. Records the probe's labels as calibration (and as frontier
+        signal for `sample_uncovered`) and returns (converged, unmatched_rate)."""
+        chosen, _ = _draw_unseen(probe_size)
+        tax_str = _format_taxonomy(state.taxonomy)
+        hardened = DEFAULT_CLASSIFY_PROMPT.strip() + ESCAPE_HATCH_SUFFIX
+        n_other = n_scored = 0
+        for idx, rep in _judge_index_replies(chosen, tax_str, hardened):
+            if rep is None:
+                continue
+            cat, _rat = _label_reply(rep, state.taxonomy)
+            state.probe_labels[corpus.id_at(idx)] = cat
+            n_scored += 1
+            n_other += (cat == "other")
+        rate = (n_other / n_scored) if n_scored else 1.0
+        return rate <= converge_below, rate
+
     @tool
     def finalize_classify(final_prompt: str) -> str:
         """Have the judge label every item in the corpus against the current
@@ -1070,6 +1168,19 @@ def make_tools(items, run_id: str, output_dir: str,
             return (f"ERROR: finalize_classify already ran with this taxonomy. "
                     f"The artifact at {artifact_path} is up to date — stop here. "
                     f"If you genuinely want to relabel, revise the taxonomy first.")
+        # Coverage backstop (opt-in): verify convergence on an independent
+        # uniform probe the orchestrator does not control. Refuse while there is
+        # still budget to keep discovering; once the budget is spent, finalize
+        # anyway and record the shortfall so the artifact is honestly flagged.
+        if enforce_coverage and not state.skip_coverage_check:
+            ok, rate = _coverage_ok()
+            if not ok and state.classify_calls < classify_budget:
+                return (f"ERROR: coverage check failed — {rate:.0%} of a fresh "
+                        f"uniform-random probe was labelled \"other\" (threshold "
+                        f"{converge_below:.0%}). The taxonomy still misses items. "
+                        f"Sample more (use sample_uncovered), propose novelties, "
+                        f"revise, then finalize again.")
+            state.low_coverage = None if ok else rate
         if finalize_mode == "none":
             return _discovery_only_finalize(final_prompt)
         if finalize_mode in ("embed", "finetune"):
@@ -1103,6 +1214,9 @@ def make_tools(items, run_id: str, output_dir: str,
             run_id, taxonomy, final_prompt, n_items=len(corpus),
             category_counts=roll.counts, n_coerced=roll.n_coerced,
             n_judge_errors=roll.n_judge_errors)
+        # Backstop let this through above threshold (budget spent): flag it.
+        if state.low_coverage is not None:
+            artifact["low_coverage_rate"] = round(state.low_coverage, 3)
         atomic_write_json(artifact_path, artifact)
         # Snapshot the taxonomy that this artifact reflects. `_apply_ops`
         # always reassigns state.taxonomy to a fresh list of fresh dicts,
@@ -1169,6 +1283,10 @@ def make_tools(items, run_id: str, output_dir: str,
             return reused
 
         original_floor = state.classify_calls
+        # Recovery bypasses both the min_iterations floor and the coverage
+        # backstop — we are salvaging an aborted run, not optimising a healthy
+        # one, and must not refuse to write the artifact we already earned.
+        state.skip_coverage_check = True
         try:
             # Force the floor check to pass by temporarily reporting we have
             # already met it. (state is a closure; finalize_classify reads it.)
@@ -1176,11 +1294,17 @@ def make_tools(items, run_id: str, output_dir: str,
             finalize_classify.invoke(DEFAULT_CLASSIFY_PROMPT)
         finally:
             state.classify_calls = original_floor
+            state.skip_coverage_check = False
         if not os.path.exists(artifact_path):
             return None
         with open(artifact_path) as f:
             return json.load(f)
 
-    return ([sample_items, get_taxonomy, revise_taxonomy,
-            classify_with_judge, propose_novelties_with_judge, finalize_classify],
-            force_finalize_with_default_prompt)
+    discovery_tools = [sample_items, get_taxonomy, revise_taxonomy,
+                       classify_with_judge, propose_novelties_with_judge,
+                       finalize_classify]
+    # Keep the default tool set (and its order) byte-identical so an unchanged
+    # run reproduces prior behaviour; only the opt-in strategy adds the 7th tool.
+    if sample_strategy == "uncovered":
+        discovery_tools.append(sample_uncovered)
+    return (discovery_tools, force_finalize_with_default_prompt)

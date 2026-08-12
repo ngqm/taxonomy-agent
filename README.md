@@ -104,6 +104,8 @@ optional keyword argument with a sensible default:
 | `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for `finalize="embed"`. |
 | `finetune_model` | `distilbert-base-uncased` | Base model for `finalize="finetune"`. |
 | `finetune_epochs` | `4` | Fine-tuning epochs for `finalize="finetune"`. |
+| `sample_strategy` | `"uniform"` | `"uncovered"` gives discovery a `sample_uncovered` tool that resamples items the taxonomy has not placed (its own `"other"` labels, not embedding distance, so it stays on the goal's axis) instead of drawing purely at random. `"uniform"` reproduces prior behaviour exactly. |
+| `enforce_coverage` | `False` | Turn the stop rule into a code check: re-measure the unmatched rate on a fresh uniform probe `finalize_classify` controls, refuse above `converge_below` while budget remains, then finalize and flag `low_coverage_rate`. Pair with `sample_strategy="uncovered"`. |
 | `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
 | `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
 
@@ -111,7 +113,8 @@ The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--min-iters`, `--threshold`, `--probe-size`, `--concurrency`, `--seed`,
 `--orchestrator`, `--judge`, `--size`, `--judge-max-tokens`,
 `--orchestrator-max-tokens`, `--orchestrator-reasoning-effort`,
-`--judge-reasoning-effort`, `--finalize none`; see `taxonomy run --help`).
+`--judge-reasoning-effort`, `--finalize none`, `--sample-strategy uncovered`,
+`--enforce-coverage`; see `taxonomy run --help`).
 Run `help(run)` in Python for the full docstring.
 
 #### Scaling to large corpora (`finalize=`)

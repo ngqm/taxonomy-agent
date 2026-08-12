@@ -48,7 +48,10 @@ def make_tool_set(tmp_path):
     def _make(items, judge_call, judge_parallel, **kw):
         # make_tools takes a judge object with .call/.parallel; wrap the stubs.
         judge = SimpleNamespace(call=judge_call, parallel=judge_parallel)
-        names = ["sample", "get", "revise", "classify", "propose", "finalize"]
+        # 7th name maps sample_uncovered when sample_strategy="uncovered"; with
+        # the default 6-tool list, zip() simply stops at "finalize".
+        names = ["sample", "get", "revise", "classify", "propose", "finalize",
+                 "uncovered"]
         tool_list, _force_finalize = make_tools(
             items, "run-test", str(tmp_path), judge, **kw,
         )

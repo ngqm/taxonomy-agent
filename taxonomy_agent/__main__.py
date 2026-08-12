@@ -172,6 +172,13 @@ def _cmd_run(argv: list[str]) -> None:
                    choices=["low", "medium", "high"], default=None,
                    help="Reasoning effort for a reasoning-capable judge. "
                         "Default: unset (keeps the O(N) pass cheap).")
+    p.add_argument("--sample-strategy", choices=["uniform", "uncovered"],
+                   default="uniform",
+                   help="'uncovered' lets discovery preferentially resample "
+                        "items the taxonomy has not placed. Default 'uniform'.")
+    p.add_argument("--enforce-coverage", action="store_true",
+                   help="Verify convergence on an independent uniform probe at "
+                        "finalize (code-side backstop). Default off.")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -216,6 +223,8 @@ def _cmd_run(argv: list[str]) -> None:
         orchestrator_max_tokens=args.orchestrator_max_tokens,
         orchestrator_reasoning_effort=args.orchestrator_reasoning_effort,
         judge_reasoning_effort=args.judge_reasoning_effort,
+        sample_strategy=args.sample_strategy,
+        enforce_coverage=args.enforce_coverage,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -377,6 +386,14 @@ def _cmd_legacy(argv: list[str]) -> None:
                    choices=["low", "medium", "high"],
                    default=cfg.get("judge_reasoning_effort"),
                    help="Reasoning effort for a reasoning-capable judge.")
+    p.add_argument("--sample-strategy", choices=["uniform", "uncovered"],
+                   default=cfg.get("sample_strategy", "uniform"),
+                   help="'uncovered' preferentially resamples items the "
+                        "taxonomy has not placed. Default 'uniform'.")
+    p.add_argument("--enforce-coverage", action="store_true",
+                   default=cfg.get("enforce_coverage", False),
+                   help="Code-side convergence backstop on an independent "
+                        "uniform probe at finalize. Default off.")
 
     args = p.parse_args(argv)
 
@@ -417,6 +434,8 @@ def _cmd_legacy(argv: list[str]) -> None:
         orchestrator_max_tokens=args.orchestrator_max_tokens,
         orchestrator_reasoning_effort=args.orchestrator_reasoning_effort,
         judge_reasoning_effort=args.judge_reasoning_effort,
+        sample_strategy=args.sample_strategy,
+        enforce_coverage=args.enforce_coverage,
     )
 
 

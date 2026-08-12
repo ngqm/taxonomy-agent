@@ -36,6 +36,8 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --judge-max-tokens 300 --orchestrator-max-tokens N   # per-role output-token caps
 #   --orchestrator-reasoning-effort {low,medium,high}   # per-role reasoning effort
 #   --judge-reasoning-effort {low,medium,high}
+#   --sample-strategy {uniform,uncovered}   # 'uncovered' resamples what the taxonomy misses
+#   --enforce-coverage                       # code-side convergence check on an independent probe
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -88,6 +90,8 @@ result = run(
     orchestrator_max_tokens=None,   # orchestrator step cap; None = model default
     orchestrator_reasoning_effort=None,  # "low"/"medium"/"high" per role
     judge_reasoning_effort=None,         # None keeps the O(N) judge pass cheap
+    sample_strategy="uniform",      # "uncovered" resamples items the taxonomy misses
+    enforce_coverage=False,         # code-side convergence backstop at finalize
 )
 result.definitions          # {category: definition}
 result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)

@@ -409,6 +409,8 @@ def run(
     calibration_size: int = 200,
     finetune_model: str = "distilbert-base-uncased",
     finetune_epochs: int = 4,
+    sample_strategy: str = "uniform",
+    enforce_coverage: bool = False,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -488,6 +490,19 @@ def run(
             use only the probes. Each re-judged item is one extra judge call.
         finetune_model: base model id for finalize="finetune".
         finetune_epochs: fine-tuning epochs for finalize="finetune".
+        sample_strategy: "uniform" (default) or "uncovered". "uncovered" gives
+            the orchestrator an extra `sample_uncovered` tool that surfaces items
+            the taxonomy has not placed (past "other" labels) instead of drawing
+            purely at random, so judge calls concentrate on the frontier. The
+            frontier signal is the judge's own "other" labels, not embedding
+            distance, so it stays aligned with the goal instruction's axis.
+            "uniform" reproduces prior behaviour exactly.
+        enforce_coverage: when True, `finalize_classify` verifies convergence on
+            a fresh uniform-random probe it controls (not the orchestrator's
+            possibly-steered batch) and refuses to finalize above `converge_below`
+            while discovery budget remains; once budget is spent it finalizes and
+            flags `low_coverage_rate` in the artifact. Default False (prompt-only
+            stop rule, unchanged behaviour). Pair with sample_strategy="uncovered".
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -523,6 +538,9 @@ def run(
     if finalize not in ("judge", "embed", "finetune", "none"):
         raise ValueError("finalize must be 'judge', 'embed', 'finetune', or "
                          f"'none', got {finalize!r}")
+    if sample_strategy not in ("uniform", "uncovered"):
+        raise ValueError("sample_strategy must be 'uniform' or 'uncovered', "
+                         f"got {sample_strategy!r}")
     if not 0.0 <= coverage <= 1.0:
         raise ValueError(
             f"coverage must be in [0, 1], got {coverage}")
@@ -572,6 +590,8 @@ def run(
         "judge_max_tokens": judge_max_tokens,
         "orchestrator_reasoning_effort": orchestrator_reasoning_effort,
         "judge_reasoning_effort": judge_reasoning_effort,
+        "sample_strategy": sample_strategy,
+        "enforce_coverage": enforce_coverage,
         "status": "running",
     }
     atomic_write_json(meta_path, meta)
@@ -598,6 +618,10 @@ def run(
         finetune_model=finetune_model,
         finetune_epochs=finetune_epochs,
         classify_max_tokens=judge_max_tokens,
+        sample_strategy=sample_strategy,
+        enforce_coverage=enforce_coverage,
+        converge_below=converge_below,
+        probe_size=probe_size,
     )
 
     # Forward `usage: {include: true}` so OpenRouter returns the actual charge
@@ -625,6 +649,20 @@ def run(
         if category_focus and category_focus.strip()
         else ""
     )
+    # Both default to "" so the uniform, backstop-off prompt is byte-identical
+    # to the pre-feature template (preserves eval reproducibility).
+    uncovered_tool_line = (
+        "\n- `sample_uncovered(k=20)`                          "
+        "— pull items the taxonomy does not yet cover (past \"other\" items) "
+        "plus fresh ones; prefer it once categories exist."
+        if sample_strategy == "uncovered" else ""
+    )
+    coverage_note = (
+        " The system re-checks the \"other\" share on its own independent "
+        "uniform probe when you finalize, so sampling selectively does not "
+        "change when you are allowed to stop."
+        if enforce_coverage else ""
+    )
     sys_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         instruction=instruction.strip(),
         n_items=len(corpus),
@@ -634,6 +672,8 @@ def run(
         min_iters=min_iterations,
         size_aside=size_aside,
         focus_bullet=focus_bullet,
+        uncovered_tool_line=uncovered_tool_line,
+        coverage_note=coverage_note,
     )
 
     agent = create_react_agent(llm, tools, prompt=sys_prompt)
