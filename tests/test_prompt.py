@@ -9,6 +9,8 @@ def _render(**overrides) -> str:
         instruction="X", n_items=10, threshold=0.10, probe_size=20,
         max_iters=10, min_iters=3, size_aside="", focus_bullet="",
         uncovered_tool_line="", coverage_note="",
+        reply_format='{"category": <name | "other">, "rationale": <...>}',
+        overlap_clause=", non-overlapping",
     )
     base.update(overrides)
     return SYSTEM_PROMPT_TEMPLATE.format(**base)

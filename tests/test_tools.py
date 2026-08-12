@@ -14,8 +14,9 @@ import random
 
 from taxonomy_agent.tools import (JUDGE_ERROR_RATIONALE,
                                   REJECTION_SAMPLE_MIN_N,
-                                  UNCOVERED_MAX_RESURFACE, _coerce_category,
-                                  _rejection_sample_indices)
+                                  UNCOVERED_MAX_RESURFACE, _CountRollup,
+                                  _coerce_categories, _coerce_category,
+                                  _rejection_sample_indices, is_coerced_rationale)
 
 
 def _ids_from_sample(out: str) -> list[str]:
@@ -768,7 +769,8 @@ def test_prompt_default_omits_new_bits():
     p = SYSTEM_PROMPT_TEMPLATE.format(
         instruction="x", n_items=1, threshold=0.1, probe_size=20, max_iters=10,
         min_iters=3, size_aside="", focus_bullet="", uncovered_tool_line="",
-        coverage_note="")
+        coverage_note="", reply_format='{"category": <name>}',
+        overlap_clause=", non-overlapping")
     assert "sample_uncovered" not in p
     assert "independent" not in p
 
@@ -779,6 +781,117 @@ def test_prompt_uncovered_and_coverage_render():
         instruction="x", n_items=1, threshold=0.1, probe_size=20, max_iters=10,
         min_iters=3, size_aside="", focus_bullet="",
         uncovered_tool_line="\n- `sample_uncovered(k=20)` — pull uncovered items.",
-        coverage_note=" The system re-checks on its own independent probe.")
+        coverage_note=" The system re-checks on its own independent probe.",
+        reply_format='{"category": <name>}', overlap_clause=", non-overlapping")
     assert "sample_uncovered" in p
     assert "independent probe" in p
+
+
+# === multi-label ===
+
+_MTAX = [{"name": "a", "description": "d"}, {"name": "b", "description": "d"}]
+
+
+def test_coerce_categories_canonicalizes_dedupes_drops_invented():
+    cats, rat = _coerce_categories(
+        {"categories": ["a", "B", "a", "zzz", "other"], "rationale": "r"}, _MTAX)
+    assert cats == ["a", "b"]          # case-folded, deduped; invented + other gone
+    assert rat == "r"
+
+
+def test_coerce_categories_empty_when_none_apply():
+    cats, _ = _coerce_categories({"categories": [], "rationale": "r"}, _MTAX)
+    assert cats == []
+
+
+def test_coerce_categories_all_invented_flags_coerced():
+    cats, rat = _coerce_categories({"categories": ["zzz"], "rationale": "r"}, _MTAX)
+    assert cats == [] and is_coerced_rationale(rat)
+
+
+def test_coerce_categories_falls_back_to_single_category_field():
+    cats, _ = _coerce_categories({"category": "a", "rationale": "r"}, _MTAX)
+    assert cats == ["a"]
+
+
+def test_countrollup_add_multi_counts_each_category():
+    roll = _CountRollup()
+    roll.add_multi(["a", "b"], "r", 2)
+    roll.add_multi([], "r", 1)          # empty -> other
+    assert roll.counts == {"a": 2, "b": 2, "other": 1}
+
+
+def _add_ab(t):
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"},
+        {"op": "add", "name": "b", "description": "d"}]})
+
+
+def test_classify_multi_label_returns_list_and_primary(items50, make_tool_set):
+    multi = _ok_parallel('{"categories": ["a", "b"], "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, multi, multi_label=True)
+    _add_ab(t)
+    out = json.loads(t["classify"].invoke(
+        {"item_ids": ["0", "1"], "classify_prompt": "p"}))
+    assert out["dont_fit_rate"] == 0.0
+    r = out["results"][0]
+    assert r["categories"] == ["a", "b"]
+    assert r["category"] == "a"         # primary = first applicable
+
+
+def test_classify_multi_label_empty_is_uncovered(items50, make_tool_set):
+    empty = _ok_parallel('{"categories": [], "rationale": "r"}')
+    t = make_tool_set(items50, lambda *a, **k: None, empty, multi_label=True)
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    out = json.loads(t["classify"].invoke(
+        {"item_ids": ["0"], "classify_prompt": "p"}))
+    assert out["dont_fit_rate"] == 1.0
+    assert out["results"][0]["category"] == "other"
+    assert out["results"][0]["categories"] == []
+
+
+def test_finalize_multi_label_writes_lists_and_per_category_counts(
+        items5, make_tool_set, tmp_path):
+    multi = _ok_parallel('{"categories": ["a", "b"], "rationale": "r"}')
+    t = make_tool_set(items5, lambda *a, **k: None, multi, multi_label=True)
+    _add_ab(t)
+    t["finalize"].invoke({"final_prompt": "p"})
+    art = json.load(open(tmp_path / "taxonomy.json"))
+    assert art["category_counts"] == {"a": 5, "b": 5}   # each item in both
+    assert art["n_items"] == 5
+    rows = [json.loads(l) for l in open(tmp_path / "classifications.jsonl")
+            if l.strip()]
+    assert len(rows) == 5
+    assert all(r["categories"] == ["a", "b"] and r["category"] == "a"
+               for r in rows)
+
+
+def test_single_label_finalize_has_no_categories_field(items5, make_tool_set,
+                                                       tmp_path):
+    """Default single-label rows stay exactly as before (no `categories` key)."""
+    ok = _ok_parallel('{"category": "a", "rationale": "r"}')
+    t = make_tool_set(items5, lambda *a, **k: None, ok)   # multi_label default False
+    t["revise"].invoke({"operations": [
+        {"op": "add", "name": "a", "description": "d"}]})
+    t["finalize"].invoke({"final_prompt": "p"})
+    rows = [json.loads(l) for l in open(tmp_path / "classifications.jsonl")
+            if l.strip()]
+    assert rows and all("categories" not in r for r in rows)
+
+
+def test_runresult_multi_label_dataframe_and_csv(items5, make_tool_set, tmp_path):
+    from taxonomy_agent import RunResult
+    multi = _ok_parallel('{"categories": ["a", "b"], "rationale": "r"}')
+    t = make_tool_set(items5, lambda *a, **k: None, multi, multi_label=True)
+    _add_ab(t)
+    t["finalize"].invoke({"final_prompt": "p"})
+    res = RunResult.from_dir(tmp_path)
+    df = res.to_dataframe()
+    assert "categories" in df.columns
+    assert list(df.iloc[0]["categories"]) == ["a", "b"]
+    assert df.iloc[0]["category"] == "a"
+    import csv as _csv
+    p = res.save_csv(str(tmp_path / "labels.csv"))
+    csv_rows = list(_csv.DictReader(open(p)))
+    assert csv_rows[0]["categories"] == "a; b"

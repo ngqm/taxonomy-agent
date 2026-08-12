@@ -111,7 +111,10 @@ def test_run_validates_params(tmp_path):
                 dict(max_iterations=0), dict(converge_below=1.5),
                 dict(judge_max_tokens=0), dict(orchestrator_max_tokens=0),
                 dict(orchestrator_reasoning_effort="ultra"),
-                dict(judge_reasoning_effort="ultra"), dict(finalize="bogus")]:
+                dict(judge_reasoning_effort="ultra"), dict(finalize="bogus"),
+                dict(sample_strategy="bogus"),
+                dict(multi_label=True, finalize="embed"),
+                dict(multi_label=True, finalize="finetune")]:
         with pytest.raises(ValueError):
             run(_items(), "x", str(tmp_path), api_key="fake", **bad)
 

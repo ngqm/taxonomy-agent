@@ -22,6 +22,14 @@ ESCAPE_HATCH_SUFFIX = (
     "the literal string `other`."
 )
 
+# Multi-label variant: the judge returns every applicable category, or [].
+ESCAPE_HATCH_SUFFIX_MULTI = (
+    "\n\nIMPORTANT: Reply with a JSON array `\"categories\"` listing EVERY listed "
+    "category that applies to this item; if none applies, reply with "
+    "`\"categories\": []`. Do not invent names — use only exact names from the "
+    "listed taxonomy."
+)
+
 # Sentinel rationale prefix for items where the judge call itself failed
 # (network/HTTP/timeout after retry). These are NOT genuine misfits — they
 # must be excluded from the unmatched rate, not folded into "other".
@@ -80,6 +88,14 @@ DEFAULT_CLASSIFY_PROMPT = (
     "Pick the single category from the list that best describes the item. "
     "Reply only with a JSON object: "
     "{\"category\": <name or \"other\">, \"rationale\": <one or two sentences>}."
+)
+
+# Multi-label default: every applicable category, or [] if none fit.
+DEFAULT_CLASSIFY_PROMPT_MULTI = (
+    "List every category from the list that applies to the item. "
+    "Reply only with a JSON object: "
+    "{\"categories\": [<names, or empty if none apply>], "
+    "\"rationale\": <one or two sentences>}."
 )
 
 
@@ -147,6 +163,36 @@ def _coerce_category(parsed: Any, taxonomy: list[dict]) -> tuple[str, str]:
     if raw.lower() == "other":
         return "other", rat
     return "other", f"{COERCED_RATIONALE_PREFIX} '{raw}'] {rat}"
+
+
+def _coerce_categories(parsed: Any, taxonomy: list[dict]) -> tuple[list[str], str]:
+    """Multi-label counterpart of `_coerce_category`. Reads a `categories` list
+    (falling back to a single `category` for robustness), keeps only exact
+    taxonomy names (case-insensitive, de-duplicated, order preserved), and drops
+    `other` and invented labels. Returns (categories, rationale); an empty list
+    means the item fits no category. If the judge named only invented labels, the
+    rationale is stamped coerced so the count of misfits stays honest."""
+    lookup = {c["name"].lower(): c["name"] for c in taxonomy}
+    if not isinstance(parsed, dict):
+        return [], "[unparseable judge reply]"
+    rat = str(parsed.get("rationale", ""))
+    raw = parsed.get("categories")
+    if not isinstance(raw, list):
+        one = parsed.get("category")
+        raw = [one] if one is not None else []
+    out: list[str] = []
+    saw_invented = False
+    for r in raw:
+        name = str(r).strip()
+        canon = lookup.get(name.lower())
+        if canon is not None:
+            if canon not in out:
+                out.append(canon)
+        elif name and name.lower() != "other":
+            saw_invented = True
+    if not out and saw_invented:
+        return [], f"{COERCED_RATIONALE_PREFIX} '{raw}'] {rat}"
+    return out, rat
 
 
 def is_coerced_rationale(rationale: str) -> bool:
@@ -229,6 +275,20 @@ class _CountRollup:
 
     def add(self, category: str, rationale: str, n: int = 1) -> None:
         self.counts[category] = self.counts.get(category, 0) + n
+        if rationale == JUDGE_ERROR_RATIONALE:
+            self.n_judge_errors += n
+        elif is_coerced_rationale(rationale):
+            self.n_coerced += n
+
+    def add_multi(self, categories: list[str], rationale: str, n: int = 1) -> None:
+        """Multi-label count: increment every assigned category (or `other` when
+        the list is empty). Coerced / judge-error sentinels count once per item,
+        so category_counts may exceed n_items but n_coerced/n_judge_errors do not."""
+        if categories:
+            for c in categories:
+                self.counts[c] = self.counts.get(c, 0) + n
+        else:
+            self.counts["other"] = self.counts.get("other", 0) + n
         if rationale == JUDGE_ERROR_RATIONALE:
             self.n_judge_errors += n
         elif is_coerced_rationale(rationale):
@@ -571,7 +631,8 @@ def make_tools(items, run_id: str, output_dir: str,
                sample_strategy: str = "uniform",
                enforce_coverage: bool = False,
                converge_below: float = 0.10,
-               probe_size: int = 20):
+               probe_size: int = 20,
+               multi_label: bool = False):
     """Construct the discovery tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -766,7 +827,8 @@ def make_tools(items, run_id: str, output_dir: str,
             return "ERROR: taxonomy is empty. Call revise_taxonomy(add ...) first."
         state.classify_calls += 1
         tax_str = _format_taxonomy(taxonomy)
-        hardened = classify_prompt.strip() + ESCAPE_HATCH_SUFFIX
+        suffix = ESCAPE_HATCH_SUFFIX_MULTI if multi_label else ESCAPE_HATCH_SUFFIX
+        hardened = classify_prompt.strip() + suffix
         prompts = [build_classify_prompt(hardened, tax_str, it) for it in sel]
         replies = judge.parallel(prompts, concurrency=concurrency,
                                  max_tokens=classify_max_tokens)
@@ -777,16 +839,30 @@ def make_tools(items, run_id: str, output_dir: str,
         for it, rep in zip(sel, replies):
             if rep is None:
                 n_judge_errors += 1
-                results.append({"item_id": it["id"], "category": "other",
-                                "rationale": JUDGE_ERROR_RATIONALE})
+                row = {"item_id": it["id"], "category": "other",
+                       "rationale": JUDGE_ERROR_RATIONALE}
+                if multi_label:
+                    row["categories"] = []
+                results.append(row)
                 continue
             parsed = _parse_json_block(rep)
-            cat, rat = _coerce_category(parsed, taxonomy)
-            if is_coerced_rationale(rat):
-                n_coerced += 1
-            if cat == "other":
-                n_other += 1
-            results.append({"item_id": it["id"], "category": cat, "rationale": rat[:400]})
+            if multi_label:
+                cats, rat = _coerce_categories(parsed, taxonomy)
+                if is_coerced_rationale(rat):
+                    n_coerced += 1
+                if not cats:                    # matches no category = uncovered
+                    n_other += 1
+                results.append({"item_id": it["id"],
+                                "category": cats[0] if cats else "other",
+                                "categories": cats, "rationale": rat[:400]})
+            else:
+                cat, rat = _coerce_category(parsed, taxonomy)
+                if is_coerced_rationale(rat):
+                    n_coerced += 1
+                if cat == "other":
+                    n_other += 1
+                results.append({"item_id": it["id"], "category": cat,
+                                "rationale": rat[:400]})
         n_scored = len(sel) - n_judge_errors
         # Keep each probe's judge label as free calibration for a classifier
         # finalize (skip failed calls). Labels are against the taxonomy at this
@@ -1131,15 +1207,22 @@ def make_tools(items, run_id: str, output_dir: str,
         signal for `sample_uncovered`) and returns (converged, unmatched_rate)."""
         chosen, _ = _draw_unseen(probe_size)
         tax_str = _format_taxonomy(state.taxonomy)
-        hardened = DEFAULT_CLASSIFY_PROMPT.strip() + ESCAPE_HATCH_SUFFIX
+        prompt = DEFAULT_CLASSIFY_PROMPT_MULTI if multi_label else DEFAULT_CLASSIFY_PROMPT
+        suffix = ESCAPE_HATCH_SUFFIX_MULTI if multi_label else ESCAPE_HATCH_SUFFIX
+        hardened = prompt.strip() + suffix
         n_other = n_scored = 0
         for idx, rep in _judge_index_replies(chosen, tax_str, hardened):
             if rep is None:
                 continue
-            cat, _rat = _label_reply(rep, state.taxonomy)
-            state.probe_labels[corpus.id_at(idx)] = cat
+            if multi_label:
+                cats, _ = _coerce_categories(_parse_json_block(rep), state.taxonomy)
+                primary = cats[0] if cats else "other"
+                n_other += (not cats)
+            else:
+                primary, _ = _label_reply(rep, state.taxonomy)
+                n_other += (primary == "other")
+            state.probe_labels[corpus.id_at(idx)] = primary
             n_scored += 1
-            n_other += (cat == "other")
         rate = (n_other / n_scored) if n_scored else 1.0
         return rate <= converge_below, rate
 
@@ -1186,7 +1269,8 @@ def make_tools(items, run_id: str, output_dir: str,
         if finalize_mode in ("embed", "finetune"):
             return _classifier_finalize(final_prompt)
         tax_str = _format_taxonomy(taxonomy)
-        hardened = final_prompt.strip() + ESCAPE_HATCH_SUFFIX
+        suffix = ESCAPE_HATCH_SUFFIX_MULTI if multi_label else ESCAPE_HATCH_SUFFIX
+        hardened = final_prompt.strip() + suffix
 
         # Deduplicate by item content: identical items get the same label, so
         # the judge is paid once per distinct item instead of once per duplicate.
@@ -1203,12 +1287,20 @@ def make_tools(items, run_id: str, output_dir: str,
         with open(classifications_jsonl, "a") as f:
             for rep_i, rep in _judge_index_replies(list(rep_to_group),
                                                    tax_str, hardened):
-                cat, rat = _label_reply(rep, taxonomy)
                 g = rep_to_group[rep_i]
-                roll.add(cat, rat, len(g))
-                for i in g:
-                    f.write(json.dumps(
-                        {**corpus[i], "category": cat, "rationale": rat}) + "\n")
+                if multi_label:
+                    cats, rat = _coerce_categories(_parse_json_block(rep), taxonomy)
+                    roll.add_multi(cats, rat, len(g))
+                    primary = cats[0] if cats else "other"
+                    for i in g:
+                        f.write(json.dumps({**corpus[i], "category": primary,
+                                            "categories": cats, "rationale": rat}) + "\n")
+                else:
+                    cat, rat = _label_reply(rep, taxonomy)
+                    roll.add(cat, rat, len(g))
+                    for i in g:
+                        f.write(json.dumps(
+                            {**corpus[i], "category": cat, "rationale": rat}) + "\n")
 
         artifact = build_artifact_from_counts(
             run_id, taxonomy, final_prompt, n_items=len(corpus),
@@ -1291,7 +1383,9 @@ def make_tools(items, run_id: str, output_dir: str,
             # Force the floor check to pass by temporarily reporting we have
             # already met it. (state is a closure; finalize_classify reads it.)
             state.classify_calls = max(state.classify_calls, min_iterations)
-            finalize_classify.invoke(DEFAULT_CLASSIFY_PROMPT)
+            finalize_classify.invoke(
+                DEFAULT_CLASSIFY_PROMPT_MULTI if multi_label
+                else DEFAULT_CLASSIFY_PROMPT)
         finally:
             state.classify_calls = original_floor
             state.skip_coverage_check = False

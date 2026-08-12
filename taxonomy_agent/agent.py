@@ -211,18 +211,29 @@ class RunResult(dict):
 
     def to_dataframe(self):
         """A per-item ``pandas.DataFrame`` with columns ``id, text, category,
-        rationale, definition`` (the definition of the assigned category)."""
+        rationale, definition`` (the definition of the assigned category). A
+        multi-label run adds a ``categories`` column holding the full list;
+        ``category`` is then the primary (first) label."""
         import pandas as pd
         defs = self.definitions
-        rows = [{
-            "id": c.get("id"),
-            "text": c.get("text"),
-            "category": c.get("category"),
-            "rationale": c.get("rationale"),
-            "definition": defs.get(c.get("category"), ""),
-        } for c in self.iter_classifications()]
-        return pd.DataFrame(
-            rows, columns=["id", "text", "category", "rationale", "definition"])
+        raw = list(self.iter_classifications())
+        multi = any("categories" in c for c in raw)
+        rows = []
+        for c in raw:
+            row = {
+                "id": c.get("id"),
+                "text": c.get("text"),
+                "category": c.get("category"),
+                "rationale": c.get("rationale"),
+                "definition": defs.get(c.get("category"), ""),
+            }
+            if multi:
+                row["categories"] = c.get("categories", [c.get("category")])
+            rows.append(row)
+        cols = ["id", "text", "category", "rationale", "definition"]
+        if multi:
+            cols.insert(3, "categories")
+        return pd.DataFrame(rows, columns=cols)
 
     def save_csv(self, path: str) -> str:
         """Write the per-item table (with rationales and definitions) to
@@ -232,18 +243,32 @@ class RunResult(dict):
         million-row run exports without first materializing a DataFrame of the
         whole corpus in memory."""
         defs = self.definitions
+        it = self.iter_classifications()
+        first = next(it, None)
+        multi = first is not None and "categories" in first
         cols = ["id", "text", "category", "rationale", "definition"]
+        if multi:
+            cols.insert(3, "categories")
+
+        def _row(c):
+            row = {
+                "id": c.get("id"),
+                "text": c.get("text"),
+                "category": c.get("category"),
+                "rationale": c.get("rationale"),
+                "definition": defs.get(c.get("category"), ""),
+            }
+            if multi:
+                row["categories"] = "; ".join(c.get("categories") or [])
+            return row
+
         with open(path, "w", newline="") as f:
             w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
             w.writeheader()
-            for c in self.iter_classifications():
-                w.writerow({
-                    "id": c.get("id"),
-                    "text": c.get("text"),
-                    "category": c.get("category"),
-                    "rationale": c.get("rationale"),
-                    "definition": defs.get(c.get("category"), ""),
-                })
+            if first is not None:
+                w.writerow(_row(first))
+            for c in it:
+                w.writerow(_row(c))
         return path
 
     def iteration_stats(self):
@@ -411,6 +436,7 @@ def run(
     finetune_epochs: int = 4,
     sample_strategy: str = "uniform",
     enforce_coverage: bool = False,
+    multi_label: bool = False,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -503,6 +529,14 @@ def run(
             while discovery budget remains; once budget is spent it finalizes and
             flags `low_coverage_rate` in the artifact. Default False (prompt-only
             stop rule, unchanged behaviour). Pair with sample_strategy="uncovered".
+        multi_label: when True, an item may be assigned several categories at
+            once. The judge returns a list; each classification row keeps a
+            single `category` (the primary/first label, so existing consumers and
+            `to_dataframe`/`save_csv` still work) plus a `categories` list of all
+            applicable labels, and `category_counts` counts an item once per
+            assigned category (so it may exceed n_items). An item matching nothing
+            is `"other"`. Categories may overlap. Default False. Not yet supported
+            with finalize="embed"/"finetune" (raises); use finalize="judge"/"none".
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -541,6 +575,9 @@ def run(
     if sample_strategy not in ("uniform", "uncovered"):
         raise ValueError("sample_strategy must be 'uniform' or 'uncovered', "
                          f"got {sample_strategy!r}")
+    if multi_label and finalize in ("embed", "finetune"):
+        raise ValueError("multi_label is not yet supported with "
+                         f"finalize={finalize!r}; use finalize='judge' or 'none'.")
     if not 0.0 <= coverage <= 1.0:
         raise ValueError(
             f"coverage must be in [0, 1], got {coverage}")
@@ -592,6 +629,7 @@ def run(
         "judge_reasoning_effort": judge_reasoning_effort,
         "sample_strategy": sample_strategy,
         "enforce_coverage": enforce_coverage,
+        "multi_label": multi_label,
         "status": "running",
     }
     atomic_write_json(meta_path, meta)
@@ -622,6 +660,7 @@ def run(
         enforce_coverage=enforce_coverage,
         converge_below=converge_below,
         probe_size=probe_size,
+        multi_label=multi_label,
     )
 
     # Forward `usage: {include: true}` so OpenRouter returns the actual charge
@@ -663,6 +702,16 @@ def run(
         "change when you are allowed to stop."
         if enforce_coverage else ""
     )
+    # Multi-label changes the per-item reply shape (a list of categories) and
+    # lets categories overlap; single-label keeps the pre-feature wording.
+    if multi_label:
+        reply_format = ('{"categories": [<taxonomy names; [] if none apply>], '
+                        '"rationale": <≤2 sentences>}')
+        overlap_clause = ""            # overlap is allowed, so drop "non-overlapping"
+    else:
+        reply_format = ('{"category": <one of the taxonomy names | "other">, '
+                        '"rationale": <≤2 sentences>}')
+        overlap_clause = ", non-overlapping"
     sys_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         instruction=instruction.strip(),
         n_items=len(corpus),
@@ -674,6 +723,8 @@ def run(
         focus_bullet=focus_bullet,
         uncovered_tool_line=uncovered_tool_line,
         coverage_note=coverage_note,
+        reply_format=reply_format,
+        overlap_clause=overlap_clause,
     )
 
     agent = create_react_agent(llm, tools, prompt=sys_prompt)

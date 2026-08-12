@@ -38,6 +38,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --judge-reasoning-effort {low,medium,high}
 #   --sample-strategy {uniform,uncovered}   # 'uncovered' resamples what the taxonomy misses
 #   --enforce-coverage                       # code-side convergence check on an independent probe
+#   --multi-label                            # allow several categories per item (judge returns a list)
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -92,6 +93,7 @@ result = run(
     judge_reasoning_effort=None,         # None keeps the O(N) judge pass cheap
     sample_strategy="uniform",      # "uncovered" resamples items the taxonomy misses
     enforce_coverage=False,         # code-side convergence backstop at finalize
+    multi_label=False,              # True = several categories per item (judge returns a list)
 )
 result.definitions          # {category: definition}
 result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)

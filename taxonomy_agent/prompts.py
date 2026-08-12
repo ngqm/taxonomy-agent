@@ -9,7 +9,7 @@ SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories
 {n_items} items.
 
 ## Your job
-1. Discover a clear, non-overlapping taxonomy that answers the research goal{size_aside}.
+1. Discover a clear{overlap_clause} taxonomy that answers the research goal{size_aside}.
 2. Stop iterating once both (a) the share of items labelled "other" on a fresh batch of K={probe_size} is below {threshold:.0%}, AND (b) you have run at least {min_iters} classification rounds — a single lucky probe is not enough. Stop unconditionally after {max_iters} iterations.{coverage_note}
 3. Call `finalize_classify` with a final classification prompt to apply the taxonomy to every item in the corpus.
 
@@ -48,7 +48,7 @@ The taxonomy starts empty. You modify it through `revise_taxonomy`. You never pa
 ## Constraints
 {focus_bullet}- Names: short snake_case. Descriptions: one short sentence.
 - Edits to the taxonomy should respond to what the items show, not to speculation.
-- The judge tools expect JSON-only replies. For classify and finalize, each per-item reply must be `{{"category": <one of the taxonomy names | "other">, "rationale": <≤2 sentences>}}`. Specify this in your prompts.
+- The judge tools expect JSON-only replies. For classify and finalize, each per-item reply must be `{reply_format}`. Specify this in your prompts.
 
 You write every prompt sent to the judge tools, including the final classification prompt. State the iteration number in each plan.
 

@@ -179,6 +179,9 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--enforce-coverage", action="store_true",
                    help="Verify convergence on an independent uniform probe at "
                         "finalize (code-side backstop). Default off.")
+    p.add_argument("--multi-label", action="store_true",
+                   help="Allow each item to receive several categories (the "
+                        "judge returns a list). Default off (one label per item).")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -225,6 +228,7 @@ def _cmd_run(argv: list[str]) -> None:
         judge_reasoning_effort=args.judge_reasoning_effort,
         sample_strategy=args.sample_strategy,
         enforce_coverage=args.enforce_coverage,
+        multi_label=args.multi_label,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -394,6 +398,10 @@ def _cmd_legacy(argv: list[str]) -> None:
                    default=cfg.get("enforce_coverage", False),
                    help="Code-side convergence backstop on an independent "
                         "uniform probe at finalize. Default off.")
+    p.add_argument("--multi-label", action="store_true",
+                   default=cfg.get("multi_label", False),
+                   help="Allow each item to receive several categories. "
+                        "Default off.")
 
     args = p.parse_args(argv)
 
@@ -436,6 +444,7 @@ def _cmd_legacy(argv: list[str]) -> None:
         judge_reasoning_effort=args.judge_reasoning_effort,
         sample_strategy=args.sample_strategy,
         enforce_coverage=args.enforce_coverage,
+        multi_label=args.multi_label,
     )
 
 
