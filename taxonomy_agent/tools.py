@@ -659,7 +659,8 @@ def make_tools(items, run_id: str, output_dir: str,
                enforce_coverage: bool = False,
                converge_below: float = 0.10,
                probe_size: int = 20,
-               multi_label: bool = False):
+               multi_label: bool = False,
+               web_search_fn=None):
     """Construct the discovery tools, sharing state via closure.
 
     The taxonomy lives entirely inside the closure — the orchestrator mutates
@@ -1400,11 +1401,27 @@ def make_tools(items, run_id: str, output_dir: str,
         with open(artifact_path) as f:
             return json.load(f)
 
+    @tool
+    def web_search(query: str) -> str:
+        """Look up background on a candidate category or domain term on the web.
+
+        Use this ONLY to ground category NAMES and DEFINITIONS in established
+        terminology (for example, the accepted name for a pattern you already
+        see in the items). The taxonomy must still reflect what THIS corpus
+        shows: do not add categories the items do not support just because the
+        web mentions them. Returns a short text summary of results."""
+        try:
+            return str(web_search_fn(query))[:2000]
+        except Exception as e:
+            return f"web_search error: {e!r}"
+
     discovery_tools = [sample_items, get_taxonomy, revise_taxonomy,
                        classify_with_judge, propose_novelties_with_judge,
                        finalize_classify]
     # Keep the default tool set (and its order) byte-identical so an unchanged
-    # run reproduces prior behaviour; only the opt-in strategy adds the 7th tool.
+    # run reproduces prior behaviour; only the opt-in features add extra tools.
     if sample_strategy == "uncovered":
         discovery_tools.append(sample_uncovered)
+    if web_search_fn is not None:
+        discovery_tools.append(web_search)
     return (discovery_tools, force_finalize_with_default_prompt)

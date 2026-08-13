@@ -107,6 +107,7 @@ optional keyword argument with a sensible default:
 | `sample_strategy` | `"uniform"` | `"uncovered"` gives discovery a `sample_uncovered` tool that resamples items the taxonomy has not placed (its own `"other"` labels, not embedding distance, so it stays on the goal's axis) instead of drawing purely at random. `"uniform"` reproduces prior behaviour exactly. |
 | `enforce_coverage` | `False` | Turn the stop rule into a code check: re-measure the unmatched rate on a fresh uniform probe `finalize_classify` controls, refuse above `converge_below` while budget remains, then finalize and flag `low_coverage_rate`. Pair with `sample_strategy="uncovered"`. |
 | `multi_label` | `False` | Allow an item to be assigned several categories. The judge returns a list; each row keeps a primary `category` (first label, so existing consumers still work) plus a `categories` list, and `category_counts` counts an item once per assigned category (so it may exceed `n_items`). An item matching nothing is `other`; categories may overlap. Not yet supported with `finalize="embed"/"finetune"`. |
+| `enable_web_search` | `False` | Give the orchestrator a `web_search` tool to ground category names/definitions in established terminology (keyless DuckDuckGo by default; pass `web_search_fn` for another provider). **Injects external priors** so the taxonomy is no longer purely corpus-derived, reduces reproducibility, and must stay **off for benchmark runs**. Orchestrator only, never the judge. |
 | `api_key` | `OPENROUTER_API_KEY` | OpenRouter key; read from the environment if omitted. |
 | `base_url` | OpenRouter | OpenAI-compatible endpoint to call. |
 
@@ -115,7 +116,7 @@ The `taxonomy run` CLI exposes the most-used knobs as flags (`--max-iters`,
 `--orchestrator`, `--judge`, `--size`, `--judge-max-tokens`,
 `--orchestrator-max-tokens`, `--orchestrator-reasoning-effort`,
 `--judge-reasoning-effort`, `--finalize none`, `--sample-strategy uncovered`,
-`--enforce-coverage`, `--multi-label`; see `taxonomy run --help`).
+`--enforce-coverage`, `--multi-label`, `--web-search`; see `taxonomy run --help`).
 Run `help(run)` in Python for the full docstring.
 
 #### Scaling to large corpora (`finalize=`)

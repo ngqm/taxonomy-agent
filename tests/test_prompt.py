@@ -10,7 +10,7 @@ def _render(**overrides) -> str:
         max_iters=10, min_iters=3, size_aside="", focus_bullet="",
         uncovered_tool_line="", coverage_note="",
         reply_format='{"category": <name | "other">, "rationale": <...>}',
-        overlap_clause=", non-overlapping",
+        overlap_clause=", non-overlapping", web_search_tool_line="",
     )
     base.update(overrides)
     return SYSTEM_PROMPT_TEMPLATE.format(**base)

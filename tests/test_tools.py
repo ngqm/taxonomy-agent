@@ -770,8 +770,9 @@ def test_prompt_default_omits_new_bits():
         instruction="x", n_items=1, threshold=0.1, probe_size=20, max_iters=10,
         min_iters=3, size_aside="", focus_bullet="", uncovered_tool_line="",
         coverage_note="", reply_format='{"category": <name>}',
-        overlap_clause=", non-overlapping")
+        overlap_clause=", non-overlapping", web_search_tool_line="")
     assert "sample_uncovered" not in p
+    assert "web_search" not in p
     assert "independent" not in p
 
 
@@ -782,7 +783,8 @@ def test_prompt_uncovered_and_coverage_render():
         min_iters=3, size_aside="", focus_bullet="",
         uncovered_tool_line="\n- `sample_uncovered(k=20)` — pull uncovered items.",
         coverage_note=" The system re-checks on its own independent probe.",
-        reply_format='{"category": <name>}', overlap_clause=", non-overlapping")
+        reply_format='{"category": <name>}', overlap_clause=", non-overlapping",
+        web_search_tool_line="")
     assert "sample_uncovered" in p
     assert "independent probe" in p
 
@@ -878,6 +880,50 @@ def test_single_label_finalize_has_no_categories_field(items5, make_tool_set,
     rows = [json.loads(l) for l in open(tmp_path / "classifications.jsonl")
             if l.strip()]
     assert rows and all("categories" not in r for r in rows)
+
+
+# === web search (opt-in orchestrator tool) ===
+
+def _stub_judge():
+    from types import SimpleNamespace
+    return SimpleNamespace(call=lambda *a, **k: None,
+                           parallel=lambda p, **k: [None] * len(p))
+
+
+def test_web_search_absent_by_default(items5, tmp_path):
+    from taxonomy_agent.tools import make_tools
+    tools, _ = make_tools(items5, "r", str(tmp_path), _stub_judge())
+    assert not any(t.name == "web_search" for t in tools)
+
+
+def test_web_search_exposed_and_pluggable(items5, tmp_path):
+    from taxonomy_agent.tools import make_tools
+    calls = []
+
+    def fake_search(q):
+        calls.append(q)
+        return f"RESULT for {q}"
+
+    tools, _ = make_tools(items5, "r", str(tmp_path), _stub_judge(),
+                          web_search_fn=fake_search)
+    ws = [t for t in tools if t.name == "web_search"]
+    assert len(ws) == 1
+    out = ws[0].invoke({"query": "jailbreak taxonomy"})
+    assert "RESULT for jailbreak taxonomy" in out
+    assert calls == ["jailbreak taxonomy"]
+
+
+def test_web_search_error_is_caught(items5, tmp_path):
+    from taxonomy_agent.tools import make_tools
+
+    def boom(q):
+        raise RuntimeError("network down")
+
+    tools, _ = make_tools(items5, "r", str(tmp_path), _stub_judge(),
+                          web_search_fn=boom)
+    ws = next(t for t in tools if t.name == "web_search")
+    out = ws.invoke({"query": "x"})
+    assert "web_search error" in out and "network down" in out
 
 
 def test_runresult_multi_label_dataframe_and_csv(items5, make_tool_set, tmp_path):

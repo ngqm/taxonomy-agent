@@ -16,7 +16,7 @@ SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories
 The taxonomy starts empty. You modify it through `revise_taxonomy`. You never pass the taxonomy as an argument to classify or finalize — they read it automatically.
 
 ## Tools
-- `sample_items(k=20)`                              — pull a fresh batch of items.{uncovered_tool_line}
+- `sample_items(k=20)`                              — pull a fresh batch of items.{uncovered_tool_line}{web_search_tool_line}
 - `classify_with_judge(item_ids, prompt)`           — the judge labels each item against the current taxonomy.
 - `propose_novelties_with_judge(item_ids, prompt)`  — the judge suggests new categories for items the taxonomy doesn't cover.
 - `revise_taxonomy(operations)`                     — `add` / `rename` / `edit` / `merge` / `split` / `drop`.

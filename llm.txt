@@ -39,6 +39,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   --sample-strategy {uniform,uncovered}   # 'uncovered' resamples what the taxonomy misses
 #   --enforce-coverage                       # code-side convergence check on an independent probe
 #   --multi-label                            # allow several categories per item (judge returns a list)
+#   --web-search                             # give the orchestrator a web_search tool (off for eval)
 
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
@@ -95,6 +96,7 @@ result = run(
     sample_strategy="uniform",      # "uncovered" resamples items the taxonomy misses
     enforce_coverage=False,         # code-side convergence backstop at finalize
     multi_label=False,              # True = several categories per item (judge returns a list)
+    enable_web_search=False,        # give the orchestrator a web_search tool (off for eval)
 )
 result.definitions          # {category: definition}
 result.classifications      # [{id, text, category, rationale}, ...]  (streams from jsonl)

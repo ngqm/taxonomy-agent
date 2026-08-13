@@ -8,7 +8,7 @@ import logging
 import os
 import uuid
 from pathlib import Path
-from typing import Iterable, Union
+from typing import Callable, Iterable, Union
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -402,6 +402,21 @@ def _mostly_judge_errors(artifact: dict, threshold: float = 0.5) -> bool:
     return n_items > 0 and n_err >= threshold * n_items
 
 
+def _default_web_search(query: str) -> str:
+    """Default web-search backend for the orchestrator: DuckDuckGo (keyless).
+    Requires the optional `duckduckgo-search` + `langchain-community` packages;
+    pass a custom `web_search_fn` to run() to use a different provider."""
+    try:
+        from langchain_community.tools import DuckDuckGoSearchRun
+    except ImportError as e:
+        raise ImportError(
+            "enable_web_search=True needs the optional web-search dependencies: "
+            "pip install duckduckgo-search langchain-community (or pass your own "
+            "web_search_fn)."
+        ) from e
+    return DuckDuckGoSearchRun().run(query)
+
+
 def run(
     items: Union[str, Path, Iterable[dict]],
     instruction: str,
@@ -437,6 +452,8 @@ def run(
     sample_strategy: str = "uniform",
     enforce_coverage: bool = False,
     multi_label: bool = False,
+    enable_web_search: bool = False,
+    web_search_fn: "Callable[[str], str] | None" = None,
 ) -> "RunResult":
     """Discover a taxonomy of patterns in `items` and classify every item.
 
@@ -537,6 +554,16 @@ def run(
             assigned category (so it may exceed n_items). An item matching nothing
             is `"other"`. Categories may overlap. Default False. Not yet supported
             with finalize="embed"/"finetune" (raises); use finalize="judge"/"none".
+        enable_web_search: give the orchestrator a `web_search` tool it can call
+            during discovery to ground category names/definitions in established
+            terminology. Default False. NOTE: this injects external priors (the
+            taxonomy no longer comes purely from the corpus), reduces run
+            reproducibility, and must stay off for benchmark/eval runs. The judge
+            never gets it (that would be per-item and O(N)).
+        web_search_fn: optional `query -> results_text` backend, used only when
+            enable_web_search is True; defaults to a keyless DuckDuckGo backend
+            (needs `pip install duckduckgo-search langchain-community`). Pass your
+            own to use Tavily/Brave/etc.
 
     Returns:
         dict with `run_id`, `output_dir`, `artifact_path`, and (if successful) the loaded
@@ -630,6 +657,7 @@ def run(
         "sample_strategy": sample_strategy,
         "enforce_coverage": enforce_coverage,
         "multi_label": multi_label,
+        "enable_web_search": enable_web_search,
         "status": "running",
     }
     atomic_write_json(meta_path, meta)
@@ -661,6 +689,8 @@ def run(
         converge_below=converge_below,
         probe_size=probe_size,
         multi_label=multi_label,
+        web_search_fn=(
+            (web_search_fn or _default_web_search) if enable_web_search else None),
     )
 
     # Forward `usage: {include: true}` so OpenRouter returns the actual charge
@@ -702,6 +732,12 @@ def run(
         "change when you are allowed to stop."
         if enforce_coverage else ""
     )
+    web_search_tool_line = (
+        "\n- `web_search(query)`                              "
+        "— look up established terminology to ground category names/definitions; "
+        "the taxonomy must still reflect the corpus."
+        if enable_web_search else ""
+    )
     # Multi-label changes the per-item reply shape (a list of categories) and
     # lets categories overlap; single-label keeps the pre-feature wording.
     if multi_label:
@@ -725,6 +761,7 @@ def run(
         coverage_note=coverage_note,
         reply_format=reply_format,
         overlap_clause=overlap_clause,
+        web_search_tool_line=web_search_tool_line,
     )
 
     agent = create_react_agent(llm, tools, prompt=sys_prompt)

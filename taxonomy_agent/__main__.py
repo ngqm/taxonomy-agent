@@ -182,6 +182,9 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("--multi-label", action="store_true",
                    help="Allow each item to receive several categories (the "
                         "judge returns a list). Default off (one label per item).")
+    p.add_argument("--web-search", action="store_true",
+                   help="Give the orchestrator a web_search tool (DuckDuckGo) to "
+                        "ground category names. Off for eval; hurts reproducibility.")
     args = p.parse_args(argv)
 
     if not args.corpus:
@@ -229,6 +232,7 @@ def _cmd_run(argv: list[str]) -> None:
         sample_strategy=args.sample_strategy,
         enforce_coverage=args.enforce_coverage,
         multi_label=args.multi_label,
+        enable_web_search=args.web_search,
     )
     print(f"[run] done. Inspect with: taxonomy inspect {out}")
 
@@ -402,6 +406,10 @@ def _cmd_legacy(argv: list[str]) -> None:
                    default=cfg.get("multi_label", False),
                    help="Allow each item to receive several categories. "
                         "Default off.")
+    p.add_argument("--web-search", action="store_true",
+                   default=cfg.get("web_search", False),
+                   help="Give the orchestrator a web_search tool (DuckDuckGo). "
+                        "Off for eval; hurts reproducibility.")
 
     args = p.parse_args(argv)
 
@@ -445,6 +453,7 @@ def _cmd_legacy(argv: list[str]) -> None:
         sample_strategy=args.sample_strategy,
         enforce_coverage=args.enforce_coverage,
         multi_label=args.multi_label,
+        enable_web_search=args.web_search,
     )
 
 
