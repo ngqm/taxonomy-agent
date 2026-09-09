@@ -49,8 +49,7 @@ the iterations and returns a matplotlib `Figure` (`pip install
 OpenRouter model slug (`provider/model`). Both default to
 `deepseek/deepseek-v4-flash`, so you can omit them to run both roles on that
 inexpensive model; a common alternative pairs a stronger orchestrator with the
-cheap judge, for example `orchestrator_model="anthropic/claude-sonnet-4.6"`. To
-use a different OpenAI-compatible endpoint, also pass `base_url=`.
+cheap judge. To use a different OpenAI-compatible endpoint, also pass `base_url=`.
 
 `RunResult.from_dir("out/")` reloads a completed run offline.
 
@@ -222,8 +221,8 @@ Each run writes to its output directory:
 
 With DeepSeek-v4-Flash in both roles, a 500-item run costs roughly \$0.17 and
 takes about ten minutes; smaller corpora cost a few cents. A stronger
-orchestrator such as Claude Sonnet, GPT-5, or Gemini Pro improves quality on
-difficult corpora at higher cost, while the judge can remain inexpensive.
+orchestrator improves quality on difficult corpora at higher cost, while the
+judge can remain inexpensive.
 
 ## Testing
 
@@ -248,4 +247,4 @@ python -m taxonomy_agent.eval --corpus 20ng \
 
 It writes `results.json` with purity, NMI, ARI, and cost per method and seed.
 Pass `--orchestrator deepseek/deepseek-v4-flash` to match the paper's cheap
-config; the CLI otherwise defaults the orchestrator to Claude Sonnet.
+config; the CLI otherwise uses a stronger default orchestrator.
