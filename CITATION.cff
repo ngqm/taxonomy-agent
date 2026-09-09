@@ -27,5 +27,5 @@ preferred-citation:
     - family-names: Kim
       given-names: Taegyoon
   year: 2026
-  url: "https://ngqm--taxonomyagent.modal.run"
+  url: "https://github.com/ngqm/taxonomy-agent"
   notes: "Preprint. Not peer reviewed."

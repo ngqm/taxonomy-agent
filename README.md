@@ -3,7 +3,6 @@
 [![CI](https://github.com/ngqm/taxonomy-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/ngqm/taxonomy-agent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Live demo](https://img.shields.io/badge/demo-live-brightgreen.svg)](https://ngqm--taxonomyagent.modal.run)
 
 TaxonomyAgent discovers an interpretable taxonomy over an unlabelled text
 corpus along an axis you choose, then labels every item against it. An
@@ -15,8 +14,6 @@ You supply a corpus and one sentence describing the axis of interest, for
 example "group these prompts by the manipulation tactic each uses."
 TaxonomyAgent returns the discovered categories, a label and rationale for
 every item, and a replayable trace of the run.
-
-A hosted demo is available at https://ngqm--taxonomyagent.modal.run.
 
 ## Installation
 
@@ -210,6 +207,13 @@ taxonomy demo    # one-command run on a bundled DarkBench slice
 taxonomy ui      # or: streamlit run app.py
 ```
 
+## Examples
+
+Runnable scripts are in [`examples/`](examples/): a minimal discovery run,
+natural-language and exact refinement, cheap large-corpus labelling
+(`finalize="embed"`), and steering discovery toward a non-topical axis. See also
+`notebooks/quickstart.ipynb`.
+
 ## Input formats
 
 The library and the CLI accept a list of strings, a list of `{id, text}`
@@ -281,7 +285,7 @@ config; the CLI otherwise defaults the orchestrator to Claude Sonnet.
   author = {Nguyen, Quang Minh and Ahmed, Uzair and Kim, Taegyoon},
   year   = {2026},
   note   = {Preprint},
-  howpublished = {\url{https://ngqm--taxonomyagent.modal.run}}
+  howpublished = {\url{https://github.com/ngqm/taxonomy-agent}}
 }
 ```
 
