@@ -156,5 +156,12 @@ class TopicGPTStyleBaseline(Baseline):
 
     def run(self, items, *, instruction="", seed=42, model="", api_key=None,
             **kwargs):
-        return run_topicgpt_style(items, instruction=instruction, model=model,
-                                  api_key=api_key, seed=seed)
+        # n_iters / batch_size / max_topics are read from kwargs so the same
+        # baseline can be run at a higher compute budget (compute-matched to
+        # TaxonomyAgent) without a separate class.
+        return run_topicgpt_style(
+            items, instruction=instruction, model=model, api_key=api_key,
+            seed=seed,
+            n_iters=int(kwargs.get("n_iters", 3)),
+            batch_size=int(kwargs.get("batch_size", 10)),
+            max_topics=int(kwargs.get("max_topics", 20)))

@@ -9,8 +9,12 @@ from __future__ import annotations
 
 from .base import Baseline
 from .bertopic_baseline import BERTopicBaseline
+from .cate_baseline import CatEBaseline
+from .dynamite_baseline import DynaMiTEBaseline
 from .embed_cluster_llm import EmbedClusterLabelBaseline
+from .iterative_llm import IterativeLLMBaseline
 from .lda_baseline import LDABaseline
+from .lloom_baseline import LLooMBaseline
 from .single_shot_llm import SingleShotBaseline
 from .topicgpt_style import TopicGPTStyleBaseline
 
@@ -20,6 +24,10 @@ _BASELINES: list[Baseline] = [
     SingleShotBaseline(),
     TopicGPTStyleBaseline(),
     EmbedClusterLabelBaseline(),
+    IterativeLLMBaseline(),
+    CatEBaseline(),
+    LLooMBaseline(),
+    DynaMiTEBaseline(),
 ]
 REGISTRY: dict[str, Baseline] = {b.name: b for b in _BASELINES}
 
@@ -37,4 +45,6 @@ __all__ = [
     "Baseline", "REGISTRY", "get_baseline",
     "BERTopicBaseline", "LDABaseline", "SingleShotBaseline",
     "TopicGPTStyleBaseline", "EmbedClusterLabelBaseline",
+    "IterativeLLMBaseline", "CatEBaseline", "LLooMBaseline",
+    "DynaMiTEBaseline",
 ]
