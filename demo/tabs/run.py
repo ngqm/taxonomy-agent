@@ -526,7 +526,12 @@ def render(settings):
                 except Exception as e:
                     ss.running = False
                     if os.environ.get("TAXONOMY_DEMO_HOSTED"):
-                        st.error("The run could not be started. Please try again.")
+                        st.error(
+                            "The run could not be started, likely a transient "
+                            "model or provider hiccup. Try again in a minute, or "
+                            "browse finished runs in the **Inspect** and "
+                            "**Compare** tabs."
+                        )
                     else:
                         st.exception(e)
                     st.stop()
@@ -536,7 +541,14 @@ def render(settings):
                 ss.result_dir = out_abs
                 st.success(f"Done. Open the **Inspect** tab to view `{out_abs}`.")
             else:
-                st.error(f"Agent exited with code {proc.returncode}. Inspect the log above.")
+                st.error(
+                    f"The run did not finish (exit code {proc.returncode}). This "
+                    "is usually a transient model or provider outage; the log "
+                    "above has the details. You can still see the system on "
+                    "finished DarkBench and 20 Newsgroups runs in the "
+                    "**Inspect** and **Compare** tabs, or press **Run the demo** "
+                    "again in a minute."
+                )
     elif ss.log_lines:
         log_box.code("\n".join(ss.log_lines[-400:]), language="text")
 

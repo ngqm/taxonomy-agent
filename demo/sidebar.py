@@ -1,6 +1,5 @@
 """The configuration sidebar; returns a Settings tuple for the tabs."""
 from __future__ import annotations
-import html
 import json
 import os
 import re
@@ -129,18 +128,11 @@ def render_sidebar() -> Settings:
                 judge = judge_choice
 
         def _numrow(label, lo, hi, default, helptext):
-            # Mockup-style "label left … value right" spec row (borderless via CSS).
-            # The number_input's own label is collapsed, so its help "?" never
-            # shows; render an explanatory "?" on the custom label instead (the
-            # `title` gives a hover tooltip with the same text).
-            _lc, _vc = st.columns([1.7, 1], vertical_alignment="center")
-            tip = html.escape(helptext, quote=True)
-            _lc.markdown(
-                f'<span class="side-numlabel">{label}'
-                f'<span class="side-help" title="{tip}">?</span></span>',
-                unsafe_allow_html=True)
-            return _vc.number_input(label, lo, hi, default,
-                                    label_visibility="collapsed", help=helptext)
+            # Standard number input with Streamlit's own help tooltip. A custom
+            # title= "?" span did not register as interactive for reviewers, so
+            # use the real (hover-popover) help icon, consistent with the other
+            # sidebar controls.
+            return st.number_input(label, lo, hi, default, help=helptext)
 
         with st.expander("Discovery loop", expanded=True):
             max_iters = _numrow(
