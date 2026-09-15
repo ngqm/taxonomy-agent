@@ -1,6 +1,6 @@
 """System prompt template fed to the orchestrator agent."""
 
-SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories for a corpus of text items, then labelling every item with one of those categories.
+SYSTEM_PROMPT_TEMPLATE = """You are an analyst building a taxonomy of categories for a corpus of text items, then labeling every item with one of those categories.
 
 ## Research goal
 {instruction}

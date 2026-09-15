@@ -1,7 +1,7 @@
 """Corpus abstractions: keep a large item collection reachable by the discovery
 loop without holding every item in memory.
 
-`InMemoryCorpus` wraps a list — the small-input path, behaviourally identical to
+`InMemoryCorpus` wraps a list — the small-input path, behaviorally identical to
 passing a plain list. `JsonlCorpus` indexes a `.jsonl` file by byte offset and
 reads items on demand: random-access sampling by `seek`, streaming iteration for
 the finalize pass. It does not retain item *text*, so a corpus whose text dwarfs

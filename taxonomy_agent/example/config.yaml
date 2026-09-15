@@ -18,7 +18,7 @@ judge: deepseek/deepseek-v4-flash
 
 # ── DISCOVERY LOOP ──────────────────────────────────────────────────────────
 max_iters: 10                # hard cap on discovery iterations
-threshold: 0.10              # stop when don't-fit rate < this on a fresh probe
+threshold: 0.10              # stop when unmatched rate < this on a fresh probe
 probe_size: 20               # K — items per probe batch
 size_hint: "4–10"            # free-form target size in the orchestrator prompt;
                              #   "" (empty) drops the guidance entirely

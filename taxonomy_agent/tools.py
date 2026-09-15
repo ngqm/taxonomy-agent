@@ -46,7 +46,7 @@ COERCED_RATIONALE_PREFIX = "[coerced from invented label"
 CLASSIFIER_RATIONALE_PREFIX = "[classifier:"
 
 # Rationale stamped on the discovery-probe rows written when finalize="none"
-# (discovery only): the taxonomy is returned without labelling the full corpus,
+# (discovery only): the taxonomy is returned without labeling the full corpus,
 # and only the items already judged for free during discovery are recorded.
 DISCOVERY_PROBE_RATIONALE = "[discovery probe; corpus not fully labelled]"
 
@@ -249,7 +249,7 @@ def _content_hash(item: dict) -> str:
 def _label_reply(rep: str | None, taxonomy: list[dict]) -> tuple[str, str]:
     """Map a judge reply to `(category, rationale)`: a failed call (`rep is
     None`) becomes `("other", JUDGE_ERROR_RATIONALE)`; any other reply is parsed
-    and coerced to the taxonomy. Shared by every judge-labelling site."""
+    and coerced to the taxonomy. Shared by every judge-labeling site."""
     if rep is None:
         return "other", JUDGE_ERROR_RATIONALE
     return _coerce_category(_parse_json_block(rep), taxonomy)
@@ -669,13 +669,13 @@ def make_tools(items, run_id: str, output_dir: str,
     `sample_strategy="uncovered"` adds a seventh tool, `sample_uncovered`, that
     preferentially surfaces items the taxonomy has not placed (past "other"
     labels). The default "uniform" returns exactly the six original tools in the
-    original order, so an unchanged run reproduces prior behaviour byte-for-byte.
+    original order, so an unchanged run reproduces prior behavior byte-for-byte.
 
     `enforce_coverage=True` turns `finalize_classify`'s stop rule into a code
     check: it re-measures the unmatched rate on a fresh uniform-random probe
     (independent of whatever the orchestrator chose to classify) and refuses to
     finalize above `converge_below` while classify budget remains. `probe_size`
-    sizes that probe. Both default off so behaviour is unchanged.
+    sizes that probe. Both default off so behavior is unchanged.
 
     `min_iterations` is a floor on the number of `classify_with_judge` calls
     required before `finalize_classify` is allowed — guards against premature
@@ -1171,7 +1171,7 @@ def make_tools(items, run_id: str, output_dir: str,
 
     def _discovery_only_finalize(final_prompt: str) -> str:
         """finalize_mode == "none": ship the discovered taxonomy WITHOUT the
-        O(N) full-corpus labelling pass. The items already judged for free
+        O(N) full-corpus labeling pass. The items already judged for free
         during discovery (the probes, kept in `state.probe_labels`) are written
         to classifications.jsonl as a labelled sample; the rest of the corpus is
         left unlabelled. Keeps the counts↔n_items invariant by reporting
@@ -1419,7 +1419,7 @@ def make_tools(items, run_id: str, output_dir: str,
                        classify_with_judge, propose_novelties_with_judge,
                        finalize_classify]
     # Keep the default tool set (and its order) byte-identical so an unchanged
-    # run reproduces prior behaviour; only the opt-in features add extra tools.
+    # run reproduces prior behavior; only the opt-in features add extra tools.
     if sample_strategy == "uncovered":
         discovery_tools.append(sample_uncovered)
     if web_search_fn is not None:

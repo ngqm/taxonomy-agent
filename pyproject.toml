@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "taxonomy-agent"
 version = "0.1.0"
-description = "Discover and apply an interpretable taxonomy along a single axis of variation in a text corpus."
+description = "Discover an interpretable taxonomy over a text corpus along an axis you choose, then label every item against it."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]

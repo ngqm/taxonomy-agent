@@ -4,8 +4,8 @@ Quick start:
     taxonomy demo                          # bundled 48-item DarkBench slice
     taxonomy run corpus.jsonl              # sensible defaults; cheap models
     taxonomy run corpus.jsonl -g "Goal"    # positional corpus + goal flag
-    taxonomy run --quality corpus.jsonl    # Sonnet orchestrator for better quality
-    taxonomy ui                            # launch the Streamlit walk-up app
+    taxonomy run --quality corpus.jsonl    # stronger orchestrator for better quality
+    taxonomy ui                            # launch the Streamlit app
     taxonomy inspect ./run_dir/            # text summary of a finished run
 
 Power-user mode (still supported):
@@ -81,7 +81,7 @@ def _cmd_demo(argv: list[str]) -> None:
     p.add_argument("-o", "--output", default=None,
                    help="Output directory (default: ./taxonomy_demo_run/).")
     p.add_argument("--quality", action="store_true",
-                   help="Use the Sonnet orchestrator instead of the cheap default.")
+                   help="Use a stronger orchestrator instead of the cheap default.")
     args = p.parse_args(argv)
 
     pkg_root = Path(__file__).resolve().parent
@@ -128,7 +128,7 @@ def _cmd_run(argv: list[str]) -> None:
     p.add_argument("-o", "--output", default=None,
                    help="Output directory (default: ./taxonomy_run_<timestamp>/).")
     p.add_argument("--quality", action="store_true",
-                   help="Use the Sonnet orchestrator (~$1-2 per 500-item run).")
+                   help="Use a stronger orchestrator (~$1-2 per 500-item run).")
     p.add_argument("--orchestrator", default=None,
                    help="Override the orchestrator model id.")
     p.add_argument("--judge", default=None,
@@ -149,7 +149,7 @@ def _cmd_run(argv: list[str]) -> None:
                         "centroid for the confident majority), 'finetune' "
                         "(re-judge, then fine-tune a BERT-family model), or "
                         "'none' (discovery only — ship the taxonomy without "
-                        "labelling the full corpus). 'embed'/'finetune' need "
+                        "labeling the full corpus). 'embed'/'finetune' need "
                         "the [scale] extra.")
     p.add_argument("--coverage", type=float, default=0.85,
                    help="With --finalize embed/finetune, fraction of items to "

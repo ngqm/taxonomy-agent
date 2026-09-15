@@ -75,15 +75,15 @@ optional keyword argument with a sensible default:
 | `orchestrator_max_tokens` | `None` | Cap on orchestrator output tokens per step; `None` uses the model's own default. |
 | `judge_max_tokens` | `300` | Max tokens per judge classification reply (label + rationale). Lower to trim cost on the O(N) pass; raise if rationales truncate. |
 | `orchestrator_reasoning_effort` | `None` | Reasoning effort for a reasoning-capable orchestrator (`low`/`medium`/`high`), forwarded as OpenRouter `reasoning.effort`. |
-| `judge_reasoning_effort` | `None` | Same, for the judge. Leave `None` to keep the O(N) labelling pass cheap. |
+| `judge_reasoning_effort` | `None` | Same, for the judge. Leave `None` to keep the O(N) labeling pass cheap. |
 | `recursion_limit` | `80` | LangGraph cap on agent super-steps. |
-| `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), `"finetune"` (re-judge, then fine-tune a BERT-family model), or `"none"` (discovery only — ship the taxonomy without labelling the corpus). See below. |
+| `finalize` | `"judge"` | How to label the full corpus: `"judge"` (LLM per item), `"embed"` (re-judge a sample, then embedding nearest-centroid), `"finetune"` (re-judge, then fine-tune a BERT-family model), or `"none"` (discovery only — ship the taxonomy without labeling the corpus). See below. |
 | `coverage` | `0.85` | With `finalize="embed"/"finetune"`, the fraction of items to accept from the classifier; the rest go to the judge. |
 | `calibration_size` | `200` | With `finalize="embed"/"finetune"`, items to re-judge against the final taxonomy for training labels (`0` = probes only); each is an extra judge call. |
 | `embed_model` | `all-MiniLM-L6-v2` | sentence-transformers model for `finalize="embed"`. |
 | `finetune_model` | `distilbert-base-uncased` | Base model for `finalize="finetune"`. |
 | `finetune_epochs` | `4` | Fine-tuning epochs for `finalize="finetune"`. |
-| `sample_strategy` | `"uniform"` | `"uncovered"` gives discovery a `sample_uncovered` tool that resamples items the taxonomy has not placed (its own `"other"` labels, not embedding distance, so it stays on the goal's axis) instead of drawing purely at random. `"uniform"` reproduces prior behaviour exactly. |
+| `sample_strategy` | `"uniform"` | `"uncovered"` gives discovery a `sample_uncovered` tool that resamples items the taxonomy has not placed (its own `"other"` labels, not embedding distance, so it stays on the goal's axis) instead of drawing purely at random. `"uniform"` reproduces prior behavior exactly. |
 | `enforce_coverage` | `False` | Turn the stop rule into a code check: re-measure the unmatched rate on a fresh uniform probe `finalize_classify` controls, refuse above `converge_below` while budget remains, then finalize and flag `low_coverage_rate`. Pair with `sample_strategy="uncovered"`. |
 | `multi_label` | `False` | Allow an item to be assigned several categories. The judge returns a list; each row keeps a primary `category` (first label, so existing consumers still work) plus a `categories` list, and `category_counts` counts an item once per assigned category (so it may exceed `n_items`). An item matching nothing is `other`; categories may overlap. Not yet supported with `finalize="embed"/"finetune"`. |
 | `enable_web_search` | `False` | Give the orchestrator a `web_search` tool to ground category names/definitions in established terminology (keyless DuckDuckGo by default; pass `web_search_fn` for another provider). **Injects external priors** so the taxonomy is no longer purely corpus-derived, reduces reproducibility, and must stay **off for benchmark runs**. Orchestrator only, never the judge. |
@@ -111,7 +111,7 @@ labeled once discovery converges — four options:
    the low-confidence tail to the judge.
 3. **`finalize="finetune"`** — same, but **fine-tune a BERT-family model** on the
    re-judged sample instead of using centroids (a little more accurate, heavier).
-4. **`finalize="none"`** — **discovery only**: skip full-corpus labelling
+4. **`finalize="none"`** — **discovery only**: skip full-corpus labeling
    entirely. You get the discovered taxonomy (categories + definitions) plus the
    items already judged for free during discovery as a labelled sample, so you
    pay only for discovery. Re-run later with one of the modes above (e.g.

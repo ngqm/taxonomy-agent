@@ -1,7 +1,6 @@
 # Contributing
 
-Thanks for the interest. `taxonomy_agent` is a small research demo, so the bar
-is "clear, terse, reproducible" rather than "production-hardened".
+Thanks for the interest. The bar is "clear, terse, reproducible."
 
 ## Setup
 
@@ -36,7 +35,7 @@ the judge and mocks `requests.post`.
 
 - [ ] Tests pass locally (`python -m pytest tests/ -v`).
 - [ ] New behavior has a unit test (stub the judge / mock `requests.post`).
-- [ ] README / config table updated if you added a flag or YAML key.
+- [ ] README / DOCS.md updated if you added a flag or YAML key.
 - [ ] No API key, `.env`, or sample run output committed.
 - [ ] No new heavy dependency without a note in the PR description.
 
@@ -47,9 +46,8 @@ the judge and mocks `requests.post`.
 - Orchestrator and judge model ids.
 - The `instruction` (or `instruction_file` contents).
 - A few sample items (`id` + `text`), or the smallest input that reproduces.
-- Expected vs. actual behaviour.
+- Expected vs. actual behavior.
 - Relevant lines from `run.log` and `trace.jsonl`.
 
 **Feature request** — describe the use case first, then the proposed
-behaviour. Research-demo scope: small, composable additions land faster than
-large reworks.
+behavior. Small, composable additions land faster than large reworks.

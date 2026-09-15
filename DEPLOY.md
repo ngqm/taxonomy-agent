@@ -1,11 +1,13 @@
 # Deploying the demo on Modal
 
+> **Note:** the hosted demo is no longer actively maintained. The project focus
+> has shifted to the Python package (see `README.md`). These instructions are
+> kept for reference in case a new deployment is needed.
+
 The Streamlit demo is served on [Modal](https://modal.com) from a single
 container. Streamlit multiplexes browser sessions in-process, so one container
 handles a poster session's traffic; Modal gives far more CPU/RAM headroom than
 the free Streamlit Cloud / HF Spaces tiers, plus scale-to-zero and free credits.
-
-**Live URL:** https://ngqm--taxonomyagent.modal.run
 
 ## One-time setup
 

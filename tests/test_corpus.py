@@ -1,4 +1,4 @@
-"""Corpus abstractions: the file-backed JsonlCorpus must be behaviourally
+"""Corpus abstractions: the file-backed JsonlCorpus must be behaviorally
 identical to loading the same .jsonl into memory, while reading items on demand
 rather than holding them all."""
 from __future__ import annotations

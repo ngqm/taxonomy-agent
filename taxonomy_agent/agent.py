@@ -146,6 +146,19 @@ class RunResult(dict):
         result.save_csv("out.csv")   # export that same table
     """
 
+    def __repr__(self) -> str:
+        # A dict subclass would otherwise echo the entire artifact (and any
+        # embedded rows) on print / in the REPL; show a one-line summary instead.
+        counts = self.category_counts
+        parts = [f"status={self.status!r}", f"categories={len(self.taxonomy)}"]
+        if counts:
+            parts.append(f"items={sum(counts.values())}")
+        if self.cost_usd is not None:
+            parts.append(f"cost_usd={self.cost_usd:.4f}")
+        if self.get("output_dir"):
+            parts.append(f"output_dir={self['output_dir']!r}")
+        return f"RunResult({', '.join(parts)})"
+
     @property
     def status(self) -> str | None:
         return self.get("status")
@@ -494,14 +507,14 @@ def run(
             applies.
         judge_max_tokens: cap on each judge classification reply (label +
             rationale). Default 300. Lower it to trim cost/latency on the O(N)
-            labelling pass; raise it if rationales are being truncated. Does not
+            labeling pass; raise it if rationales are being truncated. Does not
             throttle category *proposals* (those keep a larger internal budget).
         orchestrator_reasoning_effort, judge_reasoning_effort: reasoning effort
             for each role independently on reasoning-capable models, forwarded to
             OpenRouter as `reasoning.effort` ("low", "medium", or "high"). None
             (default) sends nothing, so the model's own default applies. Set the
             orchestrator's to think harder about the taxonomy; leave the judge's
-            None to keep the O(N) labelling pass cheap (raising it multiplies
+            None to keep the O(N) labeling pass cheap (raising it multiplies
             per-item cost/latency).
         seed: seeds the probe-sampling and calibration RNG only. It does NOT
             make the discovered taxonomy reproducible: the orchestrator LLM runs
@@ -517,10 +530,10 @@ def run(
             corpora: "embed" labels by nearest class-mean on frozen embeddings
             (no training); "finetune" fine-tunes a BERT-family encoder end to end
             (heavier, benefits most from a larger calibration set). Both need the
-            `[scale]` extra. "none" skips full-corpus labelling entirely: it
+            `[scale]` extra. "none" skips full-corpus labeling entirely: it
             ships the discovered taxonomy (categories + definitions) plus the
             items already judged for free during discovery as a labelled sample,
-            so you pay only for discovery — re-run later with a labelling mode to
+            so you pay only for discovery — re-run later with a labeling mode to
             classify the whole corpus.
         coverage: with finalize="embed"/"finetune", the fraction of items
             to accept from the classifier (highest confidence first); the rest go
@@ -539,13 +552,13 @@ def run(
             purely at random, so judge calls concentrate on the frontier. The
             frontier signal is the judge's own "other" labels, not embedding
             distance, so it stays aligned with the goal instruction's axis.
-            "uniform" reproduces prior behaviour exactly.
+            "uniform" reproduces prior behavior exactly.
         enforce_coverage: when True, `finalize_classify` verifies convergence on
             a fresh uniform-random probe it controls (not the orchestrator's
             possibly-steered batch) and refuses to finalize above `converge_below`
             while discovery budget remains; once budget is spent it finalizes and
             flags `low_coverage_rate` in the artifact. Default False (prompt-only
-            stop rule, unchanged behaviour). Pair with sample_strategy="uncovered".
+            stop rule, unchanged behavior). Pair with sample_strategy="uncovered".
         multi_label: when True, an item may be assigned several categories at
             once. The judge returns a list; each classification row keeps a
             single `category` (the primary/first label, so existing consumers and

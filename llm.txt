@@ -29,7 +29,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 #   -o DIR            output dir (default ./taxonomy_run_<timestamp>/)
 #   --size 4-10       target taxonomy size; '' to let it discover freely
 #   --orchestrator ID / --judge ID   override models (default deepseek-v4-flash)
-#   --quality         use the Sonnet orchestrator (~$1-2 per 500 items)
+#   --quality         use a stronger orchestrator (~$1-2 per 500 items)
 #   --max-iters 10 --min-iters 3 --threshold 0.10 --probe-size 20 --concurrency 8
 #   --finalize {judge,embed,finetune,none} --calibration-size 200   # cheap labeling at scale
 #       ('none' = discovery only: ship the taxonomy, don't label the whole corpus)
@@ -44,7 +44,7 @@ taxonomy run corpus.jsonl -g "Group these prompts by the type of manipulation th
 # Inspect a finished (or killed) run: taxonomy, cost, iteration trace.
 taxonomy inspect ./taxonomy_run_XXXX [--full]
 
-# Launch the Streamlit demo UI (Start / Run / History / Inspect / Compare tabs).
+# Launch the Streamlit UI (Start / Run / History / Inspect / Compare tabs).
 taxonomy ui                              # extra args forward to streamlit
 
 # Config-file run (same flags as `python -m taxonomy_agent`):
@@ -174,4 +174,5 @@ Writes `results.json` (+ `results.tex`) with purity, NMI, ARI, and cost per meth
 - `taxonomy_agent/eval/`       — benchmark driver, corpora loaders, baselines
 - `app.py` + `demo/`          — Streamlit app at repo root
 - `example_runs/`             — sample finished runs (load these in `taxonomy inspect`)
-- `README.md`, `DEPLOY.md`    — human docs and deployment
+- `README.md`, `DOCS.md`      — quick start and full reference
+- `DEPLOY.md`                 — Modal deployment (the hosted demo is not actively maintained)

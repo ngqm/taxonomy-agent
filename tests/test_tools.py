@@ -1,8 +1,8 @@
-"""End-to-end tool-behaviour tests with stub judges.
+"""End-to-end tool-behavior tests with stub judges.
 
 Locks in: bug 3 (classify dedup + judge-error isolation), bug 4 (sample
 history), bug 6 (classify budget), bug 9 (finalize idempotency), and the
-batching behaviour added for propose_novelties_with_judge."""
+batching behavior added for propose_novelties_with_judge."""
 from __future__ import annotations
 
 import json
@@ -473,7 +473,7 @@ def test_finalize_streams_classifications_jsonl(items5, make_tool_set, tmp_path)
     so a crash mid-finalize keeps the rows that already finished."""
     def parallel(prompts, on_reply=None, **k):
         replies = ['{"category": "a", "rationale": "r"}'] * len(prompts)
-        # Match production behaviour: invoke on_reply for each completion.
+        # Match production behavior: invoke on_reply for each completion.
         for i, rep in enumerate(replies):
             if on_reply is not None:
                 on_reply(i, rep)
@@ -638,7 +638,7 @@ def test_trace_records_revise_and_classify(items50, make_tool_set, tmp_path):
 
 # === finalize="none" (discovery only) ===
 
-def test_finalize_none_ships_taxonomy_without_full_labelling(
+def test_finalize_none_ships_taxonomy_without_full_labeling(
         items50, make_tool_set, tmp_path):
     """finalize='none' writes the taxonomy + the free discovery-probe sample,
     and does NOT label the whole corpus."""

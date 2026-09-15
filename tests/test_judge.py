@@ -1,4 +1,4 @@
-"""Judge: retry behaviour with mocked OpenRouter calls."""
+"""Judge: retry behavior with mocked OpenRouter calls."""
 from __future__ import annotations
 
 import json as _json
